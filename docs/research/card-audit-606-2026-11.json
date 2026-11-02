@@ -1,0 +1,322 @@
+{
+ "claude_shared_all_three": {
+  "facts": 54,
+  "mechanical": 44
+ },
+ "claude_unique_across_three": 150,
+ "contexts": {
+  "A": {
+   "claude": {
+    "by": {
+     "global:decision:user": {
+      "facts": 5,
+      "line_cost": 1024
+     },
+     "global:rule:agent": {
+      "facts": 13,
+      "line_cost": 1548
+     },
+     "global:rule:user": {
+      "facts": 39,
+      "line_cost": 6943
+     },
+     "repo:decision:agent": {
+      "facts": 7,
+      "line_cost": 1274
+     },
+     "repo:rule:agent": {
+      "facts": 1,
+      "line_cost": 333
+     },
+     "repo:rule:user": {
+      "facts": 2,
+      "line_cost": 268
+     }
+    },
+    "card_log": {
+     "budget": 3500,
+     "carried": 67,
+     "excluded": 0,
+     "left": 0,
+     "omitted": 30,
+     "pool": 97,
+     "used": 11535
+    },
+    "delivered_chars": 17027,
+    "facts": 67,
+    "line_cost": 11390,
+    "mechanical": {
+     "facts": 46,
+     "line_cost": 8235
+    }
+   },
+   "hermes": {
+    "by": {
+     "global:decision:user": {
+      "facts": 5,
+      "line_cost": 1024
+     },
+     "global:rule:user": {
+      "facts": 10,
+      "line_cost": 2035
+     },
+     "repo:decision:agent": {
+      "facts": 1,
+      "line_cost": 90
+     }
+    },
+    "card_log": {
+     "budget": 3500,
+     "carried": 16,
+     "excluded": 0,
+     "left": 0,
+     "omitted": 81,
+     "pool": 97,
+     "used": 3294
+    },
+    "delivered_chars": 3768,
+    "facts": 16,
+    "line_cost": 3149,
+    "mechanical": {
+     "facts": 15,
+     "line_cost": 3059
+    }
+   }
+  },
+  "B": {
+   "claude": {
+    "by": {
+     "global:decision:user": {
+      "facts": 5,
+      "line_cost": 1024
+     },
+     "global:rule:agent": {
+      "facts": 13,
+      "line_cost": 1548
+     },
+     "global:rule:user": {
+      "facts": 39,
+      "line_cost": 6943
+     },
+     "repo:decision:agent": {
+      "facts": 1,
+      "line_cost": 277
+     },
+     "repo:decision:tool": {
+      "facts": 1,
+      "line_cost": 261
+     },
+     "repo:decision:user": {
+      "facts": 9,
+      "line_cost": 2543
+     },
+     "repo:rule:agent": {
+      "facts": 3,
+      "line_cost": 1037
+     },
+     "repo:rule:user": {
+      "facts": 1,
+      "line_cost": 195
+     }
+    },
+    "card_log": {
+     "budget": 3500,
+     "carried": 72,
+     "excluded": 0,
+     "left": 0,
+     "omitted": 35,
+     "pool": 107,
+     "used": 13975
+    },
+    "delivered_chars": 19296,
+    "facts": 72,
+    "line_cost": 13828,
+    "mechanical": {
+     "facts": 54,
+     "line_cost": 10705
+    }
+   },
+   "hermes": {
+    "by": {
+     "global:decision:user": {
+      "facts": 3,
+      "line_cost": 506
+     },
+     "global:rule:user": {
+      "facts": 5,
+      "line_cost": 717
+     },
+     "repo:decision:user": {
+      "facts": 6,
+      "line_cost": 1910
+     }
+    },
+    "card_log": {
+     "budget": 3500,
+     "carried": 14,
+     "excluded": 0,
+     "left": 0,
+     "omitted": 93,
+     "pool": 107,
+     "used": 3280
+    },
+    "delivered_chars": 3464,
+    "facts": 14,
+    "line_cost": 3133,
+    "mechanical": {
+     "facts": 14,
+     "line_cost": 3133
+    }
+   }
+  },
+  "C": {
+   "claude": {
+    "by": {
+     "global:decision:user": {
+      "facts": 5,
+      "line_cost": 1024
+     },
+     "global:rule:agent": {
+      "facts": 10,
+      "line_cost": 1075
+     },
+     "global:rule:user": {
+      "facts": 39,
+      "line_cost": 6943
+     },
+     "repo:decision:agent": {
+      "facts": 3,
+      "line_cost": 261
+     },
+     "repo:decision:user": {
+      "facts": 54,
+      "line_cost": 11596
+     },
+     "repo:rule:user": {
+      "facts": 11,
+      "line_cost": 1531
+     }
+    },
+    "card_log": {
+     "budget": 3500,
+     "carried": 122,
+     "excluded": 4,
+     "left": 8,
+     "omitted": 25,
+     "pool": 155,
+     "used": 24359
+    },
+    "delivered_chars": 28257,
+    "facts": 122,
+    "line_cost": 22430,
+    "mechanical": {
+     "facts": 109,
+     "line_cost": 21094
+    }
+   },
+   "hermes": {
+    "by": {
+     "global:decision:user": {
+      "facts": 2,
+      "line_cost": 421
+     },
+     "global:rule:user": {
+      "facts": 5,
+      "line_cost": 717
+     },
+     "repo:decision:agent": {
+      "facts": 2,
+      "line_cost": 196
+     },
+     "repo:decision:user": {
+      "facts": 5,
+      "line_cost": 1658
+     },
+     "repo:rule:user": {
+      "facts": 2,
+      "line_cost": 177
+     }
+    },
+    "card_log": {
+     "budget": 3500,
+     "carried": 16,
+     "excluded": 4,
+     "left": 0,
+     "omitted": 139,
+     "pool": 155,
+     "used": 3315
+    },
+    "delivered_chars": 3793,
+    "facts": 16,
+    "line_cost": 3169,
+    "mechanical": {
+     "facts": 14,
+     "line_cost": 2973
+    }
+   }
+  },
+  "G": {
+   "claude": {
+    "by": {
+     "global:decision:user": {
+      "facts": 5,
+      "line_cost": 1024
+     },
+     "global:rule:agent": {
+      "facts": 20,
+      "line_cost": 3250
+     },
+     "global:rule:user": {
+      "facts": 39,
+      "line_cost": 6943
+     }
+    },
+    "card_log": {
+     "budget": 3500,
+     "carried": 64,
+     "excluded": 0,
+     "left": 0,
+     "omitted": 23,
+     "pool": 87,
+     "used": 11278
+    },
+    "delivered_chars": 16480,
+    "facts": 64,
+    "line_cost": 11217,
+    "mechanical": {
+     "facts": 44,
+     "line_cost": 7967
+    }
+   },
+   "hermes": {
+    "by": {
+     "global:decision:user": {
+      "facts": 5,
+      "line_cost": 1024
+     },
+     "global:rule:user": {
+      "facts": 11,
+      "line_cost": 2182
+     }
+    },
+    "card_log": {
+     "budget": 3500,
+     "carried": 16,
+     "excluded": 0,
+     "left": 0,
+     "omitted": 71,
+     "pool": 87,
+     "used": 3267
+    },
+    "delivered_chars": 3451,
+    "facts": 16,
+    "line_cost": 3206,
+    "mechanical": {
+     "facts": 16,
+     "line_cost": 3206
+    }
+   }
+  }
+ },
+ "metric": "line_cost is the length of each fact line plus one for a newline, the same for every line; it is not the physical text, whose parts lose their final newline. delivered_chars is the physical length of the additionalContext of every part. pool is carried plus omitted plus left, from card.log."
+}
