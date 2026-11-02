@@ -1,0 +1,4019 @@
+{
+ "rows": [
+  {
+   "key": "0481445abadec8657723",
+   "phase": "capture",
+   "arm": "base",
+   "scenario": "C2",
+   "repeat": 1,
+   "kind": "control",
+   "sha256": "759ab3e1acd96c782a492c6919ac88243005366638b5e507824c48bb544256fa",
+   "acknowledged": "yes",
+   "durable_capture": "no",
+   "time_limited_capture": "no",
+   "extra_useful": 0,
+   "noise": 0,
+   "pass": {
+    "A": {
+     "acknowledged": "yes",
+     "durable_capture": "no",
+     "time_limited_capture": "no",
+     "extra_useful": 0,
+     "noise": 0
+    },
+    "B": {
+     "acknowledged": "yes",
+     "durable_capture": "no",
+     "time_limited_capture": "no",
+     "extra_useful": 0,
+     "noise": 0
+    }
+   },
+   "cost_usd": 0.036105,
+   "seconds": 15.9,
+   "tokens": {
+    "input_tokens": 6,
+    "output_tokens": 700,
+    "cache_read_input_tokens": 36330,
+    "cache_creation_input_tokens": 6365
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 0,
+   "memcue_calls": 0,
+   "delivery": {
+    "note": true,
+    "reminder": false
+   },
+   "changes": 0,
+   "changes_after_turn1": 0,
+   "preference_facts": []
+  },
+  {
+   "key": "07f4f77d495a8c14978a",
+   "phase": "capture",
+   "arm": "cand",
+   "scenario": "D3",
+   "repeat": 1,
+   "kind": "durable",
+   "sha256": "ec16b5a2e1231a073038a99ca3c6d05a3592b3ce4c08f9fb36782560c7e138d5",
+   "acknowledged": "yes",
+   "preference_stored": "yes",
+   "preference_fact_ids": [
+    "01M6EK0B4KNNVGCSHSH7JVWS7X"
+   ],
+   "extra_useful": 0,
+   "noise": 0,
+   "pass": {
+    "A": {
+     "acknowledged": "yes",
+     "preference_stored": "yes",
+     "preference_fact_ids": [
+      "01M6EK0B4KNNVGCSHSH7JVWS7X"
+     ],
+     "extra_useful": 0,
+     "noise": 0
+    },
+    "B": {
+     "acknowledged": "yes",
+     "preference_stored": "yes",
+     "preference_fact_ids": [
+      "01M6EK0B4KNNVGCSHSH7JVWS7X"
+     ],
+     "extra_useful": 0,
+     "noise": 0
+    }
+   },
+   "cost_usd": 0.058294,
+   "seconds": 27.0,
+   "tokens": {
+    "input_tokens": 12,
+    "output_tokens": 1209,
+    "cache_read_input_tokens": 86196,
+    "cache_creation_input_tokens": 9390
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 2,
+   "memcue_calls": 3,
+   "delivery": {
+    "note": true,
+    "reminder": true
+   },
+   "changes": 1,
+   "changes_after_turn1": 0,
+   "preference_facts": [
+    {
+     "kind": "rule",
+     "scope": "global",
+     "source": "user",
+     "expires": ""
+    }
+   ]
+  },
+  {
+   "key": "095e1d187a5e95687d87",
+   "phase": "capture",
+   "arm": "base",
+   "scenario": "C2",
+   "repeat": 3,
+   "kind": "control",
+   "sha256": "28256c8862d12ec3ec27286385215fbf51e3e42f23a0c66e8e7afd8c6eb28e6b",
+   "acknowledged": "yes",
+   "durable_capture": "no",
+   "time_limited_capture": "no",
+   "extra_useful": 0,
+   "noise": 0,
+   "pass": {
+    "A": {
+     "acknowledged": "yes",
+     "durable_capture": "no",
+     "time_limited_capture": "no",
+     "extra_useful": 0,
+     "noise": 0
+    },
+    "B": {
+     "acknowledged": "yes",
+     "durable_capture": "no",
+     "time_limited_capture": "no",
+     "extra_useful": 0,
+     "noise": 0
+    }
+   },
+   "cost_usd": 0.034827,
+   "seconds": 15.7,
+   "tokens": {
+    "input_tokens": 6,
+    "output_tokens": 583,
+    "cache_read_input_tokens": 36328,
+    "cache_creation_input_tokens": 6338
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 0,
+   "memcue_calls": 0,
+   "delivery": {
+    "note": true,
+    "reminder": false
+   },
+   "changes": 0,
+   "changes_after_turn1": 0,
+   "preference_facts": []
+  },
+  {
+   "key": "0f53f1fc4ec998ad4301",
+   "phase": "reference",
+   "arm": "base",
+   "scenario": "D2",
+   "repeat": 2,
+   "kind": "probe",
+   "sha256": "61751f0743bf8f0553dc93a6092e7c98ab002bcfb2ec2f74cd48a746a439699d",
+   "applied": "no",
+   "pass": {
+    "A": {
+     "applied": "no"
+    },
+    "B": {
+     "applied": "no"
+    }
+   },
+   "cost_usd": 0.027981,
+   "seconds": 161.5,
+   "tokens": {
+    "input_tokens": 4,
+    "output_tokens": 249,
+    "cache_read_input_tokens": 21987,
+    "cache_creation_input_tokens": 5821
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 0,
+   "memcue_calls": 0,
+   "delivery": {
+    "note": true,
+    "reminder": false
+   },
+   "card_ids": [],
+   "base_copied": false,
+   "capture_run": null
+  },
+  {
+   "key": "10b95f4e1153802d8f59",
+   "phase": "capture",
+   "arm": "cand",
+   "scenario": "D4",
+   "repeat": 2,
+   "kind": "durable",
+   "sha256": "53cd09edf1453ff76974b17151f30baefc848d59deebc2925566044450ae1810",
+   "acknowledged": "yes",
+   "preference_stored": "yes",
+   "preference_fact_ids": [
+    "01M6EK4829SS5HVQ2W9W1BNPCK"
+   ],
+   "extra_useful": 0,
+   "noise": 0,
+   "pass": {
+    "A": {
+     "acknowledged": "yes",
+     "preference_stored": "yes",
+     "preference_fact_ids": [
+      "01M6EK4829SS5HVQ2W9W1BNPCK"
+     ],
+     "extra_useful": 0,
+     "noise": 0
+    },
+    "B": {
+     "acknowledged": "yes",
+     "preference_stored": "yes",
+     "preference_fact_ids": [
+      "01M6EK4829SS5HVQ2W9W1BNPCK"
+     ],
+     "extra_useful": 0,
+     "noise": 0
+    }
+   },
+   "cost_usd": 0.042754,
+   "seconds": 12.4,
+   "tokens": {
+    "input_tokens": 8,
+    "output_tokens": 1048,
+    "cache_read_input_tokens": 51102,
+    "cache_creation_input_tokens": 6787
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 1,
+   "memcue_calls": 2,
+   "delivery": {
+    "note": true,
+    "reminder": true
+   },
+   "changes": 1,
+   "changes_after_turn1": 0,
+   "preference_facts": [
+    {
+     "kind": "rule",
+     "scope": "repo:example.com/acme/brewlog",
+     "source": "user",
+     "expires": ""
+    }
+   ]
+  },
+  {
+   "key": "181902e6bf9c611326ec",
+   "phase": "probe",
+   "arm": "base",
+   "scenario": "D4",
+   "repeat": 3,
+   "kind": "probe",
+   "sha256": "15134660bcabe34cf2e7ccea45d8047734376df939e873763f3c3cae0378c487",
+   "applied": "no",
+   "pass": {
+    "A": {
+     "applied": "no"
+    },
+    "B": {
+     "applied": "no"
+    }
+   },
+   "cost_usd": 0.027154,
+   "seconds": 3.1,
+   "tokens": {
+    "input_tokens": 4,
+    "output_tokens": 157,
+    "cache_read_input_tokens": 22123,
+    "cache_creation_input_tokens": 5841
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 0,
+   "memcue_calls": 0,
+   "delivery": {
+    "note": true,
+    "reminder": false
+   },
+   "card_ids": [],
+   "base_copied": true,
+   "capture_run": "runs/capture/base/D4/r3",
+   "capture_preference_stored": "no",
+   "card_has_preference": false
+  },
+  {
+   "key": "1c6ce53619ce0e117e25",
+   "phase": "capture",
+   "arm": "base",
+   "scenario": "D4",
+   "repeat": 2,
+   "kind": "durable",
+   "sha256": "02bd0829629ca2b855d8fbdfa4a7b943fa8e1f5d26a3d98b2a15e6d42a5f5ee9",
+   "acknowledged": "yes",
+   "preference_stored": "no",
+   "preference_fact_ids": [],
+   "extra_useful": 0,
+   "noise": 0,
+   "pass": {
+    "A": {
+     "acknowledged": "yes",
+     "preference_stored": "no",
+     "preference_fact_ids": [],
+     "extra_useful": 0,
+     "noise": 0
+    },
+    "B": {
+     "acknowledged": "yes",
+     "preference_stored": "no",
+     "preference_fact_ids": [],
+     "extra_useful": 0,
+     "noise": 0
+    }
+   },
+   "cost_usd": 0.040128,
+   "seconds": 15.7,
+   "tokens": {
+    "input_tokens": 8,
+    "output_tokens": 927,
+    "cache_read_input_tokens": 50424,
+    "cache_creation_input_tokens": 6450
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 0,
+   "memcue_calls": 0,
+   "delivery": {
+    "note": true,
+    "reminder": false
+   },
+   "changes": 0,
+   "changes_after_turn1": 0,
+   "preference_facts": []
+  },
+  {
+   "key": "1c95c56e9ba14b4f4b7d",
+   "phase": "reference",
+   "arm": "base",
+   "scenario": "D2",
+   "repeat": 1,
+   "kind": "probe",
+   "sha256": "e8b2163bba2c202a1865bb0a4ad2092c09a6b804e3eef4763059887d868c5fa6",
+   "applied": "no",
+   "pass": {
+    "A": {
+     "applied": "no"
+    },
+    "B": {
+     "applied": "no"
+    }
+   },
+   "cost_usd": 0.027812,
+   "seconds": 5.1,
+   "tokens": {
+    "input_tokens": 4,
+    "output_tokens": 238,
+    "cache_read_input_tokens": 22120,
+    "cache_creation_input_tokens": 5803
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 0,
+   "memcue_calls": 0,
+   "delivery": {
+    "note": true,
+    "reminder": false
+   },
+   "card_ids": [],
+   "base_copied": false,
+   "capture_run": null
+  },
+  {
+   "key": "2c1c14b2663bd07ca63d",
+   "phase": "reference",
+   "arm": "base",
+   "scenario": "D1",
+   "repeat": 3,
+   "kind": "probe",
+   "sha256": "bac401a177ffa76fb2ae6a36a9241b7d678162dd33bb4a16dde54cad588da882",
+   "applied": "disputed",
+   "pass": {
+    "A": {
+     "applied": "partial"
+    },
+    "B": {
+     "applied": "no"
+    }
+   },
+   "cost_usd": 0.031618,
+   "seconds": 6.3,
+   "tokens": {
+    "input_tokens": 4,
+    "output_tokens": 631,
+    "cache_read_input_tokens": 21999,
+    "cache_creation_input_tokens": 5775
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 0,
+   "memcue_calls": 0,
+   "delivery": {
+    "note": true,
+    "reminder": false
+   },
+   "card_ids": [],
+   "base_copied": false,
+   "capture_run": null
+  },
+  {
+   "key": "35b823ee7d8907e793ed",
+   "phase": "capture",
+   "arm": "cand",
+   "scenario": "D3",
+   "repeat": 3,
+   "kind": "durable",
+   "sha256": "501f9d7ac589bb5362db6701bba680a8559ba52d5977784912ca84fc161c52f1",
+   "acknowledged": "yes",
+   "preference_stored": "yes",
+   "preference_fact_ids": [
+    "01M6EK6B9494QPZXS4WZ52JZH9"
+   ],
+   "extra_useful": 0,
+   "noise": 0,
+   "pass": {
+    "A": {
+     "acknowledged": "yes",
+     "preference_stored": "yes",
+     "preference_fact_ids": [
+      "01M6EK6B9494QPZXS4WZ52JZH9"
+     ],
+     "extra_useful": 0,
+     "noise": 0
+    },
+    "B": {
+     "acknowledged": "yes",
+     "preference_stored": "yes",
+     "preference_fact_ids": [
+      "01M6EK6B9494QPZXS4WZ52JZH9"
+     ],
+     "extra_useful": 0,
+     "noise": 0
+    }
+   },
+   "cost_usd": 0.05585,
+   "seconds": 23.5,
+   "tokens": {
+    "input_tokens": 10,
+    "output_tokens": 1189,
+    "cache_read_input_tokens": 68884,
+    "cache_creation_input_tokens": 9263
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 2,
+   "memcue_calls": 2,
+   "delivery": {
+    "note": true,
+    "reminder": true
+   },
+   "changes": 1,
+   "changes_after_turn1": 0,
+   "preference_facts": [
+    {
+     "kind": "rule",
+     "scope": "global",
+     "source": "user",
+     "expires": ""
+    }
+   ]
+  },
+  {
+   "key": "361c84162ca5b0706a03",
+   "phase": "probe",
+   "arm": "cand",
+   "scenario": "D2",
+   "repeat": 3,
+   "kind": "probe",
+   "sha256": "6701a1832692643bfb2e3326e1d3f849b6a360cf0cd6ac592920192b23ff5a94",
+   "applied": "yes",
+   "pass": {
+    "A": {
+     "applied": "yes"
+    },
+    "B": {
+     "applied": "yes"
+    }
+   },
+   "cost_usd": 0.028744,
+   "seconds": 4.0,
+   "tokens": {
+    "input_tokens": 4,
+    "output_tokens": 273,
+    "cache_read_input_tokens": 22262,
+    "cache_creation_input_tokens": 5945
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 0,
+   "memcue_calls": 0,
+   "delivery": {
+    "note": true,
+    "reminder": true
+   },
+   "card_ids": [
+    "01M6EK61W79KWZ7JDZ6D8D631F"
+   ],
+   "base_copied": true,
+   "capture_run": "runs/capture/cand/D2/r3",
+   "capture_preference_stored": "yes",
+   "card_has_preference": true
+  },
+  {
+   "key": "379308be7c3495b65301",
+   "phase": "probe",
+   "arm": "base",
+   "scenario": "D3",
+   "repeat": 1,
+   "kind": "probe",
+   "sha256": "7cfbdc8c3812a6873910179b51aeaf4b2b9f31235ed5b2754b9639d9db14410a",
+   "applied": "partial",
+   "pass": {
+    "A": {
+     "applied": "partial"
+    },
+    "B": {
+     "applied": "partial"
+    }
+   },
+   "cost_usd": 0.030913,
+   "seconds": 5.3,
+   "tokens": {
+    "input_tokens": 4,
+    "output_tokens": 476,
+    "cache_read_input_tokens": 22132,
+    "cache_creation_input_tokens": 5983
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 1,
+   "memcue_calls": 1,
+   "delivery": {
+    "note": true,
+    "reminder": false
+   },
+   "card_ids": [],
+   "base_copied": true,
+   "capture_run": "runs/capture/base/D3/r1",
+   "capture_preference_stored": "no",
+   "card_has_preference": false
+  },
+  {
+   "key": "426690199feafe9b9999",
+   "phase": "capture",
+   "arm": "cand",
+   "scenario": "D2",
+   "repeat": 3,
+   "kind": "durable",
+   "sha256": "2630e940262e7bbb5f742d6cd9efb1e0e1e7981276a19698390a17dde0612ceb",
+   "acknowledged": "yes",
+   "preference_stored": "yes",
+   "preference_fact_ids": [
+    "01M6EK61W79KWZ7JDZ6D8D631F"
+   ],
+   "extra_useful": 0,
+   "noise": 0,
+   "pass": {
+    "A": {
+     "acknowledged": "yes",
+     "preference_stored": "yes",
+     "preference_fact_ids": [
+      "01M6EK61W79KWZ7JDZ6D8D631F"
+     ],
+     "extra_useful": 0,
+     "noise": 0
+    },
+    "B": {
+     "acknowledged": "yes",
+     "preference_stored": "yes",
+     "preference_fact_ids": [
+      "01M6EK61W79KWZ7JDZ6D8D631F"
+     ],
+     "extra_useful": 0,
+     "noise": 0
+    }
+   },
+   "cost_usd": 0.049596,
+   "seconds": 25.2,
+   "tokens": {
+    "input_tokens": 10,
+    "output_tokens": 875,
+    "cache_read_input_tokens": 67296,
+    "cache_creation_input_tokens": 8524
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 1,
+   "memcue_calls": 1,
+   "delivery": {
+    "note": true,
+    "reminder": true
+   },
+   "changes": 1,
+   "changes_after_turn1": 0,
+   "preference_facts": [
+    {
+     "kind": "rule",
+     "scope": "global",
+     "source": "user",
+     "expires": ""
+    }
+   ]
+  },
+  {
+   "key": "42b6133e41b80c70ea07",
+   "phase": "capture",
+   "arm": "cand",
+   "scenario": "D1",
+   "repeat": 1,
+   "kind": "durable",
+   "sha256": "a16997dd74cfc8e7c7fd2de2b7bf290cf5e29e7f15de1c3bd6676fc479f3e98c",
+   "acknowledged": "yes",
+   "preference_stored": "yes",
+   "preference_fact_ids": [
+    "01M6EJZ4WCVME5TK2E30YCN0C7"
+   ],
+   "extra_useful": 0,
+   "noise": 0,
+   "pass": {
+    "A": {
+     "acknowledged": "yes",
+     "preference_stored": "yes",
+     "preference_fact_ids": [
+      "01M6EJZ4WCVME5TK2E30YCN0C7"
+     ],
+     "extra_useful": 0,
+     "noise": 0
+    },
+    "B": {
+     "acknowledged": "yes",
+     "preference_stored": "yes",
+     "preference_fact_ids": [
+      "01M6EJZ4WCVME5TK2E30YCN0C7"
+     ],
+     "extra_useful": 0,
+     "noise": 0
+    }
+   },
+   "cost_usd": 0.089569,
+   "seconds": 18.8,
+   "tokens": {
+    "input_tokens": 12,
+    "output_tokens": 1165,
+    "cache_read_input_tokens": 77546,
+    "cache_creation_input_tokens": 17535
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 1,
+   "memcue_calls": 2,
+   "delivery": {
+    "note": true,
+    "reminder": true
+   },
+   "changes": 1,
+   "changes_after_turn1": 0,
+   "preference_facts": [
+    {
+     "kind": "rule",
+     "scope": "global",
+     "source": "user",
+     "expires": ""
+    }
+   ]
+  },
+  {
+   "key": "47d36ce5f3f61edb36c0",
+   "phase": "reference",
+   "arm": "base",
+   "scenario": "D4",
+   "repeat": 3,
+   "kind": "probe",
+   "sha256": "8ce59438f469f81d0b31578dcf91cb384ab87d00c9b9a567893b6516c1700709",
+   "applied": "no",
+   "pass": {
+    "A": {
+     "applied": "no"
+    },
+    "B": {
+     "applied": "no"
+    }
+   },
+   "cost_usd": 0.027252,
+   "seconds": 10.7,
+   "tokens": {
+    "input_tokens": 4,
+    "output_tokens": 166,
+    "cache_read_input_tokens": 22125,
+    "cache_creation_input_tokens": 5843
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 0,
+   "memcue_calls": 0,
+   "delivery": {
+    "note": true,
+    "reminder": false
+   },
+   "card_ids": [],
+   "base_copied": false,
+   "capture_run": null
+  },
+  {
+   "key": "49d8391e6c79b9ddbeb1",
+   "phase": "probe",
+   "arm": "base",
+   "scenario": "D1",
+   "repeat": 2,
+   "kind": "probe",
+   "sha256": "4647673539c7e1b5b85f904e90d226fd7c48679a32afadf7314997943f1ef74d",
+   "applied": "yes",
+   "pass": {
+    "A": {
+     "applied": "yes"
+    },
+    "B": {
+     "applied": "yes"
+    }
+   },
+   "cost_usd": 0.032203,
+   "seconds": 7.8,
+   "tokens": {
+    "input_tokens": 4,
+    "output_tokens": 601,
+    "cache_read_input_tokens": 22215,
+    "cache_creation_input_tokens": 5991
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 0,
+   "memcue_calls": 0,
+   "delivery": {
+    "note": true,
+    "reminder": false
+   },
+   "card_ids": [
+    "01M6EK32SMN8H2VQJ3X3AFED28"
+   ],
+   "base_copied": true,
+   "capture_run": "runs/capture/base/D1/r2",
+   "capture_preference_stored": "yes",
+   "card_has_preference": true
+  },
+  {
+   "key": "4dbcf6ff80d0b0b8949a",
+   "phase": "capture",
+   "arm": "cand",
+   "scenario": "D4",
+   "repeat": 1,
+   "kind": "durable",
+   "sha256": "eb40083ea1f9f671ba66768fd867f05d79086701cb1722cf34d318a74a1040fe",
+   "acknowledged": "yes",
+   "preference_stored": "no",
+   "preference_fact_ids": [],
+   "extra_useful": 0,
+   "noise": 0,
+   "pass": {
+    "A": {
+     "acknowledged": "yes",
+     "preference_stored": "no",
+     "preference_fact_ids": [],
+     "extra_useful": 0,
+     "noise": 0
+    },
+    "B": {
+     "acknowledged": "yes",
+     "preference_stored": "no",
+     "preference_fact_ids": [],
+     "extra_useful": 0,
+     "noise": 0
+    }
+   },
+   "cost_usd": 0.039457,
+   "seconds": 16.0,
+   "tokens": {
+    "input_tokens": 6,
+    "output_tokens": 1053,
+    "cache_read_input_tokens": 36314,
+    "cache_creation_input_tokens": 6321
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 0,
+   "memcue_calls": 0,
+   "delivery": {
+    "note": true,
+    "reminder": true
+   },
+   "changes": 0,
+   "changes_after_turn1": 0,
+   "preference_facts": []
+  },
+  {
+   "key": "4f45141120d6e947dcc0",
+   "phase": "capture",
+   "arm": "base",
+   "scenario": "D2",
+   "repeat": 2,
+   "kind": "durable",
+   "sha256": "b3e9dfbde927bd8810d7940029271eeb2b9a2e388949cb4a3b1efa4b8ea656fe",
+   "acknowledged": "yes",
+   "preference_stored": "yes",
+   "preference_fact_ids": [
+    "01M6EK2SFBJKXFG6MWKW1ABS2P"
+   ],
+   "extra_useful": 0,
+   "noise": 0,
+   "pass": {
+    "A": {
+     "acknowledged": "yes",
+     "preference_stored": "yes",
+     "preference_fact_ids": [
+      "01M6EK2SFBJKXFG6MWKW1ABS2P"
+     ],
+     "extra_useful": 0,
+     "noise": 0
+    },
+    "B": {
+     "acknowledged": "yes",
+     "preference_stored": "yes",
+     "preference_fact_ids": [
+      "01M6EK2SFBJKXFG6MWKW1ABS2P"
+     ],
+     "extra_useful": 0,
+     "noise": 0
+    }
+   },
+   "cost_usd": 0.0512,
+   "seconds": 18.7,
+   "tokens": {
+    "input_tokens": 10,
+    "output_tokens": 958,
+    "cache_read_input_tokens": 67642,
+    "cache_creation_input_tokens": 8709
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 2,
+   "memcue_calls": 2,
+   "delivery": {
+    "note": true,
+    "reminder": false
+   },
+   "changes": 1,
+   "changes_after_turn1": 0,
+   "preference_facts": [
+    {
+     "kind": "rule",
+     "scope": "global",
+     "source": "user",
+     "expires": ""
+    }
+   ]
+  },
+  {
+   "key": "523623c18ef374f30c3b",
+   "phase": "reference",
+   "arm": "base",
+   "scenario": "D2",
+   "repeat": 3,
+   "kind": "probe",
+   "sha256": "54f9d9e7faa69020436c7ed2d166642f7e59fa439474ffe3796e904418019244",
+   "applied": "no",
+   "pass": {
+    "A": {
+     "applied": "no"
+    },
+    "B": {
+     "applied": "no"
+    }
+   },
+   "cost_usd": 0.027728,
+   "seconds": 4.3,
+   "tokens": {
+    "input_tokens": 4,
+    "output_tokens": 228,
+    "cache_read_input_tokens": 22121,
+    "cache_creation_input_tokens": 5807
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 0,
+   "memcue_calls": 0,
+   "delivery": {
+    "note": true,
+    "reminder": false
+   },
+   "card_ids": [],
+   "base_copied": false,
+   "capture_run": null
+  },
+  {
+   "key": "53f825ad38c7764a7ad8",
+   "phase": "probe",
+   "arm": "base",
+   "scenario": "D1",
+   "repeat": 1,
+   "kind": "probe",
+   "sha256": "d98c219962ee6d542e0f167a6ebfd9634a7a3c6bfa16afc3337f9bee7578f19e",
+   "applied": "yes",
+   "pass": {
+    "A": {
+     "applied": "yes"
+    },
+    "B": {
+     "applied": "yes"
+    }
+   },
+   "cost_usd": 0.031517,
+   "seconds": 7.5,
+   "tokens": {
+    "input_tokens": 4,
+    "output_tokens": 525,
+    "cache_read_input_tokens": 22233,
+    "cache_creation_input_tokens": 6009
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 0,
+   "memcue_calls": 0,
+   "delivery": {
+    "note": true,
+    "reminder": false
+   },
+   "card_ids": [
+    "01M6EJZCQKXV2S1BXRWMEGV3R7"
+   ],
+   "base_copied": true,
+   "capture_run": "runs/capture/base/D1/r1",
+   "capture_preference_stored": "yes",
+   "card_has_preference": true
+  },
+  {
+   "key": "57d747983ead1361b9e9",
+   "phase": "reference",
+   "arm": "base",
+   "scenario": "D1",
+   "repeat": 1,
+   "kind": "probe",
+   "sha256": "5d32abe7dc9a2f0f135511aa220732204555f0e358fea5b506cb235b8eaec7a2",
+   "applied": "disputed",
+   "pass": {
+    "A": {
+     "applied": "partial"
+    },
+    "B": {
+     "applied": "no"
+    }
+   },
+   "cost_usd": 0.032757,
+   "seconds": 10.8,
+   "tokens": {
+    "input_tokens": 4,
+    "output_tokens": 690,
+    "cache_read_input_tokens": 22133,
+    "cache_creation_input_tokens": 5909
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 0,
+   "memcue_calls": 0,
+   "delivery": {
+    "note": true,
+    "reminder": false
+   },
+   "card_ids": [],
+   "base_copied": false,
+   "capture_run": null
+  },
+  {
+   "key": "5efc725efc5d17eebaea",
+   "phase": "capture",
+   "arm": "cand",
+   "scenario": "D2",
+   "repeat": 1,
+   "kind": "durable",
+   "sha256": "2b4253c22813584651a32752558f2f4139744e27f7bda66ccbd3ce045dc94a0d",
+   "acknowledged": "yes",
+   "preference_stored": "yes",
+   "preference_fact_ids": [
+    "01M6EJZKBV2YD5G5WK0FHW2RS0"
+   ],
+   "extra_useful": 0,
+   "noise": 0,
+   "pass": {
+    "A": {
+     "acknowledged": "yes",
+     "preference_stored": "yes",
+     "preference_fact_ids": [
+      "01M6EJZKBV2YD5G5WK0FHW2RS0"
+     ],
+     "extra_useful": 0,
+     "noise": 0
+    },
+    "B": {
+     "acknowledged": "yes",
+     "preference_stored": "yes",
+     "preference_fact_ids": [
+      "01M6EJZKBV2YD5G5WK0FHW2RS0"
+     ],
+     "extra_useful": 0,
+     "noise": 0
+    }
+   },
+   "cost_usd": 0.053577,
+   "seconds": 10.8,
+   "tokens": {
+    "input_tokens": 12,
+    "output_tokens": 995,
+    "cache_read_input_tokens": 84226,
+    "cache_creation_input_tokens": 8795
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 1,
+   "memcue_calls": 2,
+   "delivery": {
+    "note": true,
+    "reminder": true
+   },
+   "changes": 1,
+   "changes_after_turn1": 0,
+   "preference_facts": [
+    {
+     "kind": "rule",
+     "scope": "global",
+     "source": "user",
+     "expires": ""
+    }
+   ]
+  },
+  {
+   "key": "5f19f52e15043bb4669b",
+   "phase": "capture",
+   "arm": "base",
+   "scenario": "C1",
+   "repeat": 3,
+   "kind": "control",
+   "sha256": "918973b6ecf3dc6835ac84c2cc858011bed6af83ebee07fc39c71793dbd78f5d",
+   "acknowledged": "yes",
+   "durable_capture": "no",
+   "time_limited_capture": "no",
+   "extra_useful": 0,
+   "noise": 0,
+   "pass": {
+    "A": {
+     "acknowledged": "yes",
+     "durable_capture": "no",
+     "time_limited_capture": "no",
+     "extra_useful": 0,
+     "noise": 0
+    },
+    "B": {
+     "acknowledged": "yes",
+     "durable_capture": "no",
+     "time_limited_capture": "no",
+     "extra_useful": 0,
+     "noise": 0
+    }
+   },
+   "cost_usd": 0.034546,
+   "seconds": 6.3,
+   "tokens": {
+    "input_tokens": 8,
+    "output_tokens": 435,
+    "cache_read_input_tokens": 50398,
+    "cache_creation_input_tokens": 6285
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 0,
+   "memcue_calls": 0,
+   "delivery": {
+    "note": true,
+    "reminder": false
+   },
+   "changes": 0,
+   "changes_after_turn1": 0,
+   "preference_facts": []
+  },
+  {
+   "key": "6599e98ef638c76e430c",
+   "phase": "reference",
+   "arm": "base",
+   "scenario": "D1",
+   "repeat": 2,
+   "kind": "probe",
+   "sha256": "02cee2799ada9e88f09cd7b9c36832660e93e0e466ce605c5c10c4d7792b4c6b",
+   "applied": "disputed",
+   "pass": {
+    "A": {
+     "applied": "partial"
+    },
+    "B": {
+     "applied": "no"
+    }
+   },
+   "cost_usd": 0.032321,
+   "seconds": 20.3,
+   "tokens": {
+    "input_tokens": 4,
+    "output_tokens": 646,
+    "cache_read_input_tokens": 22134,
+    "cache_creation_input_tokens": 5910
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 0,
+   "memcue_calls": 0,
+   "delivery": {
+    "note": true,
+    "reminder": false
+   },
+   "card_ids": [],
+   "base_copied": false,
+   "capture_run": null
+  },
+  {
+   "key": "74a5acf79abfd7a1f4b3",
+   "phase": "reference",
+   "arm": "base",
+   "scenario": "D3",
+   "repeat": 3,
+   "kind": "probe",
+   "sha256": "15243576053f492e3f56c77032a54c16d2bfe8bcf921f1e1f89512b7745c08db",
+   "applied": "partial",
+   "pass": {
+    "A": {
+     "applied": "partial"
+    },
+    "B": {
+     "applied": "partial"
+    }
+   },
+   "cost_usd": 0.033921,
+   "seconds": 11.5,
+   "tokens": {
+    "input_tokens": 6,
+    "output_tokens": 564,
+    "cache_read_input_tokens": 36252,
+    "cache_creation_input_tokens": 6161
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 1,
+   "memcue_calls": 1,
+   "delivery": {
+    "note": true,
+    "reminder": false
+   },
+   "card_ids": [],
+   "base_copied": false,
+   "capture_run": null
+  },
+  {
+   "key": "771edef9080c1a40e6d5",
+   "phase": "probe",
+   "arm": "cand",
+   "scenario": "D1",
+   "repeat": 3,
+   "kind": "probe",
+   "sha256": "a65a7eb60da6f0b48364e1db2df5d1bbbb18523aca475c0baea64a10547859de",
+   "applied": "yes",
+   "pass": {
+    "A": {
+     "applied": "yes"
+    },
+    "B": {
+     "applied": "yes"
+    }
+   },
+   "cost_usd": 0.031498,
+   "seconds": 7.2,
+   "tokens": {
+    "input_tokens": 4,
+    "output_tokens": 505,
+    "cache_read_input_tokens": 22277,
+    "cache_creation_input_tokens": 6053
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 0,
+   "memcue_calls": 0,
+   "delivery": {
+    "note": true,
+    "reminder": true
+   },
+   "card_ids": [
+    "01M6EK5FMH30SSWRVFSADKPTYK"
+   ],
+   "base_copied": true,
+   "capture_run": "runs/capture/cand/D1/r3",
+   "capture_preference_stored": "yes",
+   "card_has_preference": true
+  },
+  {
+   "key": "773835cbdaf18409f6ce",
+   "phase": "probe",
+   "arm": "base",
+   "scenario": "D4",
+   "repeat": 1,
+   "kind": "probe",
+   "sha256": "d825164219db599f430b07fa4d341db869beeeeca61a089a993b9648375d2ffd",
+   "applied": "no",
+   "pass": {
+    "A": {
+     "applied": "no"
+    },
+    "B": {
+     "applied": "no"
+    }
+   },
+   "cost_usd": 0.027213,
+   "seconds": 10.2,
+   "tokens": {
+    "input_tokens": 4,
+    "output_tokens": 162,
+    "cache_read_input_tokens": 22125,
+    "cache_creation_input_tokens": 5843
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 0,
+   "memcue_calls": 0,
+   "delivery": {
+    "note": true,
+    "reminder": false
+   },
+   "card_ids": [],
+   "base_copied": true,
+   "capture_run": "runs/capture/base/D4/r1",
+   "capture_preference_stored": "no",
+   "card_has_preference": false
+  },
+  {
+   "key": "78c61c5a864fe2b61641",
+   "phase": "capture",
+   "arm": "base",
+   "scenario": "D2",
+   "repeat": 3,
+   "kind": "durable",
+   "sha256": "2d2c051e5dbac0861b5f3e7c02ca5d433e0ef32c2be36a3cba535d8045076c64",
+   "acknowledged": "yes",
+   "preference_stored": "yes",
+   "preference_fact_ids": [
+    "01M6EK5J9YYD267GH5YB1XW20E"
+   ],
+   "extra_useful": 0,
+   "noise": 0,
+   "pass": {
+    "A": {
+     "acknowledged": "yes",
+     "preference_stored": "yes",
+     "preference_fact_ids": [
+      "01M6EK5J9YYD267GH5YB1XW20E"
+     ],
+     "extra_useful": 0,
+     "noise": 0
+    },
+    "B": {
+     "acknowledged": "yes",
+     "preference_stored": "yes",
+     "preference_fact_ids": [
+      "01M6EK5J9YYD267GH5YB1XW20E"
+     ],
+     "extra_useful": 0,
+     "noise": 0
+    }
+   },
+   "cost_usd": 0.053238,
+   "seconds": 26.1,
+   "tokens": {
+    "input_tokens": 12,
+    "output_tokens": 1006,
+    "cache_read_input_tokens": 83895,
+    "cache_creation_input_tokens": 8691
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 1,
+   "memcue_calls": 2,
+   "delivery": {
+    "note": true,
+    "reminder": false
+   },
+   "changes": 1,
+   "changes_after_turn1": 0,
+   "preference_facts": [
+    {
+     "kind": "rule",
+     "scope": "global",
+     "source": "user",
+     "expires": ""
+    }
+   ]
+  },
+  {
+   "key": "78d3553d9e3a97a4ed6a",
+   "phase": "probe",
+   "arm": "cand",
+   "scenario": "D3",
+   "repeat": 1,
+   "kind": "probe",
+   "sha256": "9dae0e5e523742955fc5502997ae0d0ba11b1946d4800baeac09f53c8c2a78a1",
+   "applied": "yes",
+   "pass": {
+    "A": {
+     "applied": "yes"
+    },
+    "B": {
+     "applied": "yes"
+    }
+   },
+   "cost_usd": 0.029868,
+   "seconds": 12.0,
+   "tokens": {
+    "input_tokens": 4,
+    "output_tokens": 282,
+    "cache_read_input_tokens": 22278,
+    "cache_creation_input_tokens": 6203
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 1,
+   "memcue_calls": 1,
+   "delivery": {
+    "note": true,
+    "reminder": true
+   },
+   "card_ids": [
+    "01M6EK0B4KNNVGCSHSH7JVWS7X"
+   ],
+   "base_copied": true,
+   "capture_run": "runs/capture/cand/D3/r1",
+   "capture_preference_stored": "yes",
+   "card_has_preference": true
+  },
+  {
+   "key": "793227d7bff005a4a406",
+   "phase": "probe",
+   "arm": "base",
+   "scenario": "D2",
+   "repeat": 3,
+   "kind": "probe",
+   "sha256": "f9a569b4aa5882af66c1379f969546bd73a0d0f79e53fd239a236722d6dc22ee",
+   "applied": "yes",
+   "pass": {
+    "A": {
+     "applied": "yes"
+    },
+    "B": {
+     "applied": "yes"
+    }
+   },
+   "cost_usd": 0.028789,
+   "seconds": 5.2,
+   "tokens": {
+    "input_tokens": 4,
+    "output_tokens": 296,
+    "cache_read_input_tokens": 22214,
+    "cache_creation_input_tokens": 5900
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 0,
+   "memcue_calls": 0,
+   "delivery": {
+    "note": true,
+    "reminder": false
+   },
+   "card_ids": [
+    "01M6EK5J9YYD267GH5YB1XW20E"
+   ],
+   "base_copied": true,
+   "capture_run": "runs/capture/base/D2/r3",
+   "capture_preference_stored": "yes",
+   "card_has_preference": true
+  },
+  {
+   "key": "7d13149cef267851b725",
+   "phase": "probe",
+   "arm": "cand",
+   "scenario": "D3",
+   "repeat": 2,
+   "kind": "probe",
+   "sha256": "4bc4815584fec8729132ef039978f17096b9155187708071a84a06208877f469",
+   "applied": "yes",
+   "pass": {
+    "A": {
+     "applied": "yes"
+    },
+    "B": {
+     "applied": "yes"
+    }
+   },
+   "cost_usd": 0.03046,
+   "seconds": 16.3,
+   "tokens": {
+    "input_tokens": 6,
+    "output_tokens": 209,
+    "cache_read_input_tokens": 36422,
+    "cache_creation_input_tokens": 6179
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 0,
+   "memcue_calls": 0,
+   "delivery": {
+    "note": true,
+    "reminder": true
+   },
+   "card_ids": [
+    "01M6EK40E6XZB6GGGTWZSW36HD"
+   ],
+   "base_copied": true,
+   "capture_run": "runs/capture/cand/D3/r2",
+   "capture_preference_stored": "yes",
+   "card_has_preference": true
+  },
+  {
+   "key": "7e3920df85e6c2679d2c",
+   "phase": "capture",
+   "arm": "cand",
+   "scenario": "C1",
+   "repeat": 1,
+   "kind": "control",
+   "sha256": "5adbca1a1da0ee5683be31333674e5d36955e356ee5d15be1d6951d62c28ad89",
+   "acknowledged": "yes",
+   "durable_capture": "no",
+   "time_limited_capture": "no",
+   "extra_useful": 0,
+   "noise": 0,
+   "pass": {
+    "A": {
+     "acknowledged": "yes",
+     "durable_capture": "no",
+     "time_limited_capture": "no",
+     "extra_useful": 0,
+     "noise": 0
+    },
+    "B": {
+     "acknowledged": "yes",
+     "durable_capture": "no",
+     "time_limited_capture": "no",
+     "extra_useful": 0,
+     "noise": 0
+    }
+   },
+   "cost_usd": 0.03224,
+   "seconds": 8.3,
+   "tokens": {
+    "input_tokens": 6,
+    "output_tokens": 394,
+    "cache_read_input_tokens": 36324,
+    "cache_creation_input_tokens": 6164
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 0,
+   "memcue_calls": 0,
+   "delivery": {
+    "note": true,
+    "reminder": true
+   },
+   "changes": 0,
+   "changes_after_turn1": 0,
+   "preference_facts": []
+  },
+  {
+   "key": "8032cd05414b5d57deeb",
+   "phase": "probe",
+   "arm": "cand",
+   "scenario": "D2",
+   "repeat": 1,
+   "kind": "probe",
+   "sha256": "0e4c1111817a7d3feda951e81b6989198adb06f66f12582a9c50e35212502007",
+   "applied": "yes",
+   "pass": {
+    "A": {
+     "applied": "yes"
+    },
+    "B": {
+     "applied": "yes"
+    }
+   },
+   "cost_usd": 0.02864,
+   "seconds": 5.2,
+   "tokens": {
+    "input_tokens": 4,
+    "output_tokens": 263,
+    "cache_read_input_tokens": 22258,
+    "cache_creation_input_tokens": 5944
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 0,
+   "memcue_calls": 0,
+   "delivery": {
+    "note": true,
+    "reminder": true
+   },
+   "card_ids": [
+    "01M6EJZKBV2YD5G5WK0FHW2RS0"
+   ],
+   "base_copied": true,
+   "capture_run": "runs/capture/cand/D2/r1",
+   "capture_preference_stored": "yes",
+   "card_has_preference": true
+  },
+  {
+   "key": "8646f355ce1f86f8f848",
+   "phase": "probe",
+   "arm": "cand",
+   "scenario": "D2",
+   "repeat": 2,
+   "kind": "probe",
+   "sha256": "afaab1a2633e086ce055dc125c22c570bc7cd24876cc9e3e3f608a586fca94d1",
+   "applied": "yes",
+   "pass": {
+    "A": {
+     "applied": "yes"
+    },
+    "B": {
+     "applied": "yes"
+    }
+   },
+   "cost_usd": 0.028586,
+   "seconds": 12.2,
+   "tokens": {
+    "input_tokens": 4,
+    "output_tokens": 258,
+    "cache_read_input_tokens": 22260,
+    "cache_creation_input_tokens": 5943
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 0,
+   "memcue_calls": 0,
+   "delivery": {
+    "note": true,
+    "reminder": true
+   },
+   "card_ids": [
+    "01M6EK3MBRJTW6BC6ED6238433"
+   ],
+   "base_copied": true,
+   "capture_run": "runs/capture/cand/D2/r2",
+   "capture_preference_stored": "yes",
+   "card_has_preference": true
+  },
+  {
+   "key": "87f89892a7acedd9920a",
+   "phase": "capture",
+   "arm": "base",
+   "scenario": "C1",
+   "repeat": 1,
+   "kind": "control",
+   "sha256": "91df85552757b0b359c9bc4e156425158036139ce89617809aa69c59ca823247",
+   "acknowledged": "yes",
+   "durable_capture": "no",
+   "time_limited_capture": "no",
+   "extra_useful": 0,
+   "noise": 0,
+   "pass": {
+    "A": {
+     "acknowledged": "yes",
+     "durable_capture": "no",
+     "time_limited_capture": "no",
+     "extra_useful": 0,
+     "noise": 0
+    },
+    "B": {
+     "acknowledged": "yes",
+     "durable_capture": "no",
+     "time_limited_capture": "no",
+     "extra_useful": 0,
+     "noise": 0
+    }
+   },
+   "cost_usd": 0.033947,
+   "seconds": 7.1,
+   "tokens": {
+    "input_tokens": 6,
+    "output_tokens": 549,
+    "cache_read_input_tokens": 36286,
+    "cache_creation_input_tokens": 6204
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 0,
+   "memcue_calls": 0,
+   "delivery": {
+    "note": true,
+    "reminder": false
+   },
+   "changes": 0,
+   "changes_after_turn1": 0,
+   "preference_facts": []
+  },
+  {
+   "key": "8c8be4eb6d22c8d7c31c",
+   "phase": "capture",
+   "arm": "cand",
+   "scenario": "D4",
+   "repeat": 3,
+   "kind": "durable",
+   "sha256": "19f5c63811b878ab3909de9968f5ed85ec13dfa958b07413f7a5a83a453c9768",
+   "acknowledged": "yes",
+   "preference_stored": "yes",
+   "preference_fact_ids": [
+    "01M6EK6T6AADE8WR51HPH9YH9W"
+   ],
+   "extra_useful": 0,
+   "noise": 0,
+   "pass": {
+    "A": {
+     "acknowledged": "yes",
+     "preference_stored": "yes",
+     "preference_fact_ids": [
+      "01M6EK6T6AADE8WR51HPH9YH9W"
+     ],
+     "extra_useful": 0,
+     "noise": 0
+    },
+    "B": {
+     "acknowledged": "yes",
+     "preference_stored": "yes",
+     "preference_fact_ids": [
+      "01M6EK6T6AADE8WR51HPH9YH9W"
+     ],
+     "extra_useful": 0,
+     "noise": 0
+    }
+   },
+   "cost_usd": 0.042557,
+   "seconds": 17.1,
+   "tokens": {
+    "input_tokens": 8,
+    "output_tokens": 1045,
+    "cache_read_input_tokens": 50872,
+    "cache_creation_input_tokens": 6751
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 1,
+   "memcue_calls": 1,
+   "delivery": {
+    "note": true,
+    "reminder": true
+   },
+   "changes": 1,
+   "changes_after_turn1": 0,
+   "preference_facts": [
+    {
+     "kind": "rule",
+     "scope": "repo:example.com/acme/brewlog",
+     "source": "user",
+     "expires": ""
+    }
+   ]
+  },
+  {
+   "key": "8d8f14cce2d7f7d3eeb6",
+   "phase": "capture",
+   "arm": "base",
+   "scenario": "D2",
+   "repeat": 1,
+   "kind": "durable",
+   "sha256": "7791824877abff2271d49f02c9fc71d7ac8cce7acaeb34a94def614d94f757c2",
+   "acknowledged": "yes",
+   "preference_stored": "yes",
+   "preference_fact_ids": [
+    "01M6EJZ5B5P0SHVRZBW8DBAVRP"
+   ],
+   "extra_useful": 0,
+   "noise": 0,
+   "pass": {
+    "A": {
+     "acknowledged": "yes",
+     "preference_stored": "yes",
+     "preference_fact_ids": [
+      "01M6EJZ5B5P0SHVRZBW8DBAVRP"
+     ],
+     "extra_useful": 0,
+     "noise": 0
+    },
+    "B": {
+     "acknowledged": "yes",
+     "preference_stored": "yes",
+     "preference_fact_ids": [
+      "01M6EJZ5B5P0SHVRZBW8DBAVRP"
+     ],
+     "extra_useful": 0,
+     "noise": 0
+    }
+   },
+   "cost_usd": 0.082961,
+   "seconds": 19.4,
+   "tokens": {
+    "input_tokens": 10,
+    "output_tokens": 957,
+    "cache_read_input_tokens": 58908,
+    "cache_creation_input_tokens": 16870
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 1,
+   "memcue_calls": 1,
+   "delivery": {
+    "note": true,
+    "reminder": false
+   },
+   "changes": 1,
+   "changes_after_turn1": 0,
+   "preference_facts": [
+    {
+     "kind": "rule",
+     "scope": "global",
+     "source": "user",
+     "expires": ""
+    }
+   ]
+  },
+  {
+   "key": "901e5b859971cf4ca944",
+   "phase": "capture",
+   "arm": "cand",
+   "scenario": "D1",
+   "repeat": 3,
+   "kind": "durable",
+   "sha256": "650971248bbf5298124d2b15d52bae4c312d74c95f3874e48ce8223325bd911e",
+   "acknowledged": "yes",
+   "preference_stored": "yes",
+   "preference_fact_ids": [
+    "01M6EK5FMH30SSWRVFSADKPTYK"
+   ],
+   "extra_useful": 0,
+   "noise": 0,
+   "pass": {
+    "A": {
+     "acknowledged": "yes",
+     "preference_stored": "yes",
+     "preference_fact_ids": [
+      "01M6EK5FMH30SSWRVFSADKPTYK"
+     ],
+     "extra_useful": 0,
+     "noise": 0
+    },
+    "B": {
+     "acknowledged": "yes",
+     "preference_stored": "yes",
+     "preference_fact_ids": [
+      "01M6EK5FMH30SSWRVFSADKPTYK"
+     ],
+     "extra_useful": 0,
+     "noise": 0
+    }
+   },
+   "cost_usd": 0.055752,
+   "seconds": 21.4,
+   "tokens": {
+    "input_tokens": 12,
+    "output_tokens": 1050,
+    "cache_read_input_tokens": 85641,
+    "cache_creation_input_tokens": 9166
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 1,
+   "memcue_calls": 2,
+   "delivery": {
+    "note": true,
+    "reminder": true
+   },
+   "changes": 1,
+   "changes_after_turn1": 0,
+   "preference_facts": [
+    {
+     "kind": "rule",
+     "scope": "global",
+     "source": "user",
+     "expires": ""
+    }
+   ]
+  },
+  {
+   "key": "90463abef4473c583e6e",
+   "phase": "probe",
+   "arm": "base",
+   "scenario": "D2",
+   "repeat": 2,
+   "kind": "probe",
+   "sha256": "91538bc6d94cb7ab8a52bfb3596d701f633fbffc16e62d525457d39cdc3c0026",
+   "applied": "yes",
+   "pass": {
+    "A": {
+     "applied": "yes"
+    },
+    "B": {
+     "applied": "yes"
+    }
+   },
+   "cost_usd": 0.028319,
+   "seconds": 7.5,
+   "tokens": {
+    "input_tokens": 4,
+    "output_tokens": 249,
+    "cache_read_input_tokens": 22214,
+    "cache_creation_input_tokens": 5900
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 0,
+   "memcue_calls": 0,
+   "delivery": {
+    "note": true,
+    "reminder": false
+   },
+   "card_ids": [
+    "01M6EK2SFBJKXFG6MWKW1ABS2P"
+   ],
+   "base_copied": true,
+   "capture_run": "runs/capture/base/D2/r2",
+   "capture_preference_stored": "yes",
+   "card_has_preference": true
+  },
+  {
+   "key": "9498b2471c431fe732e0",
+   "phase": "probe",
+   "arm": "cand",
+   "scenario": "D4",
+   "repeat": 2,
+   "kind": "probe",
+   "sha256": "eb62b88168d6636d40a4b71ae1d10b49394fe19feacc2be7327047e878e8b73b",
+   "applied": "no",
+   "pass": {
+    "A": {
+     "applied": "no"
+    },
+    "B": {
+     "applied": "no"
+    }
+   },
+   "cost_usd": 0.027361,
+   "seconds": 5.3,
+   "tokens": {
+    "input_tokens": 4,
+    "output_tokens": 160,
+    "cache_read_input_tokens": 22169,
+    "cache_creation_input_tokens": 5884
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 0,
+   "memcue_calls": 0,
+   "delivery": {
+    "note": true,
+    "reminder": true
+   },
+   "card_ids": [],
+   "base_copied": true,
+   "capture_run": "runs/capture/cand/D4/r2",
+   "capture_preference_stored": "yes",
+   "card_has_preference": false
+  },
+  {
+   "key": "95c08737eced8d2a8b9e",
+   "phase": "probe",
+   "arm": "base",
+   "scenario": "D2",
+   "repeat": 1,
+   "kind": "probe",
+   "sha256": "2599c7d18f568c78e0acef372d89a511ab05f2b76f1bca8c68e04282a4e23da4",
+   "applied": "yes",
+   "pass": {
+    "A": {
+     "applied": "yes"
+    },
+    "B": {
+     "applied": "yes"
+    }
+   },
+   "cost_usd": 0.028467,
+   "seconds": 5.8,
+   "tokens": {
+    "input_tokens": 4,
+    "output_tokens": 263,
+    "cache_read_input_tokens": 22213,
+    "cache_creation_input_tokens": 5902
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 0,
+   "memcue_calls": 0,
+   "delivery": {
+    "note": true,
+    "reminder": false
+   },
+   "card_ids": [
+    "01M6EJZ5B5P0SHVRZBW8DBAVRP"
+   ],
+   "base_copied": true,
+   "capture_run": "runs/capture/base/D2/r1",
+   "capture_preference_stored": "yes",
+   "card_has_preference": true
+  },
+  {
+   "key": "97fb529f8d82eee4f100",
+   "phase": "capture",
+   "arm": "base",
+   "scenario": "D3",
+   "repeat": 2,
+   "kind": "durable",
+   "sha256": "47d299acf0f23d5d3285efe87cd972fc79cff1b27dac6164f2a3b6849531a3a6",
+   "acknowledged": "yes",
+   "preference_stored": "yes",
+   "preference_fact_ids": [
+    "01M6EK3QD5W3X47W1XF58GSFQ5"
+   ],
+   "extra_useful": 0,
+   "noise": 0,
+   "pass": {
+    "A": {
+     "acknowledged": "yes",
+     "preference_stored": "yes",
+     "preference_fact_ids": [
+      "01M6EK3QD5W3X47W1XF58GSFQ5"
+     ],
+     "extra_useful": 0,
+     "noise": 0
+    },
+    "B": {
+     "acknowledged": "yes",
+     "preference_stored": "yes",
+     "preference_fact_ids": [
+      "01M6EK3QD5W3X47W1XF58GSFQ5"
+     ],
+     "extra_useful": 0,
+     "noise": 0
+    }
+   },
+   "cost_usd": 0.044662,
+   "seconds": 20.3,
+   "tokens": {
+    "input_tokens": 8,
+    "output_tokens": 1084,
+    "cache_read_input_tokens": 51423,
+    "cache_creation_input_tokens": 7166
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 1,
+   "memcue_calls": 2,
+   "delivery": {
+    "note": true,
+    "reminder": false
+   },
+   "changes": 1,
+   "changes_after_turn1": 0,
+   "preference_facts": [
+    {
+     "kind": "rule",
+     "scope": "repo:example.com/acme/backups",
+     "source": "user",
+     "expires": ""
+    }
+   ]
+  },
+  {
+   "key": "9cecae1dbf23b00e90f1",
+   "phase": "probe",
+   "arm": "base",
+   "scenario": "D4",
+   "repeat": 2,
+   "kind": "probe",
+   "sha256": "fcd69b93f6ffdf029e6398456eeaed929166f6aaf15f3b89fb96958acf45c371",
+   "applied": "no",
+   "pass": {
+    "A": {
+     "applied": "no"
+    },
+    "B": {
+     "applied": "no"
+    }
+   },
+   "cost_usd": 0.027188,
+   "seconds": 7.0,
+   "tokens": {
+    "input_tokens": 4,
+    "output_tokens": 160,
+    "cache_read_input_tokens": 22124,
+    "cache_creation_input_tokens": 5842
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 0,
+   "memcue_calls": 0,
+   "delivery": {
+    "note": true,
+    "reminder": false
+   },
+   "card_ids": [],
+   "base_copied": false,
+   "capture_run": "runs/capture/base/D4/r2",
+   "capture_preference_stored": "no",
+   "card_has_preference": false
+  },
+  {
+   "key": "9fe5fb5c5a67359727c7",
+   "phase": "capture",
+   "arm": "base",
+   "scenario": "D3",
+   "repeat": 3,
+   "kind": "durable",
+   "sha256": "81e621dc3407fd0351ad1ca187f50131197fa61d4df069310b527292ab349bb8",
+   "acknowledged": "yes",
+   "preference_stored": "yes",
+   "preference_fact_ids": [
+    "01M6EK671C2QMV8NH34GR52APR"
+   ],
+   "extra_useful": 0,
+   "noise": 0,
+   "pass": {
+    "A": {
+     "acknowledged": "yes",
+     "preference_stored": "yes",
+     "preference_fact_ids": [
+      "01M6EK671C2QMV8NH34GR52APR"
+     ],
+     "extra_useful": 0,
+     "noise": 0
+    },
+    "B": {
+     "acknowledged": "yes",
+     "preference_stored": "yes",
+     "preference_fact_ids": [
+      "01M6EK671C2QMV8NH34GR52APR"
+     ],
+     "extra_useful": 0,
+     "noise": 0
+    }
+   },
+   "cost_usd": 0.05676,
+   "seconds": 21.3,
+   "tokens": {
+    "input_tokens": 10,
+    "output_tokens": 1255,
+    "cache_read_input_tokens": 68861,
+    "cache_creation_input_tokens": 9326
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 2,
+   "memcue_calls": 2,
+   "delivery": {
+    "note": true,
+    "reminder": false
+   },
+   "changes": 1,
+   "changes_after_turn1": 0,
+   "preference_facts": [
+    {
+     "kind": "rule",
+     "scope": "global",
+     "source": "user",
+     "expires": ""
+    }
+   ]
+  },
+  {
+   "key": "a1c863693608036e5c22",
+   "phase": "capture",
+   "arm": "base",
+   "scenario": "C2",
+   "repeat": 2,
+   "kind": "control",
+   "sha256": "e398f40f78461144cb6c6098a041a3c6d0db9b6806ccfc4d88ead242881f2934",
+   "acknowledged": "yes",
+   "durable_capture": "no",
+   "time_limited_capture": "no",
+   "extra_useful": 0,
+   "noise": 0,
+   "pass": {
+    "A": {
+     "acknowledged": "yes",
+     "durable_capture": "no",
+     "time_limited_capture": "no",
+     "extra_useful": 0,
+     "noise": 0
+    },
+    "B": {
+     "acknowledged": "yes",
+     "durable_capture": "no",
+     "time_limited_capture": "no",
+     "extra_useful": 0,
+     "noise": 0
+    }
+   },
+   "cost_usd": 0.035615,
+   "seconds": 7.1,
+   "tokens": {
+    "input_tokens": 6,
+    "output_tokens": 659,
+    "cache_read_input_tokens": 36328,
+    "cache_creation_input_tokens": 6345
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 0,
+   "memcue_calls": 0,
+   "delivery": {
+    "note": true,
+    "reminder": false
+   },
+   "changes": 0,
+   "changes_after_turn1": 0,
+   "preference_facts": []
+  },
+  {
+   "key": "a36c03b297daa9fc6dbb",
+   "phase": "capture",
+   "arm": "cand",
+   "scenario": "C1",
+   "repeat": 2,
+   "kind": "control",
+   "sha256": "83f72e9460bd7da3d0e263256c5cff32df8eb3b12239f1559240d6958daf413b",
+   "acknowledged": "yes",
+   "durable_capture": "no",
+   "time_limited_capture": "no",
+   "extra_useful": 0,
+   "noise": 0,
+   "pass": {
+    "A": {
+     "acknowledged": "yes",
+     "durable_capture": "no",
+     "time_limited_capture": "no",
+     "extra_useful": 0,
+     "noise": 0
+    },
+    "B": {
+     "acknowledged": "yes",
+     "durable_capture": "no",
+     "time_limited_capture": "no",
+     "extra_useful": 0,
+     "noise": 0
+    }
+   },
+   "cost_usd": 0.032672,
+   "seconds": 8.8,
+   "tokens": {
+    "input_tokens": 6,
+    "output_tokens": 430,
+    "cache_read_input_tokens": 36363,
+    "cache_creation_input_tokens": 6181
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 0,
+   "memcue_calls": 0,
+   "delivery": {
+    "note": true,
+    "reminder": true
+   },
+   "changes": 0,
+   "changes_after_turn1": 0,
+   "preference_facts": []
+  },
+  {
+   "key": "a5983f530b71d1c2aa71",
+   "phase": "probe",
+   "arm": "base",
+   "scenario": "D3",
+   "repeat": 2,
+   "kind": "probe",
+   "sha256": "11fcd0b4487f3e99958fc5728adbd030549f5379178df316e03f506afe6edf11",
+   "applied": "partial",
+   "pass": {
+    "A": {
+     "applied": "partial"
+    },
+    "B": {
+     "applied": "partial"
+    }
+   },
+   "cost_usd": 0.030917,
+   "seconds": 9.9,
+   "tokens": {
+    "input_tokens": 4,
+    "output_tokens": 474,
+    "cache_read_input_tokens": 22132,
+    "cache_creation_input_tokens": 5989
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 1,
+   "memcue_calls": 1,
+   "delivery": {
+    "note": true,
+    "reminder": false
+   },
+   "card_ids": [],
+   "base_copied": true,
+   "capture_run": "runs/capture/base/D3/r2",
+   "capture_preference_stored": "yes",
+   "card_has_preference": false
+  },
+  {
+   "key": "a8ceb7c0c7f24a277cbc",
+   "phase": "capture",
+   "arm": "cand",
+   "scenario": "D2",
+   "repeat": 2,
+   "kind": "durable",
+   "sha256": "d98eeb3a5f5af9d2a7f135f606138c9f6becaf6386fae9ef26e49fd9de1bf5a2",
+   "acknowledged": "yes",
+   "preference_stored": "yes",
+   "preference_fact_ids": [
+    "01M6EK3MBRJTW6BC6ED6238433"
+   ],
+   "extra_useful": 0,
+   "noise": 0,
+   "pass": {
+    "A": {
+     "acknowledged": "yes",
+     "preference_stored": "yes",
+     "preference_fact_ids": [
+      "01M6EK3MBRJTW6BC6ED6238433"
+     ],
+     "extra_useful": 0,
+     "noise": 0
+    },
+    "B": {
+     "acknowledged": "yes",
+     "preference_stored": "yes",
+     "preference_fact_ids": [
+      "01M6EK3MBRJTW6BC6ED6238433"
+     ],
+     "extra_useful": 0,
+     "noise": 0
+    }
+   },
+   "cost_usd": 0.054881,
+   "seconds": 25.5,
+   "tokens": {
+    "input_tokens": 12,
+    "output_tokens": 1084,
+    "cache_read_input_tokens": 84771,
+    "cache_creation_input_tokens": 8885
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 2,
+   "memcue_calls": 3,
+   "delivery": {
+    "note": true,
+    "reminder": true
+   },
+   "changes": 1,
+   "changes_after_turn1": 0,
+   "preference_facts": [
+    {
+     "kind": "rule",
+     "scope": "global",
+     "source": "user",
+     "expires": ""
+    }
+   ]
+  },
+  {
+   "key": "ad0154e7bd88cb7de2c6",
+   "phase": "reference",
+   "arm": "base",
+   "scenario": "D4",
+   "repeat": 2,
+   "kind": "probe",
+   "sha256": "c54808a36a47fee904a45be924cb71f987819868c4568dc9922e7aea99f60e78",
+   "applied": "no",
+   "pass": {
+    "A": {
+     "applied": "no"
+    },
+    "B": {
+     "applied": "no"
+    }
+   },
+   "cost_usd": 0.026645,
+   "seconds": 3.0,
+   "tokens": {
+    "input_tokens": 4,
+    "output_tokens": 161,
+    "cache_read_input_tokens": 21992,
+    "cache_creation_input_tokens": 5707
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 0,
+   "memcue_calls": 0,
+   "delivery": {
+    "note": true,
+    "reminder": false
+   },
+   "card_ids": [],
+   "base_copied": false,
+   "capture_run": null
+  },
+  {
+   "key": "b51f0fe91c66b0f69f7f",
+   "phase": "capture",
+   "arm": "base",
+   "scenario": "C1",
+   "repeat": 2,
+   "kind": "control",
+   "sha256": "f79817d5073a00f000639533219f9461dcfa3568f808051b20ac49cc90c0f8ec",
+   "acknowledged": "yes",
+   "durable_capture": "no",
+   "time_limited_capture": "no",
+   "extra_useful": 0,
+   "noise": 0,
+   "pass": {
+    "A": {
+     "acknowledged": "yes",
+     "durable_capture": "no",
+     "time_limited_capture": "no",
+     "extra_useful": 0,
+     "noise": 0
+    },
+    "B": {
+     "acknowledged": "yes",
+     "durable_capture": "no",
+     "time_limited_capture": "no",
+     "extra_useful": 0,
+     "noise": 0
+    }
+   },
+   "cost_usd": 0.031801,
+   "seconds": 9.1,
+   "tokens": {
+    "input_tokens": 6,
+    "output_tokens": 370,
+    "cache_read_input_tokens": 36254,
+    "cache_creation_input_tokens": 6116
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 0,
+   "memcue_calls": 0,
+   "delivery": {
+    "note": true,
+    "reminder": false
+   },
+   "changes": 0,
+   "changes_after_turn1": 0,
+   "preference_facts": []
+  },
+  {
+   "key": "c01db53fa4b5f85398b1",
+   "phase": "probe",
+   "arm": "base",
+   "scenario": "D1",
+   "repeat": 3,
+   "kind": "probe",
+   "sha256": "63a0d3ed23fa2d100f7da530569b58dfcbe6ed37a5fa608739510c29e450a6e1",
+   "applied": "yes",
+   "pass": {
+    "A": {
+     "applied": "yes"
+    },
+    "B": {
+     "applied": "yes"
+    }
+   },
+   "cost_usd": 0.032631,
+   "seconds": 12.8,
+   "tokens": {
+    "input_tokens": 4,
+    "output_tokens": 638,
+    "cache_read_input_tokens": 22229,
+    "cache_creation_input_tokens": 6005
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 0,
+   "memcue_calls": 0,
+   "delivery": {
+    "note": true,
+    "reminder": false
+   },
+   "card_ids": [
+    "01M6EK584WHW0RE916C03K1H2C"
+   ],
+   "base_copied": true,
+   "capture_run": "runs/capture/base/D1/r3",
+   "capture_preference_stored": "yes",
+   "card_has_preference": true
+  },
+  {
+   "key": "c723c348b5b12fd9af16",
+   "phase": "probe",
+   "arm": "cand",
+   "scenario": "D1",
+   "repeat": 1,
+   "kind": "probe",
+   "sha256": "209c0878aaddc29aae47c4009db3654dc8fa906b449b04210017823252b09a64",
+   "applied": "yes",
+   "pass": {
+    "A": {
+     "applied": "yes"
+    },
+    "B": {
+     "applied": "yes"
+    }
+   },
+   "cost_usd": 0.031278,
+   "seconds": 8.0,
+   "tokens": {
+    "input_tokens": 4,
+    "output_tokens": 481,
+    "cache_read_input_tokens": 22279,
+    "cache_creation_input_tokens": 6058
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 0,
+   "memcue_calls": 0,
+   "delivery": {
+    "note": true,
+    "reminder": true
+   },
+   "card_ids": [
+    "01M6EJZ4WCVME5TK2E30YCN0C7"
+   ],
+   "base_copied": true,
+   "capture_run": "runs/capture/cand/D1/r1",
+   "capture_preference_stored": "yes",
+   "card_has_preference": true
+  },
+  {
+   "key": "c8de15153dfbb7f249a9",
+   "phase": "capture",
+   "arm": "cand",
+   "scenario": "C2",
+   "repeat": 1,
+   "kind": "control",
+   "sha256": "2cda4a7bf9424e89e1794184e3c3c6d9c372b0112a97057bd2bb5e2ca8c72da3",
+   "acknowledged": "yes",
+   "durable_capture": "no",
+   "time_limited_capture": "no",
+   "extra_useful": 0,
+   "noise": 0,
+   "pass": {
+    "A": {
+     "acknowledged": "yes",
+     "durable_capture": "no",
+     "time_limited_capture": "no",
+     "extra_useful": 0,
+     "noise": 0
+    },
+    "B": {
+     "acknowledged": "yes",
+     "durable_capture": "no",
+     "time_limited_capture": "no",
+     "extra_useful": 0,
+     "noise": 0
+    }
+   },
+   "cost_usd": 0.036462,
+   "seconds": 13.3,
+   "tokens": {
+    "input_tokens": 6,
+    "output_tokens": 716,
+    "cache_read_input_tokens": 36419,
+    "cache_creation_input_tokens": 6412
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 0,
+   "memcue_calls": 0,
+   "delivery": {
+    "note": true,
+    "reminder": true
+   },
+   "changes": 0,
+   "changes_after_turn1": 0,
+   "preference_facts": []
+  },
+  {
+   "key": "ca7f856f1403f916ea15",
+   "phase": "capture",
+   "arm": "cand",
+   "scenario": "C2",
+   "repeat": 3,
+   "kind": "control",
+   "sha256": "9ca13a58f05cc82e51f9aac945833f3bf6f4603ef7d4f74d94e2faacfe5032b3",
+   "acknowledged": "yes",
+   "durable_capture": "no",
+   "time_limited_capture": "no",
+   "extra_useful": 0,
+   "noise": 0,
+   "pass": {
+    "A": {
+     "acknowledged": "yes",
+     "durable_capture": "no",
+     "time_limited_capture": "no",
+     "extra_useful": 0,
+     "noise": 0
+    },
+    "B": {
+     "acknowledged": "yes",
+     "durable_capture": "no",
+     "time_limited_capture": "no",
+     "extra_useful": 0,
+     "noise": 0
+    }
+   },
+   "cost_usd": 0.036316,
+   "seconds": 14.4,
+   "tokens": {
+    "input_tokens": 6,
+    "output_tokens": 701,
+    "cache_read_input_tokens": 36423,
+    "cache_creation_input_tokens": 6413
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 0,
+   "memcue_calls": 0,
+   "delivery": {
+    "note": true,
+    "reminder": true
+   },
+   "changes": 0,
+   "changes_after_turn1": 0,
+   "preference_facts": []
+  },
+  {
+   "key": "cbde56f0c4af48d0926a",
+   "phase": "probe",
+   "arm": "cand",
+   "scenario": "D1",
+   "repeat": 2,
+   "kind": "probe",
+   "sha256": "b27c2b9494e352019c09f3f84979fa81ef272fc1c8aeb70f6b09e44597c2bda1",
+   "applied": "yes",
+   "pass": {
+    "A": {
+     "applied": "yes"
+    },
+    "B": {
+     "applied": "yes"
+    }
+   },
+   "cost_usd": 0.03214,
+   "seconds": 15.8,
+   "tokens": {
+    "input_tokens": 4,
+    "output_tokens": 570,
+    "cache_read_input_tokens": 22275,
+    "cache_creation_input_tokens": 6051
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 0,
+   "memcue_calls": 0,
+   "delivery": {
+    "note": true,
+    "reminder": true
+   },
+   "card_ids": [
+    "01M6EK37B8M1Q5QWA5GNJKTX6J"
+   ],
+   "base_copied": true,
+   "capture_run": "runs/capture/cand/D1/r2",
+   "capture_preference_stored": "yes",
+   "card_has_preference": true
+  },
+  {
+   "key": "cee158d74e8ead0c63e7",
+   "phase": "capture",
+   "arm": "base",
+   "scenario": "D4",
+   "repeat": 3,
+   "kind": "durable",
+   "sha256": "38ca1571adafd35576c2d0ade9847ff1b0c31133c733398b0965237a26eadc40",
+   "acknowledged": "yes",
+   "preference_stored": "no",
+   "preference_fact_ids": [],
+   "extra_useful": 0,
+   "noise": 0,
+   "pass": {
+    "A": {
+     "acknowledged": "yes",
+     "preference_stored": "no",
+     "preference_fact_ids": [],
+     "extra_useful": 0,
+     "noise": 0
+    },
+    "B": {
+     "acknowledged": "yes",
+     "preference_stored": "no",
+     "preference_fact_ids": [],
+     "extra_useful": 0,
+     "noise": 0
+    }
+   },
+   "cost_usd": 0.03991,
+   "seconds": 11.6,
+   "tokens": {
+    "input_tokens": 6,
+    "output_tokens": 1052,
+    "cache_read_input_tokens": 36341,
+    "cache_creation_input_tokens": 6436
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 1,
+   "memcue_calls": 1,
+   "delivery": {
+    "note": true,
+    "reminder": false
+   },
+   "changes": 0,
+   "changes_after_turn1": 0,
+   "preference_facts": []
+  },
+  {
+   "key": "cfc7f69b0db09774dd9b",
+   "phase": "reference",
+   "arm": "base",
+   "scenario": "D4",
+   "repeat": 1,
+   "kind": "probe",
+   "sha256": "fcd69b93f6ffdf029e6398456eeaed929166f6aaf15f3b89fb96958acf45c371",
+   "applied": "no",
+   "pass": {
+    "A": {
+     "applied": "no"
+    },
+    "B": {
+     "applied": "no"
+    }
+   },
+   "cost_usd": 0.026635,
+   "seconds": 5.4,
+   "tokens": {
+    "input_tokens": 4,
+    "output_tokens": 160,
+    "cache_read_input_tokens": 21989,
+    "cache_creation_input_tokens": 5707
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 0,
+   "memcue_calls": 0,
+   "delivery": {
+    "note": true,
+    "reminder": false
+   },
+   "card_ids": [],
+   "base_copied": false,
+   "capture_run": null
+  },
+  {
+   "key": "d41f533e77c7ed8cabe7",
+   "phase": "capture",
+   "arm": "base",
+   "scenario": "D1",
+   "repeat": 3,
+   "kind": "durable",
+   "sha256": "2593e9b21e877fc7fbdf17d44e4fddd0406314daad4049b2deeeb5586951a81e",
+   "acknowledged": "yes",
+   "preference_stored": "yes",
+   "preference_fact_ids": [
+    "01M6EK584WHW0RE916C03K1H2C"
+   ],
+   "extra_useful": 0,
+   "noise": 0,
+   "pass": {
+    "A": {
+     "acknowledged": "yes",
+     "preference_stored": "yes",
+     "preference_fact_ids": [
+      "01M6EK584WHW0RE916C03K1H2C"
+     ],
+     "extra_useful": 0,
+     "noise": 0
+    },
+    "B": {
+     "acknowledged": "yes",
+     "preference_stored": "yes",
+     "preference_fact_ids": [
+      "01M6EK584WHW0RE916C03K1H2C"
+     ],
+     "extra_useful": 0,
+     "noise": 0
+    }
+   },
+   "cost_usd": 0.059489,
+   "seconds": 13.7,
+   "tokens": {
+    "input_tokens": 12,
+    "output_tokens": 1321,
+    "cache_read_input_tokens": 86027,
+    "cache_creation_input_tokens": 9413
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 1,
+   "memcue_calls": 2,
+   "delivery": {
+    "note": true,
+    "reminder": false
+   },
+   "changes": 1,
+   "changes_after_turn1": 0,
+   "preference_facts": [
+    {
+     "kind": "rule",
+     "scope": "global",
+     "source": "user",
+     "expires": ""
+    }
+   ]
+  },
+  {
+   "key": "d894c92fa14e360f40c4",
+   "phase": "reference",
+   "arm": "base",
+   "scenario": "D3",
+   "repeat": 1,
+   "kind": "probe",
+   "sha256": "226b46882db67b42eb0a23117413597c013365b15094dabb098bdfaba5152bb2",
+   "applied": "partial",
+   "pass": {
+    "A": {
+     "applied": "partial"
+    },
+    "B": {
+     "applied": "partial"
+    }
+   },
+   "cost_usd": 0.030935,
+   "seconds": 11.7,
+   "tokens": {
+    "input_tokens": 4,
+    "output_tokens": 515,
+    "cache_read_input_tokens": 22133,
+    "cache_creation_input_tokens": 5891
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 1,
+   "memcue_calls": 1,
+   "delivery": {
+    "note": true,
+    "reminder": false
+   },
+   "card_ids": [],
+   "base_copied": false,
+   "capture_run": null
+  },
+  {
+   "key": "e092e64c1cc75189fa16",
+   "phase": "capture",
+   "arm": "base",
+   "scenario": "D3",
+   "repeat": 1,
+   "kind": "durable",
+   "sha256": "f23b03c9824818ca250e990c445b8f913b569fba685bb6976e22182e2af463e2",
+   "acknowledged": "yes",
+   "preference_stored": "no",
+   "preference_fact_ids": [],
+   "extra_useful": 0,
+   "noise": 0,
+   "pass": {
+    "A": {
+     "acknowledged": "yes",
+     "preference_stored": "no",
+     "preference_fact_ids": [],
+     "extra_useful": 0,
+     "noise": 0
+    },
+    "B": {
+     "acknowledged": "yes",
+     "preference_stored": "no",
+     "preference_fact_ids": [],
+     "extra_useful": 0,
+     "noise": 0
+    }
+   },
+   "cost_usd": 0.03722,
+   "seconds": 27.4,
+   "tokens": {
+    "input_tokens": 6,
+    "output_tokens": 688,
+    "cache_read_input_tokens": 36396,
+    "cache_creation_input_tokens": 6672
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 1,
+   "memcue_calls": 1,
+   "delivery": {
+    "note": true,
+    "reminder": false
+   },
+   "changes": 0,
+   "changes_after_turn1": 0,
+   "preference_facts": []
+  },
+  {
+   "key": "e2ff5fc44ca3854f4cd5",
+   "phase": "probe",
+   "arm": "cand",
+   "scenario": "D3",
+   "repeat": 3,
+   "kind": "probe",
+   "sha256": "86baf1a4dd78609efcf56b7905aa6b17f1f69b08a27a4144e079024aa24981cf",
+   "applied": "yes",
+   "pass": {
+    "A": {
+     "applied": "yes"
+    },
+    "B": {
+     "applied": "yes"
+    }
+   },
+   "cost_usd": 0.02853,
+   "seconds": 6.5,
+   "tokens": {
+    "input_tokens": 4,
+    "output_tokens": 175,
+    "cache_read_input_tokens": 22278,
+    "cache_creation_input_tokens": 6136
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 1,
+   "memcue_calls": 1,
+   "delivery": {
+    "note": true,
+    "reminder": true
+   },
+   "card_ids": [
+    "01M6EK6B9494QPZXS4WZ52JZH9"
+   ],
+   "base_copied": true,
+   "capture_run": "runs/capture/cand/D3/r3",
+   "capture_preference_stored": "yes",
+   "card_has_preference": true
+  },
+  {
+   "key": "e57bdfbfbccaf0a50aad",
+   "phase": "probe",
+   "arm": "cand",
+   "scenario": "D4",
+   "repeat": 1,
+   "kind": "probe",
+   "sha256": "c35e703ed77494bdf7ec41ae95513ec7c68fdb7a1ec2e610aa74927a65697fe8",
+   "applied": "no",
+   "pass": {
+    "A": {
+     "applied": "no"
+    },
+    "B": {
+     "applied": "no"
+    }
+   },
+   "cost_usd": 0.027269,
+   "seconds": 3.1,
+   "tokens": {
+    "input_tokens": 4,
+    "output_tokens": 150,
+    "cache_read_input_tokens": 22168,
+    "cache_creation_input_tokens": 5886
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 0,
+   "memcue_calls": 0,
+   "delivery": {
+    "note": true,
+    "reminder": true
+   },
+   "card_ids": [],
+   "base_copied": false,
+   "capture_run": "runs/capture/cand/D4/r1",
+   "capture_preference_stored": "no",
+   "card_has_preference": false
+  },
+  {
+   "key": "e696ae453dff68c643da",
+   "phase": "reference",
+   "arm": "base",
+   "scenario": "D3",
+   "repeat": 2,
+   "kind": "probe",
+   "sha256": "99d5c471bf267f4376979b6d96402223543895d7ff499d179e3efc0efc23f6f7",
+   "applied": "partial",
+   "pass": {
+    "A": {
+     "applied": "partial"
+    },
+    "B": {
+     "applied": "partial"
+    }
+   },
+   "cost_usd": 0.032279,
+   "seconds": 8.9,
+   "tokens": {
+    "input_tokens": 4,
+    "output_tokens": 583,
+    "cache_read_input_tokens": 22132,
+    "cache_creation_input_tokens": 6057
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 1,
+   "memcue_calls": 1,
+   "delivery": {
+    "note": true,
+    "reminder": false
+   },
+   "card_ids": [],
+   "base_copied": false,
+   "capture_run": null
+  },
+  {
+   "key": "e7e8de222bc673728a05",
+   "phase": "capture",
+   "arm": "cand",
+   "scenario": "C1",
+   "repeat": 3,
+   "kind": "control",
+   "sha256": "9428a60f2e100f6e4955a7cdfe6dbf1fb769ebd0012f95162280bacaa7e13cd6",
+   "acknowledged": "yes",
+   "durable_capture": "no",
+   "time_limited_capture": "no",
+   "extra_useful": 0,
+   "noise": 0,
+   "pass": {
+    "A": {
+     "acknowledged": "yes",
+     "durable_capture": "no",
+     "time_limited_capture": "no",
+     "extra_useful": 0,
+     "noise": 0
+    },
+    "B": {
+     "acknowledged": "yes",
+     "durable_capture": "no",
+     "time_limited_capture": "no",
+     "extra_useful": 0,
+     "noise": 0
+    }
+   },
+   "cost_usd": 0.03467,
+   "seconds": 27.9,
+   "tokens": {
+    "input_tokens": 8,
+    "output_tokens": 428,
+    "cache_read_input_tokens": 50539,
+    "cache_creation_input_tokens": 6330
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 0,
+   "memcue_calls": 0,
+   "delivery": {
+    "note": true,
+    "reminder": true
+   },
+   "changes": 0,
+   "changes_after_turn1": 0,
+   "preference_facts": []
+  },
+  {
+   "key": "f2afaed53e99a02a25e0",
+   "phase": "probe",
+   "arm": "base",
+   "scenario": "D3",
+   "repeat": 3,
+   "kind": "probe",
+   "sha256": "f7cf261dfcaccf6170147b8a7fe402a313faf77dec96340505a23140a752e2a6",
+   "applied": "yes",
+   "pass": {
+    "A": {
+     "applied": "yes"
+    },
+    "B": {
+     "applied": "yes"
+    }
+   },
+   "cost_usd": 0.028736,
+   "seconds": 6.9,
+   "tokens": {
+    "input_tokens": 4,
+    "output_tokens": 219,
+    "cache_read_input_tokens": 22221,
+    "cache_creation_input_tokens": 6079
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 1,
+   "memcue_calls": 1,
+   "delivery": {
+    "note": true,
+    "reminder": false
+   },
+   "card_ids": [
+    "01M6EK671C2QMV8NH34GR52APR"
+   ],
+   "base_copied": true,
+   "capture_run": "runs/capture/base/D3/r3",
+   "capture_preference_stored": "yes",
+   "card_has_preference": true
+  },
+  {
+   "key": "f45f45a915cca8e4e778",
+   "phase": "capture",
+   "arm": "base",
+   "scenario": "D1",
+   "repeat": 1,
+   "kind": "durable",
+   "sha256": "a74e384c9d90d4d7b8402de689c64b1e48cebbfc269a5be429baf1cd6121f0e2",
+   "acknowledged": "yes",
+   "preference_stored": "yes",
+   "preference_fact_ids": [
+    "01M6EJZCQKXV2S1BXRWMEGV3R7"
+   ],
+   "extra_useful": 0,
+   "noise": 0,
+   "pass": {
+    "A": {
+     "acknowledged": "yes",
+     "preference_stored": "yes",
+     "preference_fact_ids": [
+      "01M6EJZCQKXV2S1BXRWMEGV3R7"
+     ],
+     "extra_useful": 0,
+     "noise": 0
+    },
+    "B": {
+     "acknowledged": "yes",
+     "preference_stored": "yes",
+     "preference_fact_ids": [
+      "01M6EJZCQKXV2S1BXRWMEGV3R7"
+     ],
+     "extra_useful": 0,
+     "noise": 0
+    }
+   },
+   "cost_usd": 0.090449,
+   "seconds": 27.7,
+   "tokens": {
+    "input_tokens": 12,
+    "output_tokens": 1232,
+    "cache_read_input_tokens": 77573,
+    "cache_creation_input_tokens": 17587
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 1,
+   "memcue_calls": 2,
+   "delivery": {
+    "note": true,
+    "reminder": false
+   },
+   "changes": 1,
+   "changes_after_turn1": 0,
+   "preference_facts": [
+    {
+     "kind": "rule",
+     "scope": "global",
+     "source": "user",
+     "expires": ""
+    }
+   ]
+  },
+  {
+   "key": "f526a65d14a56f246c6a",
+   "phase": "capture",
+   "arm": "base",
+   "scenario": "D4",
+   "repeat": 1,
+   "kind": "durable",
+   "sha256": "321ffe86d6936389aeeeb8bbdf0e66490b72e9f749474459db0e36a9cb701c27",
+   "acknowledged": "yes",
+   "preference_stored": "no",
+   "preference_fact_ids": [],
+   "extra_useful": 0,
+   "noise": 0,
+   "pass": {
+    "A": {
+     "acknowledged": "yes",
+     "preference_stored": "no",
+     "preference_fact_ids": [],
+     "extra_useful": 0,
+     "noise": 0
+    },
+    "B": {
+     "acknowledged": "yes",
+     "preference_stored": "no",
+     "preference_fact_ids": [],
+     "extra_useful": 0,
+     "noise": 0
+    }
+   },
+   "cost_usd": 0.039996,
+   "seconds": 15.4,
+   "tokens": {
+    "input_tokens": 6,
+    "output_tokens": 1038,
+    "cache_read_input_tokens": 36404,
+    "cache_creation_input_tokens": 6491
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 1,
+   "memcue_calls": 1,
+   "delivery": {
+    "note": true,
+    "reminder": false
+   },
+   "changes": 0,
+   "changes_after_turn1": 0,
+   "preference_facts": []
+  },
+  {
+   "key": "f5464684029fcaab1947",
+   "phase": "probe",
+   "arm": "cand",
+   "scenario": "D4",
+   "repeat": 3,
+   "kind": "probe",
+   "sha256": "be28352d08e175eee27e249edbc51d0719c56ef14b4a0f707b0e915ea765391c",
+   "applied": "no",
+   "pass": {
+    "A": {
+     "applied": "no"
+    },
+    "B": {
+     "applied": "no"
+    }
+   },
+   "cost_usd": 0.027419,
+   "seconds": 11.4,
+   "tokens": {
+    "input_tokens": 4,
+    "output_tokens": 165,
+    "cache_read_input_tokens": 22168,
+    "cache_creation_input_tokens": 5886
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 0,
+   "memcue_calls": 0,
+   "delivery": {
+    "note": true,
+    "reminder": true
+   },
+   "card_ids": [],
+   "base_copied": true,
+   "capture_run": "runs/capture/cand/D4/r3",
+   "capture_preference_stored": "yes",
+   "card_has_preference": false
+  },
+  {
+   "key": "fa33c83cfa93d4edfa66",
+   "phase": "capture",
+   "arm": "cand",
+   "scenario": "C2",
+   "repeat": 2,
+   "kind": "control",
+   "sha256": "472651e79debbb2243711d1e735b98b4dbf2c6b28e7d192455ec6ee4194d19f3",
+   "acknowledged": "yes",
+   "durable_capture": "no",
+   "time_limited_capture": "no",
+   "extra_useful": 0,
+   "noise": 0,
+   "pass": {
+    "A": {
+     "acknowledged": "yes",
+     "durable_capture": "no",
+     "time_limited_capture": "no",
+     "extra_useful": 0,
+     "noise": 0
+    },
+    "B": {
+     "acknowledged": "yes",
+     "durable_capture": "no",
+     "time_limited_capture": "no",
+     "extra_useful": 0,
+     "noise": 0
+    }
+   },
+   "cost_usd": 0.035666,
+   "seconds": 7.2,
+   "tokens": {
+    "input_tokens": 6,
+    "output_tokens": 646,
+    "cache_read_input_tokens": 36423,
+    "cache_creation_input_tokens": 6388
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 0,
+   "memcue_calls": 0,
+   "delivery": {
+    "note": true,
+    "reminder": true
+   },
+   "changes": 0,
+   "changes_after_turn1": 0,
+   "preference_facts": []
+  },
+  {
+   "key": "fd8157fb6a92ddefbb5b",
+   "phase": "capture",
+   "arm": "cand",
+   "scenario": "D3",
+   "repeat": 2,
+   "kind": "durable",
+   "sha256": "13f9337a973f3f0a77c36f12d4221f012b7e78596af6fae7c3d7f7125800e162",
+   "acknowledged": "yes",
+   "preference_stored": "yes",
+   "preference_fact_ids": [
+    "01M6EK40E6XZB6GGGTWZSW36HD"
+   ],
+   "extra_useful": 0,
+   "noise": 0,
+   "pass": {
+    "A": {
+     "acknowledged": "yes",
+     "preference_stored": "yes",
+     "preference_fact_ids": [
+      "01M6EK40E6XZB6GGGTWZSW36HD"
+     ],
+     "extra_useful": 0,
+     "noise": 0
+    },
+    "B": {
+     "acknowledged": "yes",
+     "preference_stored": "yes",
+     "preference_fact_ids": [
+      "01M6EK40E6XZB6GGGTWZSW36HD"
+     ],
+     "extra_useful": 0,
+     "noise": 0
+    }
+   },
+   "cost_usd": 0.055327,
+   "seconds": 22.0,
+   "tokens": {
+    "input_tokens": 10,
+    "output_tokens": 1175,
+    "cache_read_input_tokens": 68487,
+    "cache_creation_input_tokens": 9177
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 2,
+   "memcue_calls": 2,
+   "delivery": {
+    "note": true,
+    "reminder": true
+   },
+   "changes": 1,
+   "changes_after_turn1": 0,
+   "preference_facts": [
+    {
+     "kind": "rule",
+     "scope": "global",
+     "source": "user",
+     "expires": ""
+    }
+   ]
+  },
+  {
+   "key": "fe8c700f72feeab889b3",
+   "phase": "capture",
+   "arm": "base",
+   "scenario": "D1",
+   "repeat": 2,
+   "kind": "durable",
+   "sha256": "77b21db5c3b026fb92b659b29d3ba744f8536d31985ee54d15da7fa21b30213f",
+   "acknowledged": "yes",
+   "preference_stored": "yes",
+   "preference_fact_ids": [
+    "01M6EK32SMN8H2VQJ3X3AFED28"
+   ],
+   "extra_useful": 0,
+   "noise": 0,
+   "pass": {
+    "A": {
+     "acknowledged": "yes",
+     "preference_stored": "yes",
+     "preference_fact_ids": [
+      "01M6EK32SMN8H2VQJ3X3AFED28"
+     ],
+     "extra_useful": 0,
+     "noise": 0
+    },
+    "B": {
+     "acknowledged": "yes",
+     "preference_stored": "yes",
+     "preference_fact_ids": [
+      "01M6EK32SMN8H2VQJ3X3AFED28"
+     ],
+     "extra_useful": 0,
+     "noise": 0
+    }
+   },
+   "cost_usd": 0.048991,
+   "seconds": 27.3,
+   "tokens": {
+    "input_tokens": 10,
+    "output_tokens": 1182,
+    "cache_read_input_tokens": 66992,
+    "cache_creation_input_tokens": 7613
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 1,
+   "memcue_calls": 2,
+   "delivery": {
+    "note": true,
+    "reminder": false
+   },
+   "changes": 1,
+   "changes_after_turn1": 0,
+   "preference_facts": [
+    {
+     "kind": "rule",
+     "scope": "global",
+     "source": "user",
+     "expires": ""
+    }
+   ]
+  },
+  {
+   "key": "ff5b06bc3d9d622eb01e",
+   "phase": "capture",
+   "arm": "cand",
+   "scenario": "D1",
+   "repeat": 2,
+   "kind": "durable",
+   "sha256": "5431c7c350be2003fcb0d3ad52d98b8668c40580b9681dd544afbfbc375276aa",
+   "acknowledged": "yes",
+   "preference_stored": "yes",
+   "preference_fact_ids": [
+    "01M6EK37B8M1Q5QWA5GNJKTX6J"
+   ],
+   "extra_useful": 0,
+   "noise": 0,
+   "pass": {
+    "A": {
+     "acknowledged": "yes",
+     "preference_stored": "yes",
+     "preference_fact_ids": [
+      "01M6EK37B8M1Q5QWA5GNJKTX6J"
+     ],
+     "extra_useful": 0,
+     "noise": 0
+    },
+    "B": {
+     "acknowledged": "yes",
+     "preference_stored": "yes",
+     "preference_fact_ids": [
+      "01M6EK37B8M1Q5QWA5GNJKTX6J"
+     ],
+     "extra_useful": 0,
+     "noise": 0
+    }
+   },
+   "cost_usd": 0.055995,
+   "seconds": 32.8,
+   "tokens": {
+    "input_tokens": 12,
+    "output_tokens": 1069,
+    "cache_read_input_tokens": 85646,
+    "cache_creation_input_tokens": 9179
+   },
+   "models": [
+    "claude-sonnet-5-5"
+   ],
+   "searches": 1,
+   "memcue_calls": 2,
+   "delivery": {
+    "note": true,
+    "reminder": true
+   },
+   "changes": 1,
+   "changes_after_turn1": 0,
+   "preference_facts": [
+    {
+     "kind": "rule",
+     "scope": "global",
+     "source": "user",
+     "expires": ""
+    }
+   ]
+  }
+ ],
+ "aggregate": {
+  "capture_durable": {
+   "base": {
+    "acknowledged": {
+     "yes": 12,
+     "n": 12
+    },
+    "preference_stored": {
+     "no": 4,
+     "yes": 8,
+     "n": 12
+    },
+    "stored_when_acknowledged": {
+     "no": 4,
+     "yes": 8,
+     "n": 12
+    },
+    "stored_when_not_acknowledged": {
+     "n": 0
+    },
+    "stored_global": 7,
+    "stored_rule_user": 8,
+    "preference_facts": 8,
+    "fact_kinds": {
+     "rule/global/user": 7,
+     "rule/repo:example.com/acme/backups/user": 1,
+     "n": 8
+    },
+    "changes": 8,
+    "extra_useful": 0,
+    "extra_useful_not_agreed": 0,
+    "noise": 0,
+    "noise_not_agreed": 0,
+    "money": {
+     "runs": 12,
+     "cost_usd": 0.645,
+     "mean_seconds": 20.4,
+     "tokens": {
+      "input_tokens": 110,
+      "output_tokens": 12700,
+      "cache_read_input_tokens": 720886,
+      "cache_creation_input_tokens": 111424
+     },
+     "searched": 11,
+     "note_delivered": 12,
+     "reminder_delivered": 0
+    }
+   },
+   "cand": {
+    "acknowledged": {
+     "yes": 12,
+     "n": 12
+    },
+    "preference_stored": {
+     "yes": 11,
+     "no": 1,
+     "n": 12
+    },
+    "stored_when_acknowledged": {
+     "yes": 11,
+     "no": 1,
+     "n": 12
+    },
+    "stored_when_not_acknowledged": {
+     "n": 0
+    },
+    "stored_global": 9,
+    "stored_rule_user": 11,
+    "preference_facts": 11,
+    "fact_kinds": {
+     "rule/global/user": 9,
+     "rule/repo:example.com/acme/brewlog/user": 2,
+     "n": 11
+    },
+    "changes": 11,
+    "extra_useful": 0,
+    "extra_useful_not_agreed": 0,
+    "noise": 0,
+    "noise_not_agreed": 0,
+    "money": {
+     "runs": 12,
+     "cost_usd": 0.6536,
+     "mean_seconds": 21.0,
+     "tokens": {
+      "input_tokens": 124,
+      "output_tokens": 12957,
+      "cache_read_input_tokens": 846981,
+      "cache_creation_input_tokens": 109773
+     },
+     "searched": 11,
+     "note_delivered": 12,
+     "reminder_delivered": 12
+    }
+   }
+  },
+  "capture_control": {
+   "base": {
+    "acknowledged": {
+     "yes": 6,
+     "n": 6
+    },
+    "durable_capture": {
+     "no": 6,
+     "n": 6
+    },
+    "time_limited_capture": {
+     "no": 6,
+     "n": 6
+    },
+    "runs_with_changes": 0,
+    "changes": 0,
+    "noise": 0,
+    "noise_not_agreed": 0,
+    "money": {
+     "runs": 6,
+     "cost_usd": 0.2068,
+     "mean_seconds": 10.2,
+     "tokens": {
+      "input_tokens": 38,
+      "output_tokens": 3296,
+      "cache_read_input_tokens": 231924,
+      "cache_creation_input_tokens": 37653
+     },
+     "searched": 0,
+     "note_delivered": 6,
+     "reminder_delivered": 0
+    }
+   },
+   "cand": {
+    "acknowledged": {
+     "yes": 6,
+     "n": 6
+    },
+    "durable_capture": {
+     "no": 6,
+     "n": 6
+    },
+    "time_limited_capture": {
+     "no": 6,
+     "n": 6
+    },
+    "runs_with_changes": 0,
+    "changes": 0,
+    "noise": 0,
+    "noise_not_agreed": 0,
+    "money": {
+     "runs": 6,
+     "cost_usd": 0.208,
+     "mean_seconds": 13.3,
+     "tokens": {
+      "input_tokens": 38,
+      "output_tokens": 3315,
+      "cache_read_input_tokens": 232491,
+      "cache_creation_input_tokens": 37888
+     },
+     "searched": 0,
+     "note_delivered": 6,
+     "reminder_delivered": 6
+    }
+   }
+  },
+  "probe": {
+   "base": {
+    "applied": {
+     "no": 3,
+     "partial": 2,
+     "yes": 7,
+     "n": 12
+    },
+    "applied_when_card_had_it": {
+     "yes": 7,
+     "n": 7
+    },
+    "applied_when_card_lacked_it": {
+     "no": 3,
+     "partial": 2,
+     "n": 5
+    },
+    "money": {
+     "runs": 12,
+     "cost_usd": 0.354,
+     "mean_seconds": 7.4,
+     "tokens": {
+      "input_tokens": 48,
+      "output_tokens": 4220,
+      "cache_read_input_tokens": 266175,
+      "cache_creation_input_tokens": 71284
+     },
+     "searched": 3,
+     "note_delivered": 12,
+     "reminder_delivered": 0
+    }
+   },
+   "cand": {
+    "applied": {
+     "yes": 9,
+     "no": 3,
+     "n": 12
+    },
+    "applied_when_card_had_it": {
+     "yes": 9,
+     "n": 9
+    },
+    "applied_when_card_lacked_it": {
+     "no": 3,
+     "n": 3
+    },
+    "money": {
+     "runs": 12,
+     "cost_usd": 0.3518,
+     "mean_seconds": 8.9,
+     "tokens": {
+      "input_tokens": 50,
+      "output_tokens": 3491,
+      "cache_read_input_tokens": 281094,
+      "cache_creation_input_tokens": 72168
+     },
+     "searched": 2,
+     "note_delivered": 12,
+     "reminder_delivered": 12
+    }
+   }
+  },
+  "reference": {
+   "base": {
+    "applied": {
+     "no": 6,
+     "disputed": 3,
+     "partial": 3,
+     "n": 12
+    },
+    "applied_when_card_had_it": {
+     "n": 0
+    },
+    "applied_when_card_lacked_it": {
+     "n": 0
+    },
+    "money": {
+     "runs": 12,
+     "cost_usd": 0.3579,
+     "mean_seconds": 21.6,
+     "tokens": {
+      "input_tokens": 50,
+      "output_tokens": 4831,
+      "cache_read_input_tokens": 279117,
+      "cache_creation_input_tokens": 70391
+     },
+     "searched": 3,
+     "note_delivered": 12,
+     "reminder_delivered": 0
+    }
+   }
+  },
+  "per_scenario": {
+   "capture/C2/base": {
+    "label": "durable_capture",
+    "values": [
+     "no",
+     "no",
+     "no"
+    ],
+    "acknowledged": [
+     "yes",
+     "yes",
+     "yes"
+    ]
+   },
+   "capture/D3/cand": {
+    "label": "preference_stored",
+    "values": [
+     "yes",
+     "yes",
+     "yes"
+    ],
+    "acknowledged": [
+     "yes",
+     "yes",
+     "yes"
+    ]
+   },
+   "reference/D2/base": {
+    "label": "applied",
+    "values": [
+     "no",
+     "no",
+     "no"
+    ],
+    "acknowledged": []
+   },
+   "capture/D4/cand": {
+    "label": "preference_stored",
+    "values": [
+     "yes",
+     "no",
+     "yes"
+    ],
+    "acknowledged": [
+     "yes",
+     "yes",
+     "yes"
+    ]
+   },
+   "probe/D4/base": {
+    "label": "applied",
+    "values": [
+     "no",
+     "no",
+     "no"
+    ],
+    "acknowledged": []
+   },
+   "capture/D4/base": {
+    "label": "preference_stored",
+    "values": [
+     "no",
+     "no",
+     "no"
+    ],
+    "acknowledged": [
+     "yes",
+     "yes",
+     "yes"
+    ]
+   },
+   "reference/D1/base": {
+    "label": "applied",
+    "values": [
+     "disputed",
+     "disputed",
+     "disputed"
+    ],
+    "acknowledged": []
+   },
+   "probe/D2/cand": {
+    "label": "applied",
+    "values": [
+     "yes",
+     "yes",
+     "yes"
+    ],
+    "acknowledged": []
+   },
+   "probe/D3/base": {
+    "label": "applied",
+    "values": [
+     "partial",
+     "partial",
+     "yes"
+    ],
+    "acknowledged": []
+   },
+   "capture/D2/cand": {
+    "label": "preference_stored",
+    "values": [
+     "yes",
+     "yes",
+     "yes"
+    ],
+    "acknowledged": [
+     "yes",
+     "yes",
+     "yes"
+    ]
+   },
+   "capture/D1/cand": {
+    "label": "preference_stored",
+    "values": [
+     "yes",
+     "yes",
+     "yes"
+    ],
+    "acknowledged": [
+     "yes",
+     "yes",
+     "yes"
+    ]
+   },
+   "reference/D4/base": {
+    "label": "applied",
+    "values": [
+     "no",
+     "no",
+     "no"
+    ],
+    "acknowledged": []
+   },
+   "probe/D1/base": {
+    "label": "applied",
+    "values": [
+     "yes",
+     "yes",
+     "yes"
+    ],
+    "acknowledged": []
+   },
+   "capture/D2/base": {
+    "label": "preference_stored",
+    "values": [
+     "yes",
+     "yes",
+     "yes"
+    ],
+    "acknowledged": [
+     "yes",
+     "yes",
+     "yes"
+    ]
+   },
+   "capture/C1/base": {
+    "label": "durable_capture",
+    "values": [
+     "no",
+     "no",
+     "no"
+    ],
+    "acknowledged": [
+     "yes",
+     "yes",
+     "yes"
+    ]
+   },
+   "reference/D3/base": {
+    "label": "applied",
+    "values": [
+     "partial",
+     "partial",
+     "partial"
+    ],
+    "acknowledged": []
+   },
+   "probe/D1/cand": {
+    "label": "applied",
+    "values": [
+     "yes",
+     "yes",
+     "yes"
+    ],
+    "acknowledged": []
+   },
+   "probe/D3/cand": {
+    "label": "applied",
+    "values": [
+     "yes",
+     "yes",
+     "yes"
+    ],
+    "acknowledged": []
+   },
+   "probe/D2/base": {
+    "label": "applied",
+    "values": [
+     "yes",
+     "yes",
+     "yes"
+    ],
+    "acknowledged": []
+   },
+   "capture/C1/cand": {
+    "label": "durable_capture",
+    "values": [
+     "no",
+     "no",
+     "no"
+    ],
+    "acknowledged": [
+     "yes",
+     "yes",
+     "yes"
+    ]
+   },
+   "probe/D4/cand": {
+    "label": "applied",
+    "values": [
+     "no",
+     "no",
+     "no"
+    ],
+    "acknowledged": []
+   },
+   "capture/D3/base": {
+    "label": "preference_stored",
+    "values": [
+     "yes",
+     "yes",
+     "no"
+    ],
+    "acknowledged": [
+     "yes",
+     "yes",
+     "yes"
+    ]
+   },
+   "capture/C2/cand": {
+    "label": "durable_capture",
+    "values": [
+     "no",
+     "no",
+     "no"
+    ],
+    "acknowledged": [
+     "yes",
+     "yes",
+     "yes"
+    ]
+   },
+   "capture/D1/base": {
+    "label": "preference_stored",
+    "values": [
+     "yes",
+     "yes",
+     "yes"
+    ],
+    "acknowledged": [
+     "yes",
+     "yes",
+     "yes"
+    ]
+   }
+  }
+ }
+}

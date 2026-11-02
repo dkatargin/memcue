@@ -1,0 +1,23 @@
+{
+ "key": "07f4f77d495a8c14978a",
+ "record_sha256": "ec16b5a2e1231a073038a99ca3c6d05a3592b3ce4c08f9fb36782560c7e138d5",
+ "kind": "durable",
+ "pass": "B",
+ "model": "sonnet",
+ "parsed": {
+  "acknowledged": "yes",
+  "preference_stored": "yes",
+  "preference_fact_ids": [
+   "01M6EK0B4KNNVGCSHSH7JVWS7X"
+  ],
+  "extra_useful": 0,
+  "noise": 0,
+  "notes": "The second answer says it saved a standing rule to lead with the bottom line and give reasoning only on request, which acknowledges the preference (though it did not answer the backup-frequency question). The stored global rule matches the preference with correct polarity and is not narrowed to a topic; the 'finds long answers tiring' remark is a minor mood note within the same fact."
+ },
+ "error": null,
+ "cost_usd": 0.0126801,
+ "seconds": 5.0,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"acknowledged\": \"yes\", \"preference_stored\": \"yes\", \"preference_fact_ids\": [\"01M6EK0B4KNNVGCSHSH7JVWS7X\"], \"extra_useful\": 0, \"noise\": 0, \"notes\": \"The second answer says it saved a standing rule to lead with the bottom line and give reasoning only on request, which acknowledges the preference (though it did not answer the backup-frequency question). The stored global rule matches the preference with correct polarity and is not narrowed to a topic; the 'finds long answers tiring' remark is a minor mood note within the same fact.\"}"
+}

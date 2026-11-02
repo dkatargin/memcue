@@ -1,0 +1,21 @@
+{
+ "key": "1c6ce53619ce0e117e25",
+ "record_sha256": "02bd0829629ca2b855d8fbdfa4a7b943fa8e1f5d26a3d98b2a15e6d42a5f5ee9",
+ "kind": "durable",
+ "pass": "B",
+ "model": "sonnet",
+ "parsed": {
+  "acknowledged": "yes",
+  "preference_stored": "no",
+  "preference_fact_ids": [],
+  "extra_useful": 0,
+  "noise": 0,
+  "notes": "The second answer gives all the temperatures (fermentation, garage, mash, and the others) in Celsius, so it follows the preference. base_changes is empty and no memory commands were issued, so the preference was not stored."
+ },
+ "error": null,
+ "cost_usd": 0.0104381,
+ "seconds": 14.9,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"acknowledged\": \"yes\", \"preference_stored\": \"no\", \"preference_fact_ids\": [], \"extra_useful\": 0, \"noise\": 0, \"notes\": \"The second answer gives all the temperatures (fermentation, garage, mash, and the others) in Celsius, so it follows the preference. base_changes is empty and no memory commands were issued, so the preference was not stored.\"}"
+}

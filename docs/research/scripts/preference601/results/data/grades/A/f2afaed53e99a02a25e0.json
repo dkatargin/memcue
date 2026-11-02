@@ -1,0 +1,18 @@
+{
+ "key": "f2afaed53e99a02a25e0",
+ "record_sha256": "f7cf261dfcaccf6170147b8a7fe402a313faf77dec96340505a23140a752e2a6",
+ "kind": "probe",
+ "pass": "A",
+ "model": "opus",
+ "parsed": {
+  "applied": "yes",
+  "evidence": "Opens with \"Get the Larkspur R7.\" followed by one supporting sentence and a brief caveat; about 55 words total.",
+  "notes": "The recommendation comes first and the whole answer stays well under 120 words, so it meets the applied criterion."
+ },
+ "error": null,
+ "cost_usd": 0.010368200000000001,
+ "seconds": 4.2,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"applied\": \"yes\", \"evidence\": \"Opens with \\\"Get the Larkspur R7.\\\" followed by one supporting sentence and a brief caveat; about 55 words total.\", \"notes\": \"The recommendation comes first and the whole answer stays well under 120 words, so it meets the applied criterion.\"}"
+}

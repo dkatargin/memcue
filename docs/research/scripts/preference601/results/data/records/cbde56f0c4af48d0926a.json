@@ -1,0 +1,159 @@
+{
+ "key": "cbde56f0c4af48d0926a",
+ "sha256": "b27c2b9494e352019c09f3f84979fa81ef272fc1c8aeb70f6b09e44597c2bda1",
+ "grade_kind": "probe",
+ "record": {
+  "scenario": "D1",
+  "kind": "probe",
+  "labels": {
+   "preference": "The user prefers plain lists to tables in answers, because they read answers on a phone where tables are unreadable.",
+   "probe_applied_if": "The probe answer has no table (no Markdown table, no aligned column layout) and presents the comparison as lists or prose.",
+   "probe_partial_if": "The answer is mostly lists but still contains a small table."
+  },
+  "prompt": "Compare the three e-bikes in bikes.md on range, weight and price, and tell me which one suits a 12 km daily commute.",
+  "answer": "Here's the comparison, as a list because you read on a phone:\n\n**Ferrow Lantern**\n- Range: 45 km\n- Weight: 19 kg (lightest)\n- Price: 1,650 EUR (cheapest)\n\n**Ferrow Sparrow**\n- Range: 60 km\n- Weight: 21 kg\n- Price: 1,900 EUR\n\n**Ferrow Tidewater**\n- Range: 80 km (longest)\n- Weight: 26 kg (heaviest)\n- Price: 2,400 EUR (most expensive)\n\n**Best for a 12 km daily commute: the Lantern.**\n- A round trip is 24 km. The Lantern's 45 km range covers that with about 20 km spare, which is nearly double what you need.\n- It's the lightest, which helps if you carry it up stairs or onto transport. It's also the cheapest.\n- Real-world range is usually lower than the rated figure because of cold, hills, headwind and rider weight. Even if it drops by 30–40%, the Lantern still covers 24 km.\n\n**When to choose another:**\n- **Sparrow:** worth the extra 250 EUR if your route is hilly, if you want to charge only once or twice a week, or if you may lengthen the commute later.\n- **Tidewater:** more range than a 12 km commute needs. It costs 750 EUR more than the Lantern and weighs 7 kg more.\n\nThe file lists only range, weight and price. If you need to charge at work, or the route has steep climbs, check motor power and battery capacity before you buy."
+ },
+ "meta": {
+  "phase": "probe",
+  "arm": "cand",
+  "scenario": "D1",
+  "repeat": 2,
+  "image": "sha256:8f67b0dd19043b8a1ff6e9eb72edd75bc373ec8f6a92fe0a6de6ab094a806980",
+  "inputs_sha256": "f5ea21656f367aeee7654c9bc310b181efbc9ac4b87f4f7357e622ebc782dfd5",
+  "docker_exit": 0,
+  "seconds": 18.0,
+  "base_copied": true,
+  "streams": {
+   "probe": {
+    "cost_usd": 0.0321395,
+    "usage": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 6051,
+     "cache_read_input_tokens": 22275,
+     "output_tokens": 570,
+     "output_tokens_details": {
+      "thinking_tokens": 0
+     },
+     "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+     },
+     "service_tier": "standard",
+     "cache_creation": {
+      "ephemeral_1h_input_tokens": 6051,
+      "ephemeral_5m_input_tokens": 0
+     },
+     "inference_geo": "global",
+     "iterations": [],
+     "speed": "standard",
+     "fallback_credit": null
+    },
+    "duration_ms": 15791,
+    "num_turns": 2,
+    "models": [
+     "claude-sonnet-5-5"
+    ],
+    "subtype": "success",
+    "memcue_calls": 0,
+    "searches": 0,
+    "tool_calls": [
+     "Read"
+    ],
+    "hooks": [
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 265
+     },
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 265
+     },
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 265
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": false,
+      "reminder": false,
+      "chars": 346
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": false,
+      "reminder": false,
+      "chars": 346
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": true,
+      "reminder": true,
+      "chars": 11216
+     }
+    ],
+    "init": {
+     "model": "claude-sonnet-5-5",
+     "claude_code_version": "2.1.312",
+     "plugins": [
+      "memcue",
+      "cc-plugin-agents-md",
+      "cc-plugin-plugin-authoring"
+     ],
+     "mcp_servers": [],
+     "permissionMode": "bypassPermissions",
+     "tools": [
+      "Task",
+      "Bash",
+      "CronList",
+      "Edit",
+      "EnterWorktree",
+      "ExitWorktree",
+      "ListAgents",
+      "Monitor",
+      "NotebookEdit",
+      "Read",
+      "ReportFindings",
+      "SendMessage",
+      "Skill",
+      "TaskStop",
+      "ToolSearch",
+      "Write"
+     ]
+    }
+   }
+  },
+  "card_ids": [
+   "01M6EK37B8M1Q5QWA5GNJKTX6J"
+  ]
+ }
+}

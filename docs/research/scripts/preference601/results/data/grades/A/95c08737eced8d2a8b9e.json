@@ -1,0 +1,18 @@
+{
+ "key": "95c08737eced8d2a8b9e",
+ "record_sha256": "2599c7d18f568c78e0acef372d89a511ab05f2b76f1bca8c68e04282a4e23da4",
+ "kind": "probe",
+ "pass": "A",
+ "model": "opus",
+ "parsed": {
+  "applied": "yes",
+  "evidence": "The message uses only text and bold Markdown; there are no plant, sparkle, party popper or other pictographic symbols anywhere.",
+  "notes": "The answer stays upbeat through its wording alone and contains no emoji, which meets the preference."
+ },
+ "error": null,
+ "cost_usd": 0.010848199999999999,
+ "seconds": 3.9,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"applied\": \"yes\", \"evidence\": \"The message uses only text and bold Markdown; there are no plant, sparkle, party popper or other pictographic symbols anywhere.\", \"notes\": \"The answer stays upbeat through its wording alone and contains no emoji, which meets the preference.\"}"
+}

@@ -1,0 +1,23 @@
+{
+ "key": "8d8f14cce2d7f7d3eeb6",
+ "record_sha256": "7791824877abff2271d49f02c9fc71d7ac8cce7acaeb34a94def614d94f757c2",
+ "kind": "durable",
+ "pass": "A",
+ "model": "opus",
+ "parsed": {
+  "acknowledged": "yes",
+  "preference_stored": "yes",
+  "preference_fact_ids": [
+   "01M6EJZ5B5P0SHVRZBW8DBAVRP"
+  ],
+  "extra_useful": 0,
+  "noise": 0,
+  "notes": "The second answer says it removed the emoji, the rewritten announcement and the new reminder contain none, and it says the preference was saved. The single stored fact is a lasting no-emoji rule covering anything written for the user or in their name, with the correct polarity and not limited to the offsite."
+ },
+ "error": null,
+ "cost_usd": 0.023444200000000002,
+ "seconds": 4.4,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"acknowledged\": \"yes\", \"preference_stored\": \"yes\", \"preference_fact_ids\": [\"01M6EJZ5B5P0SHVRZBW8DBAVRP\"], \"extra_useful\": 0, \"noise\": 0, \"notes\": \"The second answer says it removed the emoji, the rewritten announcement and the new reminder contain none, and it says the preference was saved. The single stored fact is a lasting no-emoji rule covering anything written for the user or in their name, with the correct polarity and not limited to the offsite.\"}"
+}

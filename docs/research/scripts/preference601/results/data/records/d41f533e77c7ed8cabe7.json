@@ -1,0 +1,331 @@
+{
+ "key": "d41f533e77c7ed8cabe7",
+ "sha256": "2593e9b21e877fc7fbdf17d44e4fddd0406314daad4049b2deeeb5586951a81e",
+ "grade_kind": "durable",
+ "record": {
+  "scenario": "D1",
+  "kind": "durable",
+  "labels": {
+   "purpose": "The user says in passing that they read answers on a phone and that tables are unreadable there; lists work better.",
+   "preference": "The user prefers plain lists to tables in answers, because they read answers on a phone where tables are unreadable.",
+   "expected_scope": "global",
+   "polarity": "Avoid tables, use lists. A fact that says to use tables, or that ties the preference to kettles or to this one answer only, is wrong.",
+   "acknowledged_if": "The second answer recognises the request (for example says it will use lists from now on, or apologises for the table) or visibly switches to a list without a table.",
+   "probe_applied_if": "The probe answer has no table (no Markdown table, no aligned column layout) and presents the comparison as lists or prose.",
+   "probe_partial_if": "The answer is mostly lists but still contains a small table."
+  },
+  "prompts": {
+   "turn1": "Compare the three kettles in kettles.md for me: capacity, boil time and price. Which one is the best value?",
+   "turn2": "Thanks. One thing, though: I read your answers on my phone almost all the time, and tables turn into an unreadable mess on that screen. Plain lists work much better for me. Which of the three is the quietest?"
+  },
+  "answers": {
+   "turn1": "| | Pico | Aster | Quill |\n|---|---|---|---|\n| Capacity | 1.0 l | 1.7 l | 1.5 l |\n| Boil time (full) | 3 min 40 s | 4 min 10 s | 3 min 55 s |\n| Price | 34 EUR | 49 EUR | 39 EUR |\n| Price per litre | 34.00 EUR | 28.82 EUR | 26.00 EUR |\n| Boil time per litre | 220 s | 147 s | 157 s |\n\n- **Pico:** It's the cheapest and boils fastest in absolute terms. It holds the least, so it costs the most per litre and heats the slowest per litre.\n- **Aster:** It has the most capacity and the best heating speed per litre. It's also the priciest and the quietest (51 dB).\n- **Quill:** It has the lowest price per litre, and it's mid-range on capacity and boil time. It's the loudest (63 dB).\n\n**Best value: the Brindle Quill.** It has the lowest price per litre (26 EUR), and its boil time is only 15 seconds longer than the Pico's for 50% more capacity.\n\nThe Aster is the better pick if you care about noise or need the 1.7 l capacity. It costs 10 EUR more than the Quill. For one person, the Pico is the cheapest, but it's poor value per litre.",
+   "turn2": "The **Brindle Aster** is the quietest, at 51 dB while boiling.\n\n- **Aster:** 51 dB\n- **Pico:** 58 dB\n- **Quill:** 63 dB\n\nThe Quill is the loudest. The Aster is 12 dB quieter than the Quill, which you'd clearly hear.\n\nI've saved a note to use plain lists instead of tables from now on."
+  },
+  "base_changes": [
+   {
+    "id": "01M6EK584WHW0RE916C03K1H2C",
+    "change": "added",
+    "version": 1,
+    "kind": "rule",
+    "scope": "global",
+    "source": "user",
+    "expires": "",
+    "content": "The user reads answers mostly on a phone, where markdown tables become unreadable. Use plain lists instead of tables in answers.",
+    "keywords": [
+     "tables",
+     "plain lists",
+     "phone",
+     "mobile",
+     "formatting",
+     "таблицы",
+     "списки",
+     "телефон"
+    ]
+   }
+  ],
+  "memcue_calls": [
+   {
+    "command": "memcue search -in all \"tables plain lists phone formatting\"",
+    "output": "No stored facts match.",
+    "turn": 2
+   },
+   {
+    "command": "memcue add -kind rule -scope global -source user -keywords \"tables, plain lists, phone, mobile, formatting, таблицы, списки, телефон\" -- \"The user reads answers mostly on a phone, where markdown tables become unreadable. Use plain lists instead of tables in answers.\"",
+    "output": "01M6EK584WHW0RE916C03K1H2C",
+    "turn": 2
+   }
+  ]
+ },
+ "meta": {
+  "phase": "capture",
+  "arm": "base",
+  "scenario": "D1",
+  "repeat": 3,
+  "image": "sha256:8f67b0dd19043b8a1ff6e9eb72edd75bc373ec8f6a92fe0a6de6ab094a806980",
+  "inputs_sha256": "f5ea21656f367aeee7654c9bc310b181efbc9ac4b87f4f7357e622ebc782dfd5",
+  "docker_exit": 0,
+  "seconds": 16.8,
+  "changes_after_turn1": 0,
+  "facts_before": 0,
+  "streams": {
+   "turn1": {
+    "cost_usd": 0.0323566,
+    "usage": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 5979,
+     "cache_read_input_tokens": 22126,
+     "output_tokens": 622,
+     "output_tokens_details": {
+      "thinking_tokens": 108
+     },
+     "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+     },
+     "service_tier": "standard",
+     "cache_creation": {
+      "ephemeral_1h_input_tokens": 5979,
+      "ephemeral_5m_input_tokens": 0
+     },
+     "inference_geo": "global",
+     "iterations": [],
+     "speed": "standard",
+     "fallback_credit": null
+    },
+    "duration_ms": 5855,
+    "num_turns": 2,
+    "models": [
+     "claude-sonnet-5-5"
+    ],
+    "subtype": "success",
+    "memcue_calls": 0,
+    "searches": 0,
+    "tool_calls": [
+     "Read"
+    ],
+    "hooks": [
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 265
+     },
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 265
+     },
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 265
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": false,
+      "reminder": false,
+      "chars": 346
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": false,
+      "reminder": false,
+      "chars": 346
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": true,
+      "reminder": false,
+      "chars": 10508
+     }
+    ],
+    "init": {
+     "model": "claude-sonnet-5-5",
+     "claude_code_version": "2.1.312",
+     "plugins": [
+      "memcue",
+      "cc-plugin-agents-md",
+      "cc-plugin-plugin-authoring"
+     ],
+     "mcp_servers": [],
+     "permissionMode": "bypassPermissions",
+     "tools": [
+      "Task",
+      "Bash",
+      "CronList",
+      "Edit",
+      "EnterWorktree",
+      "ExitWorktree",
+      "ListAgents",
+      "Monitor",
+      "NotebookEdit",
+      "Read",
+      "ReportFindings",
+      "SendMessage",
+      "Skill",
+      "TaskStop",
+      "ToolSearch",
+      "Write"
+     ]
+    }
+   },
+   "turn2": {
+    "cost_usd": 0.0594887,
+    "usage": {
+     "input_tokens": 8,
+     "cache_creation_input_tokens": 3434,
+     "cache_read_input_tokens": 63901,
+     "output_tokens": 699,
+     "output_tokens_details": {
+      "thinking_tokens": 180
+     },
+     "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+     },
+     "service_tier": "standard",
+     "cache_creation": {
+      "ephemeral_1h_input_tokens": 3434,
+      "ephemeral_5m_input_tokens": 0
+     },
+     "inference_geo": "global",
+     "iterations": [],
+     "speed": "standard",
+     "fallback_credit": null
+    },
+    "duration_ms": 7816,
+    "num_turns": 5,
+    "models": [
+     "claude-sonnet-5-5"
+    ],
+    "subtype": "success",
+    "memcue_calls": 2,
+    "searches": 1,
+    "tool_calls": [
+     "Skill",
+     "Bash",
+     "Bash"
+    ],
+    "hooks": [
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:resume",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 264
+     },
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:resume",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 264
+     },
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:resume",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 264
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:resume",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": false,
+      "reminder": false,
+      "chars": 345
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:resume",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": false,
+      "reminder": false,
+      "chars": 345
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:resume",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": true,
+      "reminder": false,
+      "chars": 10507
+     }
+    ],
+    "init": {
+     "model": "claude-sonnet-5-5",
+     "claude_code_version": "2.1.312",
+     "plugins": [
+      "memcue",
+      "cc-plugin-agents-md",
+      "cc-plugin-plugin-authoring"
+     ],
+     "mcp_servers": [],
+     "permissionMode": "bypassPermissions",
+     "tools": [
+      "Task",
+      "Bash",
+      "CronList",
+      "Edit",
+      "EnterWorktree",
+      "ExitWorktree",
+      "ListAgents",
+      "Monitor",
+      "NotebookEdit",
+      "Read",
+      "ReportFindings",
+      "SendMessage",
+      "Skill",
+      "TaskStop",
+      "ToolSearch",
+      "Write"
+     ]
+    }
+   }
+  },
+  "card_ids": []
+ }
+}

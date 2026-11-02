@@ -1,0 +1,21 @@
+{
+ "key": "a1c863693608036e5c22",
+ "record_sha256": "e398f40f78461144cb6c6098a041a3c6d0db9b6806ccfc4d88ead242881f2934",
+ "kind": "control",
+ "pass": "A",
+ "model": "opus",
+ "parsed": {
+  "acknowledged": "yes",
+  "durable_capture": "no",
+  "time_limited_capture": "no",
+  "extra_useful": 0,
+  "noise": 0,
+  "notes": "The second answer gives one comma-separated line per unpaid invoice and the total, so the one-off format request was carried out. The agent made no memcue calls and its memory has no changes, so nothing was stored as lasting or as time-limited."
+ },
+ "error": null,
+ "cost_usd": 0.0177562,
+ "seconds": 4.1,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"acknowledged\": \"yes\", \"durable_capture\": \"no\", \"time_limited_capture\": \"no\", \"extra_useful\": 0, \"noise\": 0, \"notes\": \"The second answer gives one comma-separated line per unpaid invoice and the total, so the one-off format request was carried out. The agent made no memcue calls and its memory has no changes, so nothing was stored as lasting or as time-limited.\"}"
+}

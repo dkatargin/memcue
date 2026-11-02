@@ -1,0 +1,23 @@
+{
+ "key": "426690199feafe9b9999",
+ "record_sha256": "2630e940262e7bbb5f742d6cd9efb1e0e1e7981276a19698390a17dde0612ceb",
+ "kind": "durable",
+ "pass": "B",
+ "model": "sonnet",
+ "parsed": {
+  "acknowledged": "yes",
+  "preference_stored": "yes",
+  "preference_fact_ids": [
+   "01M6EK61W79KWZ7JDZ6D8D631F"
+  ],
+  "extra_useful": 0,
+  "noise": 0,
+  "notes": "The second answer drops the emoji, says so, and confirms the preference was saved. The stored rule says never to use emoji in anything written for or in the name of the user, with no narrowing; the announcement mention is only an example list."
+ },
+ "error": null,
+ "cost_usd": 0.011652099999999999,
+ "seconds": 3.9,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"acknowledged\": \"yes\", \"preference_stored\": \"yes\", \"preference_fact_ids\": [\"01M6EK61W79KWZ7JDZ6D8D631F\"], \"extra_useful\": 0, \"noise\": 0, \"notes\": \"The second answer drops the emoji, says so, and confirms the preference was saved. The stored rule says never to use emoji in anything written for or in the name of the user, with no narrowing; the announcement mention is only an example list.\"}"
+}

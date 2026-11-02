@@ -1,0 +1,18 @@
+{
+ "key": "e696ae453dff68c643da",
+ "record_sha256": "99d5c471bf267f4376979b6d96402223543895d7ff499d179e3efc0efc23f6f7",
+ "kind": "probe",
+ "pass": "A",
+ "model": "opus",
+ "parsed": {
+  "applied": "partial",
+  "evidence": "Opens with \"**Get the Larkspur R7.**\" but then adds a five-bullet breakdown plus two more paragraphs, about 200 words in all.",
+  "notes": "The recommendation comes first, but the answer goes on to a long unrequested breakdown well over 120 words."
+ },
+ "error": null,
+ "cost_usd": 0.0133322,
+ "seconds": 4.1,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"applied\": \"partial\", \"evidence\": \"Opens with \\\"**Get the Larkspur R7.**\\\" but then adds a five-bullet breakdown plus two more paragraphs, about 200 words in all.\", \"notes\": \"The recommendation comes first, but the answer goes on to a long unrequested breakdown well over 120 words.\"}"
+}

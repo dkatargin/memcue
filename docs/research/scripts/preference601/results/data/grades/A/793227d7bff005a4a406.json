@@ -1,0 +1,18 @@
+{
+ "key": "793227d7bff005a4a406",
+ "record_sha256": "f9a569b4aa5882af66c1379f969546bd73a0d0f79e53fd239a236722d6dc22ee",
+ "kind": "probe",
+ "pass": "A",
+ "model": "opus",
+ "parsed": {
+  "applied": "yes",
+  "evidence": "The draft has no emoji at all, only bold headings and plain text, and it says \"I left out emoji, following your standing rule.\"",
+  "notes": "The upbeat tone comes from wording alone, so the message fully meets the no-emoji preference."
+ },
+ "error": null,
+ "cost_usd": 0.0111722,
+ "seconds": 3.9,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"applied\": \"yes\", \"evidence\": \"The draft has no emoji at all, only bold headings and plain text, and it says \\\"I left out emoji, following your standing rule.\\\"\", \"notes\": \"The upbeat tone comes from wording alone, so the message fully meets the no-emoji preference.\"}"
+}

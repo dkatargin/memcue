@@ -1,0 +1,329 @@
+{
+ "key": "9fe5fb5c5a67359727c7",
+ "sha256": "81e621dc3407fd0351ad1ca187f50131197fa61d4df069310b527292ab349bb8",
+ "grade_kind": "durable",
+ "record": {
+  "scenario": "D3",
+  "kind": "durable",
+  "labels": {
+   "purpose": "After a long answer the user says that generally they want the bottom line in a sentence or two first and the reasoning only on request.",
+   "preference": "The user wants the bottom line first, in one or two sentences, and the reasoning or details only when they ask for them.",
+   "expected_scope": "global",
+   "polarity": "Short answer first, details on request. A fact that limits it to backup plans or to this one question is too narrow.",
+   "acknowledged_if": "The second answer recognises the request (says it will keep answers short or lead with the answer) or visibly answers in one or two sentences.",
+   "probe_applied_if": "The probe answer opens with the recommendation in one or two sentences and is short overall (roughly under 120 words), or offers the reasoning only on request.",
+   "probe_partial_if": "The answer opens with the recommendation but then gives a long breakdown (well over 120 words) anyway."
+  },
+  "prompts": {
+   "turn1": "Which of the two backup plans in plans.md should we go with?",
+   "turn2": "That's a lot of text to get through. Generally I'd rather get the bottom line in a sentence or two first; I'll ask if I want the reasoning. Quick one then: how often does plan B run a full backup?"
+  },
+  "answers": {
+   "turn1": "I'd go with **Plan B**, assuming a studio file server holds work you can't easily recreate. The file doesn't say what the server is used for or how much you can afford to lose, so that assumption matters.\n\n| | Plan A | Plan B |\n|---|---|---|\n| Worst-case data loss | Up to about 24 hours | Up to 4 hours |\n| Retention | 30 days | 90 days |\n| Offsite | 1 region | 2 regions |\n| Price (up to 2 TB) | 18 EUR/mo | 31 EUR/mo |\n| Single-file restore | No delay stated | Up to 6 hours to start |\n\n**Why B:**\n- **Less lost work.** With nightly backups, a crash at 17:00 loses a full day of studio work. Every 4 hours limits that loss to a few hours.\n- **Longer retention.** Problems like accidental deletes, silent corruption or a bad project file often go unnoticed for weeks. 90 days gives you a much better chance of finding a clean copy than 30.\n- **Better offsite protection.** Two regions mean a regional outage or incident won't take out your only offsite copy.\n- **Cost.** The extra 13 EUR a month (156 EUR a year) is small next to the cost of lost client work.\n\n**Why you might pick A instead:**\n- The data is mostly static or easy to regenerate.\n- A day of lost work is acceptable.\n- The budget is tight.\n- You often restore single files in a hurry. Plan B's restores can take up to 6 hours to start, and the file doesn't say whether Plan A has any delay.\n\nBefore you commit, ask Coldharbour whether Plan A's single-file restore time is faster. Also ask whether the 6-hour delay on Plan B can be shortened, for example with a priority tier.",
+   "turn2": "Plan B runs a full backup twice a month, on the 1st and the 15th. I've also saved your preference for short answers with the bottom line first."
+  },
+  "base_changes": [
+   {
+    "id": "01M6EK671C2QMV8NH34GR52APR",
+    "change": "added",
+    "version": 1,
+    "kind": "rule",
+    "scope": "global",
+    "source": "user",
+    "expires": "",
+    "content": "User prefers the bottom line first in one or two sentences; give the reasoning only if they ask for it.",
+    "keywords": [
+     "answer style",
+     "brevity",
+     "bottom line",
+     "short answers",
+     "стиль ответа",
+     "краткость"
+    ]
+   }
+  ],
+  "memcue_calls": [
+   {
+    "command": "memcue search \"backup plan\"",
+    "output": "No facts of this repository, this host or global match; -in all searches every repository.",
+    "turn": 1
+   },
+   {
+    "command": "memcue search -in all \"answer style bottom line first short\"; memcue add -kind rule -scope global -source user -keywords \"answer style, brevity, bottom line, short answers, стиль ответа, краткость\" -- \"User prefers the bottom line first in one or two sentences; give the reasoning only if they ask for it.\"",
+    "output": "No stored facts match.\n01M6EK671C2QMV8NH34GR52APR",
+    "turn": 2
+   }
+  ]
+ },
+ "meta": {
+  "phase": "capture",
+  "arm": "base",
+  "scenario": "D3",
+  "repeat": 3,
+  "image": "sha256:8f67b0dd19043b8a1ff6e9eb72edd75bc373ec8f6a92fe0a6de6ab094a806980",
+  "inputs_sha256": "f5ea21656f367aeee7654c9bc310b181efbc9ac4b87f4f7357e622ebc782dfd5",
+  "docker_exit": 0,
+  "seconds": 24.2,
+  "changes_after_turn1": 0,
+  "facts_before": 0,
+  "streams": {
+   "turn1": {
+    "cost_usd": 0.0338489,
+    "usage": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 6075,
+     "cache_read_input_tokens": 22109,
+     "output_tokens": 733,
+     "output_tokens_details": {
+      "thinking_tokens": 0
+     },
+     "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+     },
+     "service_tier": "standard",
+     "cache_creation": {
+      "ephemeral_1h_input_tokens": 6075,
+      "ephemeral_5m_input_tokens": 0
+     },
+     "inference_geo": "global",
+     "iterations": [],
+     "speed": "standard",
+     "fallback_credit": null
+    },
+    "duration_ms": 10953,
+    "num_turns": 3,
+    "models": [
+     "claude-sonnet-5-5"
+    ],
+    "subtype": "success",
+    "memcue_calls": 1,
+    "searches": 1,
+    "tool_calls": [
+     "Read",
+     "Bash"
+    ],
+    "hooks": [
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 265
+     },
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 265
+     },
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 265
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": false,
+      "reminder": false,
+      "chars": 346
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": false,
+      "reminder": false,
+      "chars": 346
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": true,
+      "reminder": false,
+      "chars": 10508
+     }
+    ],
+    "init": {
+     "model": "claude-sonnet-5-5",
+     "claude_code_version": "2.1.312",
+     "plugins": [
+      "memcue",
+      "cc-plugin-agents-md",
+      "cc-plugin-plugin-authoring"
+     ],
+     "mcp_servers": [],
+     "permissionMode": "bypassPermissions",
+     "tools": [
+      "Task",
+      "Bash",
+      "CronList",
+      "Edit",
+      "EnterWorktree",
+      "ExitWorktree",
+      "ListAgents",
+      "Monitor",
+      "NotebookEdit",
+      "Read",
+      "ReportFindings",
+      "SendMessage",
+      "Skill",
+      "TaskStop",
+      "ToolSearch",
+      "Write"
+     ]
+    }
+   },
+   "turn2": {
+    "cost_usd": 0.0567601,
+    "usage": {
+     "input_tokens": 6,
+     "cache_creation_input_tokens": 3251,
+     "cache_read_input_tokens": 46752,
+     "output_tokens": 522,
+     "output_tokens_details": {
+      "thinking_tokens": 237
+     },
+     "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+     },
+     "service_tier": "standard",
+     "cache_creation": {
+      "ephemeral_1h_input_tokens": 3251,
+      "ephemeral_5m_input_tokens": 0
+     },
+     "inference_geo": "global",
+     "iterations": [],
+     "speed": "standard",
+     "fallback_credit": null
+    },
+    "duration_ms": 10324,
+    "num_turns": 4,
+    "models": [
+     "claude-sonnet-5-5"
+    ],
+    "subtype": "success",
+    "memcue_calls": 1,
+    "searches": 1,
+    "tool_calls": [
+     "Skill",
+     "Bash"
+    ],
+    "hooks": [
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:resume",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 264
+     },
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:resume",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 264
+     },
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:resume",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 264
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:resume",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": false,
+      "reminder": false,
+      "chars": 345
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:resume",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": false,
+      "reminder": false,
+      "chars": 345
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:resume",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": true,
+      "reminder": false,
+      "chars": 10507
+     }
+    ],
+    "init": {
+     "model": "claude-sonnet-5-5",
+     "claude_code_version": "2.1.312",
+     "plugins": [
+      "memcue",
+      "cc-plugin-agents-md",
+      "cc-plugin-plugin-authoring"
+     ],
+     "mcp_servers": [],
+     "permissionMode": "bypassPermissions",
+     "tools": [
+      "Task",
+      "Bash",
+      "CronList",
+      "Edit",
+      "EnterWorktree",
+      "ExitWorktree",
+      "ListAgents",
+      "Monitor",
+      "NotebookEdit",
+      "Read",
+      "ReportFindings",
+      "SendMessage",
+      "Skill",
+      "TaskStop",
+      "ToolSearch",
+      "Write"
+     ]
+    }
+   }
+  },
+  "card_ids": []
+ }
+}

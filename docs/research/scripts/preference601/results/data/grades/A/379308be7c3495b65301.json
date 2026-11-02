@@ -1,0 +1,18 @@
+{
+ "key": "379308be7c3495b65301",
+ "record_sha256": "7cfbdc8c3812a6873910179b51aeaf4b2b9f31235ed5b2754b9639d9db14410a",
+ "kind": "probe",
+ "pass": "A",
+ "model": "opus",
+ "parsed": {
+  "applied": "partial",
+  "evidence": "Opens with \"**Get the Larkspur R7.**\" but follows with four reasoning bullets, a three-bullet list on when the Tamsin is worth it, and a closing note, about 160 words in total.",
+  "notes": "The bottom line comes first, but the answer then gives an unrequested breakdown well past the short-answer threshold."
+ },
+ "error": null,
+ "cost_usd": 0.0143962,
+ "seconds": 5.2,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"applied\": \"partial\", \"evidence\": \"Opens with \\\"**Get the Larkspur R7.**\\\" but follows with four reasoning bullets, a three-bullet list on when the Tamsin is worth it, and a closing note, about 160 words in total.\", \"notes\": \"The bottom line comes first, but the answer then gives an unrequested breakdown well past the short-answer threshold.\"}"
+}

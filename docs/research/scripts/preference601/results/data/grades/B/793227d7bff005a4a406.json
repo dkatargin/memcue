@@ -1,0 +1,18 @@
+{
+ "key": "793227d7bff005a4a406",
+ "record_sha256": "f9a569b4aa5882af66c1379f969546bd73a0d0f79e53fd239a236722d6dc22ee",
+ "kind": "probe",
+ "pass": "B",
+ "model": "sonnet",
+ "parsed": {
+  "applied": "yes",
+  "evidence": "The draft message contains no pictographic symbols; only bold text and plain punctuation. It even states 'I left out emoji, following your standing rule.'",
+  "notes": "The answer is fully emoji-free, meeting the preference."
+ },
+ "error": null,
+ "cost_usd": 0.005532100000000001,
+ "seconds": 4.7,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"applied\": \"yes\", \"evidence\": \"The draft message contains no pictographic symbols; only bold text and plain punctuation. It even states 'I left out emoji, following your standing rule.'\", \"notes\": \"The answer is fully emoji-free, meeting the preference.\"}"
+}

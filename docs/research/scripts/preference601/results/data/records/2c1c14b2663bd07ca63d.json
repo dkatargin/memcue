@@ -1,0 +1,157 @@
+{
+ "key": "2c1c14b2663bd07ca63d",
+ "sha256": "bac401a177ffa76fb2ae6a36a9241b7d678162dd33bb4a16dde54cad588da882",
+ "grade_kind": "probe",
+ "record": {
+  "scenario": "D1",
+  "kind": "probe",
+  "labels": {
+   "preference": "The user prefers plain lists to tables in answers, because they read answers on a phone where tables are unreadable.",
+   "probe_applied_if": "The probe answer has no table (no Markdown table, no aligned column layout) and presents the comparison as lists or prose.",
+   "probe_partial_if": "The answer is mostly lists but still contains a small table."
+  },
+  "prompt": "Compare the three e-bikes in bikes.md on range, weight and price, and tell me which one suits a 12 km daily commute.",
+  "answer": "| Model | Range | Weight | Price |\n|---|---|---|---|\n| Lantern | 45 km | 19 kg | 1,650 EUR |\n| Sparrow | 60 km | 21 kg | 1,900 EUR |\n| Tidewater | 80 km | 26 kg | 2,400 EUR |\n\n- **Range:** Tidewater is best, then Sparrow, then Lantern.\n- **Weight:** Lantern is lightest, then Sparrow (+2 kg), then Tidewater (+7 kg over Lantern).\n- **Price:** Lantern is cheapest, then Sparrow (+250 EUR), then Tidewater (+750 EUR over Lantern).\n\n**For a 12 km daily commute (24 km round trip):** all three cover it on a single charge. Lantern's 45 km still leaves about 87% headroom. Real-world range is usually lower than the rated figure in cold weather, on hills, or with a heavy load. Even if you lose a third of it, Lantern still manages 30 km.\n\n**Recommendation: the Lantern.** It's the cheapest and lightest, and it has enough range, so it costs you the least to buy and to carry up stairs. Charging every 1–2 days is enough.\n\nChoose the **Sparrow** if your route is hilly or cold, or if you want to charge only about once a week (60 km is roughly 2.5 round trips). It costs 250 EUR more and weighs 2 kg more.\n\nThe Tidewater is overkill for this commute. You'd pay 750 EUR more and carry 7 kg extra for range you won't use.\n\nThe file doesn't list motor, battery capacity or terrain assumptions. If your route has steep climbs, check those before you buy."
+ },
+ "meta": {
+  "phase": "reference",
+  "arm": "base",
+  "scenario": "D1",
+  "repeat": 3,
+  "image": "sha256:8f67b0dd19043b8a1ff6e9eb72edd75bc373ec8f6a92fe0a6de6ab094a806980",
+  "inputs_sha256": "f5ea21656f367aeee7654c9bc310b181efbc9ac4b87f4f7357e622ebc782dfd5",
+  "docker_exit": 0,
+  "seconds": 35.1,
+  "base_copied": false,
+  "streams": {
+   "probe": {
+    "cost_usd": 0.0316179,
+    "usage": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 5775,
+     "cache_read_input_tokens": 21999,
+     "output_tokens": 631,
+     "output_tokens_details": {
+      "thinking_tokens": 0
+     },
+     "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+     },
+     "service_tier": "standard",
+     "cache_creation": {
+      "ephemeral_1h_input_tokens": 5775,
+      "ephemeral_5m_input_tokens": 0
+     },
+     "inference_geo": "global",
+     "iterations": [],
+     "speed": "standard",
+     "fallback_credit": null
+    },
+    "duration_ms": 6302,
+    "num_turns": 2,
+    "models": [
+     "claude-sonnet-5-5"
+    ],
+    "subtype": "success",
+    "memcue_calls": 0,
+    "searches": 0,
+    "tool_calls": [
+     "Read"
+    ],
+    "hooks": [
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 265
+     },
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 265
+     },
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 265
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": false,
+      "reminder": false,
+      "chars": 346
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": false,
+      "reminder": false,
+      "chars": 346
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": true,
+      "reminder": false,
+      "chars": 10508
+     }
+    ],
+    "init": {
+     "model": "claude-sonnet-5-5",
+     "claude_code_version": "2.1.312",
+     "plugins": [
+      "memcue",
+      "cc-plugin-agents-md",
+      "cc-plugin-plugin-authoring"
+     ],
+     "mcp_servers": [],
+     "permissionMode": "bypassPermissions",
+     "tools": [
+      "Task",
+      "Bash",
+      "CronList",
+      "Edit",
+      "EnterWorktree",
+      "ExitWorktree",
+      "ListAgents",
+      "Monitor",
+      "NotebookEdit",
+      "Read",
+      "ReportFindings",
+      "SendMessage",
+      "Skill",
+      "TaskStop",
+      "ToolSearch",
+      "Write"
+     ]
+    }
+   }
+  },
+  "card_ids": []
+ }
+}

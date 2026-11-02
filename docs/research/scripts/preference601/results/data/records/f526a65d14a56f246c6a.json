@@ -1,0 +1,302 @@
+{
+ "key": "f526a65d14a56f246c6a",
+ "sha256": "321ffe86d6936389aeeeb8bbdf0e66490b72e9f749474459db0e36a9cb701c27",
+ "grade_kind": "durable",
+ "record": {
+  "scenario": "D4",
+  "kind": "durable",
+  "labels": {
+   "purpose": "The user says Fahrenheit means little to them and they think in Celsius, and asks for the numbers again.",
+   "preference": "The user thinks in Celsius: give temperatures in degrees Celsius, not (only) Fahrenheit.",
+   "expected_scope": "global",
+   "polarity": "Celsius first or only. A fact that says to use Fahrenheit, or that limits Celsius to this brewing recipe, is wrong or too narrow.",
+   "acknowledged_if": "The second answer recognises the request and gives the temperatures in Celsius.",
+   "probe_applied_if": "The probe answer gives the temperatures in degrees Celsius, either alone or first with Fahrenheit secondary.",
+   "probe_partial_if": "The answer gives Fahrenheit first and Celsius only as a secondary conversion."
+  },
+  "prompts": {
+   "turn1": "What fermentation temperature range does the recipe in brew.md call for, and is my garage, which sits at 61 degrees, okay for it?",
+   "turn2": "Honestly, Fahrenheit doesn't mean much to me. I grew up with Celsius and that's what I think in. Could you give me those numbers again, and also tell me the mash temperature?"
+  },
+  "answers": {
+   "turn1": "The recipe in `brew.md` (Hazel Porter) calls for fermenting between **62 °F and 68 °F** for 14 days.\n\nYour garage at 61 °F is 1 °F below the bottom of that range, so it's slightly too cold. It's close, but a few things could go wrong:\n\n- **Slow or stalled fermentation:** The yeast may work sluggishly and leave the beer under-attenuated.\n- **Cold nights:** If the garage drops further overnight, the risk goes up.\n- **Pitching:** The recipe pitches at 64 °F, so the wort would need to start warmer than the garage and will cool toward 61 °F.\n\nSome easy fixes:\n\n- Wrap the fermenter in a blanket or towel, or set it on an insulating surface such as foam board.\n- Use a heat wrap or a seedling heat mat with a thermostat controller.\n- Put it in a warmer spot, such as a closet indoors.\n\nFermentation also generates a little heat of its own, so the beer itself usually runs a few degrees above room temperature during the active phase. That may bring it into range. A stick-on thermometer on the fermenter will tell you the actual beer temperature.",
+   "turn2": "Here are the numbers in Celsius, rounded to one decimal:\n\n- **Fermentation range:** 62 to 68 °F is **16.7 to 20 °C**, for 14 days.\n- **Your garage:** 61 °F is **16.1 °C**, about 0.6 °C below the bottom of the range. That's slightly cool, so the earlier advice still applies: insulate the fermenter or add gentle warmth.\n- **Mash:** 152 °F is **66.7 °C**, held for 60 minutes.\n\nThe recipe's other temperatures are:\n\n- **Pitch the yeast:** 64 °F is **17.8 °C**.\n- **Cold crash:** 35 °F is **1.7 °C**, for 2 days before bottling."
+  },
+  "base_changes": [],
+  "memcue_calls": [
+   {
+    "command": "memcue search \"garage temperature fermentation\"",
+    "output": "No facts of this repository, this host or global match; -in all searches every repository.",
+    "turn": 1
+   }
+  ]
+ },
+ "meta": {
+  "phase": "capture",
+  "arm": "base",
+  "scenario": "D4",
+  "repeat": 1,
+  "image": "sha256:8f67b0dd19043b8a1ff6e9eb72edd75bc373ec8f6a92fe0a6de6ab094a806980",
+  "inputs_sha256": "f5ea21656f367aeee7654c9bc310b181efbc9ac4b87f4f7357e622ebc782dfd5",
+  "docker_exit": 0,
+  "seconds": 17.9,
+  "changes_after_turn1": 0,
+  "facts_before": 0,
+  "streams": {
+   "turn1": {
+    "cost_usd": 0.031851500000000005,
+    "usage": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 5990,
+     "cache_read_input_tokens": 22135,
+     "output_tokens": 567,
+     "output_tokens_details": {
+      "thinking_tokens": 0
+     },
+     "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+     },
+     "service_tier": "standard",
+     "cache_creation": {
+      "ephemeral_1h_input_tokens": 5990,
+      "ephemeral_5m_input_tokens": 0
+     },
+     "inference_geo": "global",
+     "iterations": [],
+     "speed": "standard",
+     "fallback_credit": null
+    },
+    "duration_ms": 9815,
+    "num_turns": 3,
+    "models": [
+     "claude-sonnet-5-5"
+    ],
+    "subtype": "success",
+    "memcue_calls": 1,
+    "searches": 1,
+    "tool_calls": [
+     "Bash",
+     "Bash"
+    ],
+    "hooks": [
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 265
+     },
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 265
+     },
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 265
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": false,
+      "reminder": false,
+      "chars": 346
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": false,
+      "reminder": false,
+      "chars": 346
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": true,
+      "reminder": false,
+      "chars": 10508
+     }
+    ],
+    "init": {
+     "model": "claude-sonnet-5-5",
+     "claude_code_version": "2.1.312",
+     "plugins": [
+      "memcue",
+      "cc-plugin-agents-md",
+      "cc-plugin-plugin-authoring"
+     ],
+     "mcp_servers": [],
+     "permissionMode": "bypassPermissions",
+     "tools": [
+      "Task",
+      "Bash",
+      "CronList",
+      "Edit",
+      "EnterWorktree",
+      "ExitWorktree",
+      "ListAgents",
+      "Monitor",
+      "NotebookEdit",
+      "Read",
+      "ReportFindings",
+      "SendMessage",
+      "Skill",
+      "TaskStop",
+      "ToolSearch",
+      "Write"
+     ]
+    }
+   },
+   "turn2": {
+    "cost_usd": 0.0399964,
+    "usage": {
+     "input_tokens": 2,
+     "cache_creation_input_tokens": 501,
+     "cache_read_input_tokens": 14269,
+     "output_tokens": 471,
+     "output_tokens_details": {
+      "thinking_tokens": 222
+     },
+     "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+     },
+     "service_tier": "standard",
+     "cache_creation": {
+      "ephemeral_1h_input_tokens": 501,
+      "ephemeral_5m_input_tokens": 0
+     },
+     "inference_geo": "global",
+     "iterations": [],
+     "speed": "standard",
+     "fallback_credit": null
+    },
+    "duration_ms": 5547,
+    "num_turns": 1,
+    "models": [
+     "claude-sonnet-5-5"
+    ],
+    "subtype": "success",
+    "memcue_calls": 0,
+    "searches": 0,
+    "tool_calls": [],
+    "hooks": [
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:resume",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 264
+     },
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:resume",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 264
+     },
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:resume",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 264
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:resume",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": false,
+      "reminder": false,
+      "chars": 345
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:resume",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": true,
+      "reminder": false,
+      "chars": 10507
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:resume",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": false,
+      "reminder": false,
+      "chars": 345
+     }
+    ],
+    "init": {
+     "model": "claude-sonnet-5-5",
+     "claude_code_version": "2.1.312",
+     "plugins": [
+      "memcue",
+      "cc-plugin-agents-md",
+      "cc-plugin-plugin-authoring"
+     ],
+     "mcp_servers": [],
+     "permissionMode": "bypassPermissions",
+     "tools": [
+      "Task",
+      "Bash",
+      "CronList",
+      "Edit",
+      "EnterWorktree",
+      "ExitWorktree",
+      "ListAgents",
+      "Monitor",
+      "NotebookEdit",
+      "Read",
+      "ReportFindings",
+      "SendMessage",
+      "Skill",
+      "TaskStop",
+      "ToolSearch",
+      "Write"
+     ]
+    }
+   }
+  },
+  "card_ids": []
+ }
+}

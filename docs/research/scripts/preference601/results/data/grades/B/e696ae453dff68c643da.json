@@ -1,0 +1,18 @@
+{
+ "key": "e696ae453dff68c643da",
+ "record_sha256": "99d5c471bf267f4376979b6d96402223543895d7ff499d179e3efc0efc23f6f7",
+ "kind": "probe",
+ "pass": "B",
+ "model": "sonnet",
+ "parsed": {
+  "applied": "partial",
+  "evidence": "Opens with \"**Get the Larkspur R7.**\" but then gives a five-bullet breakdown plus two more paragraphs (~200 words) unprompted.",
+  "notes": "The bottom line comes first, but the answer is well over 120 words of unrequested reasoning instead of offering details on request."
+ },
+ "error": null,
+ "cost_usd": 0.006742100000000001,
+ "seconds": 4.6,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"applied\": \"partial\", \"evidence\": \"Opens with \\\"**Get the Larkspur R7.**\\\" but then gives a five-bullet breakdown plus two more paragraphs (~200 words) unprompted.\", \"notes\": \"The bottom line comes first, but the answer is well over 120 words of unrequested reasoning instead of offering details on request.\"}"
+}

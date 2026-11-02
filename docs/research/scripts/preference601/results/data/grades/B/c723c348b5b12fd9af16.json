@@ -1,0 +1,18 @@
+{
+ "key": "c723c348b5b12fd9af16",
+ "record_sha256": "209c0878aaddc29aae47c4009db3654dc8fa906b449b04210017823252b09a64",
+ "kind": "probe",
+ "pass": "B",
+ "model": "sonnet",
+ "parsed": {
+  "applied": "yes",
+  "evidence": "Range, weight and price are each given as a bulleted list (e.g. \"- Tidewater: 80 km\"), followed by prose recommendations; no table appears.",
+  "notes": "The comparison is presented entirely as lists and prose with no Markdown table or aligned columns, which matches the preference."
+ },
+ "error": null,
+ "cost_usd": 0.0066161,
+ "seconds": 4.7,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"applied\": \"yes\", \"evidence\": \"Range, weight and price are each given as a bulleted list (e.g. \\\"- Tidewater: 80 km\\\"), followed by prose recommendations; no table appears.\", \"notes\": \"The comparison is presented entirely as lists and prose with no Markdown table or aligned columns, which matches the preference.\"}"
+}

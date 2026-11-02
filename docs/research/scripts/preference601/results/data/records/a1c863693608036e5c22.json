@@ -1,0 +1,293 @@
+{
+ "key": "a1c863693608036e5c22",
+ "sha256": "e398f40f78461144cb6c6098a041a3c6d0db9b6806ccfc4d88ead242881f2934",
+ "grade_kind": "control",
+ "record": {
+  "scenario": "C2",
+  "kind": "control",
+  "labels": {
+   "purpose": "Control: the user asks for comma-separated lines for this one answer, to paste into a spreadsheet import. It is not a lasting preference.",
+   "preference": null,
+   "acknowledged_if": "The second answer gives the invoices as comma-separated lines (the request is carried out).",
+   "durable_capture_if": "A fact stored as lasting (a rule, a decision, a preference without an expiry) that the user wants comma-separated or CSV output in general.",
+   "time_limited_capture_if": "A fact about the CSV request that is explicitly limited to this task or to today."
+  },
+  "prompts": {
+   "turn1": "Summarise the unpaid invoices in invoices.md.",
+   "turn2": "Thanks. For this one, could you redo it as one comma-separated line per invoice? I'm pasting it straight into a spreadsheet import. And what's the total outstanding?"
+  },
+  "answers": {
+   "turn1": "There are 3 unpaid invoices, totalling **3,135.50 EUR**.\n\n| Invoice | Client | Amount | Due | Note |\n|---|---|---|---|---|\n| INV-2042 | Moth & Lantern Books | 380.50 EUR | 2026-10-31 | **Overdue** (due 2 days before today, 2026-11-02) |\n| INV-2043 | Pellow Cycles | 2,115.00 EUR | 2026-11-10 | Due in 8 days |\n| INV-2044 | Quarrystone Bakery | 640.00 EUR | 2026-11-20 | Due in 18 days |\n\n- **Overdue:** 380.50 EUR (INV-2042).\n- **Not yet due:** 2,755.00 EUR (INV-2043 and INV-2044).\n\nThe other two invoices, INV-2041 and INV-2045, are marked paid.",
+   "turn2": "```\nINV-2042,Moth & Lantern Books,380.50,EUR,2026-10-31,unpaid\nINV-2043,Pellow Cycles,2115.00,EUR,2026-11-10,unpaid\nINV-2044,Quarrystone Bakery,640.00,EUR,2026-11-20,unpaid\n```\n\nI wrote the amounts without thousands separators, so 2115.00 doesn't split into two columns. There's no header row. The columns are number, client, amount, currency, due date, status.\n\n**Total outstanding: 3,135.50 EUR.**"
+  },
+  "base_changes": [],
+  "memcue_calls": []
+ },
+ "meta": {
+  "phase": "capture",
+  "arm": "base",
+  "scenario": "C2",
+  "repeat": 2,
+  "image": "sha256:8f67b0dd19043b8a1ff6e9eb72edd75bc373ec8f6a92fe0a6de6ab094a806980",
+  "inputs_sha256": "f5ea21656f367aeee7654c9bc310b181efbc9ac4b87f4f7357e622ebc782dfd5",
+  "docker_exit": 0,
+  "seconds": 10.0,
+  "changes_after_turn1": 0,
+  "facts_before": 0,
+  "streams": {
+   "turn1": {
+    "cost_usd": 0.029574999999999997,
+    "usage": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 5939,
+     "cache_read_input_tokens": 22110,
+     "output_tokens": 360,
+     "output_tokens_details": {
+      "thinking_tokens": 0
+     },
+     "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+     },
+     "service_tier": "standard",
+     "cache_creation": {
+      "ephemeral_1h_input_tokens": 5939,
+      "ephemeral_5m_input_tokens": 0
+     },
+     "inference_geo": "global",
+     "iterations": [],
+     "speed": "standard",
+     "fallback_credit": null
+    },
+    "duration_ms": 3886,
+    "num_turns": 2,
+    "models": [
+     "claude-sonnet-5-5"
+    ],
+    "subtype": "success",
+    "memcue_calls": 0,
+    "searches": 0,
+    "tool_calls": [
+     "Read"
+    ],
+    "hooks": [
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 265
+     },
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 265
+     },
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 265
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": false,
+      "reminder": false,
+      "chars": 346
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": false,
+      "reminder": false,
+      "chars": 346
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": true,
+      "reminder": false,
+      "chars": 10508
+     }
+    ],
+    "init": {
+     "model": "claude-sonnet-5-5",
+     "claude_code_version": "2.1.312",
+     "plugins": [
+      "memcue",
+      "cc-plugin-agents-md",
+      "cc-plugin-plugin-authoring"
+     ],
+     "mcp_servers": [],
+     "permissionMode": "bypassPermissions",
+     "tools": [
+      "Task",
+      "Bash",
+      "CronList",
+      "Edit",
+      "EnterWorktree",
+      "ExitWorktree",
+      "ListAgents",
+      "Monitor",
+      "NotebookEdit",
+      "Read",
+      "ReportFindings",
+      "SendMessage",
+      "Skill",
+      "TaskStop",
+      "ToolSearch",
+      "Write"
+     ]
+    }
+   },
+   "turn2": {
+    "cost_usd": 0.035614799999999995,
+    "usage": {
+     "input_tokens": 2,
+     "cache_creation_input_tokens": 406,
+     "cache_read_input_tokens": 14218,
+     "output_tokens": 299,
+     "output_tokens_details": {
+      "thinking_tokens": 105
+     },
+     "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+     },
+     "service_tier": "standard",
+     "cache_creation": {
+      "ephemeral_1h_input_tokens": 406,
+      "ephemeral_5m_input_tokens": 0
+     },
+     "inference_geo": "global",
+     "iterations": [],
+     "speed": "standard",
+     "fallback_credit": null
+    },
+    "duration_ms": 3173,
+    "num_turns": 1,
+    "models": [
+     "claude-sonnet-5-5"
+    ],
+    "subtype": "success",
+    "memcue_calls": 0,
+    "searches": 0,
+    "tool_calls": [],
+    "hooks": [
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:resume",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 264
+     },
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:resume",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 264
+     },
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:resume",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 264
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:resume",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": false,
+      "reminder": false,
+      "chars": 345
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:resume",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": true,
+      "reminder": false,
+      "chars": 10507
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:resume",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": false,
+      "reminder": false,
+      "chars": 345
+     }
+    ],
+    "init": {
+     "model": "claude-sonnet-5-5",
+     "claude_code_version": "2.1.312",
+     "plugins": [
+      "memcue",
+      "cc-plugin-agents-md",
+      "cc-plugin-plugin-authoring"
+     ],
+     "mcp_servers": [],
+     "permissionMode": "bypassPermissions",
+     "tools": [
+      "Task",
+      "Bash",
+      "CronList",
+      "Edit",
+      "EnterWorktree",
+      "ExitWorktree",
+      "ListAgents",
+      "Monitor",
+      "NotebookEdit",
+      "Read",
+      "ReportFindings",
+      "SendMessage",
+      "Skill",
+      "TaskStop",
+      "ToolSearch",
+      "Write"
+     ]
+    }
+   }
+  },
+  "card_ids": []
+ }
+}

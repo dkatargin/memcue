@@ -1,0 +1,18 @@
+{
+ "key": "53f825ad38c7764a7ad8",
+ "record_sha256": "d98c219962ee6d542e0f167a6ebfd9634a7a3c6bfa16afc3337f9bee7578f19e",
+ "kind": "probe",
+ "pass": "B",
+ "model": "sonnet",
+ "parsed": {
+  "applied": "yes",
+  "evidence": "Comparison is given as bold-headed bullet lists for Range, Weight, and Price, followed by prose recommendations; no Markdown table or aligned columns.",
+  "notes": "The answer fully avoids tables and uses lists and prose, matching the user's phone-readability preference."
+ },
+ "error": null,
+ "cost_usd": 0.0067561,
+ "seconds": 3.7,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"applied\": \"yes\", \"evidence\": \"Comparison is given as bold-headed bullet lists for Range, Weight, and Price, followed by prose recommendations; no Markdown table or aligned columns.\", \"notes\": \"The answer fully avoids tables and uses lists and prose, matching the user's phone-readability preference.\"}"
+}

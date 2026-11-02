@@ -1,0 +1,18 @@
+{
+ "key": "6599e98ef638c76e430c",
+ "record_sha256": "02cee2799ada9e88f09cd7b9c36832660e93e0e466ce605c5c10c4d7792b4c6b",
+ "kind": "probe",
+ "pass": "B",
+ "model": "sonnet",
+ "parsed": {
+  "applied": "no",
+  "evidence": "The answer opens with a Markdown table: \"| Bike | Range | Weight | Price |\" with three rows for Lantern, Sparrow and Tidewater.",
+  "notes": "The user prefers lists over tables, and the answer leads with a full comparison table, so the preference is plainly not followed even though the rest uses lists."
+ },
+ "error": null,
+ "cost_usd": 0.0073261,
+ "seconds": 3.8,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"applied\": \"no\", \"evidence\": \"The answer opens with a Markdown table: \\\"| Bike | Range | Weight | Price |\\\" with three rows for Lantern, Sparrow and Tidewater.\", \"notes\": \"The user prefers lists over tables, and the answer leads with a full comparison table, so the preference is plainly not followed even though the rest uses lists.\"}"
+}

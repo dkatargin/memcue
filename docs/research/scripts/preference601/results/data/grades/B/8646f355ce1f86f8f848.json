@@ -1,0 +1,18 @@
+{
+ "key": "8646f355ce1f86f8f848",
+ "record_sha256": "afaab1a2633e086ce055dc125c22c570bc7cd24876cc9e3e3f608a586fca94d1",
+ "kind": "probe",
+ "pass": "B",
+ "model": "sonnet",
+ "parsed": {
+  "applied": "yes",
+  "evidence": "The message uses only text and Markdown bold; no pictographic symbols appear anywhere, e.g. the closing line \"We'd love to see you there, and your green thumb too!\" has no emoji.",
+  "notes": "The upbeat announcement is entirely emoji-free, satisfying the user's preference."
+ },
+ "error": null,
+ "cost_usd": 0.0056201,
+ "seconds": 5.0,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"applied\": \"yes\", \"evidence\": \"The message uses only text and Markdown bold; no pictographic symbols appear anywhere, e.g. the closing line \\\"We'd love to see you there, and your green thumb too!\\\" has no emoji.\", \"notes\": \"The upbeat announcement is entirely emoji-free, satisfying the user's preference.\"}"
+}

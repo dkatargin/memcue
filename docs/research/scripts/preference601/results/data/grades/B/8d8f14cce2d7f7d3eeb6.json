@@ -1,0 +1,23 @@
+{
+ "key": "8d8f14cce2d7f7d3eeb6",
+ "record_sha256": "7791824877abff2271d49f02c9fc71d7ac8cce7acaeb34a94def614d94f757c2",
+ "kind": "durable",
+ "pass": "B",
+ "model": "sonnet",
+ "parsed": {
+  "acknowledged": "yes",
+  "preference_stored": "yes",
+  "preference_fact_ids": [
+   "01M6EJZ5B5P0SHVRZBW8DBAVRP"
+  ],
+  "extra_useful": 0,
+  "noise": 0,
+  "notes": "The second answer drops the emoji, says so, and confirms the preference was saved. The stored global rule says never to use emoji in anything written for the user or in their name, with the unprofessional reason, and is not limited to this task."
+ },
+ "error": null,
+ "cost_usd": 0.0115381,
+ "seconds": 3.8,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"acknowledged\": \"yes\", \"preference_stored\": \"yes\", \"preference_fact_ids\": [\"01M6EJZ5B5P0SHVRZBW8DBAVRP\"], \"extra_useful\": 0, \"noise\": 0, \"notes\": \"The second answer drops the emoji, says so, and confirms the preference was saved. The stored global rule says never to use emoji in anything written for the user or in their name, with the unprofessional reason, and is not limited to this task.\"}"
+}

@@ -1,0 +1,18 @@
+{
+ "key": "d894c92fa14e360f40c4",
+ "record_sha256": "226b46882db67b42eb0a23117413597c013365b15094dabb098bdfaba5152bb2",
+ "kind": "probe",
+ "pass": "A",
+ "model": "opus",
+ "parsed": {
+  "applied": "partial",
+  "evidence": "Opens with \"I'd get the **Larkspur R7**.\" and then gives a five-bullet breakdown (coverage, video calls, wired ports, VPN, price), plus an alternative-case paragraph and a caveat, roughly 200 words in total.",
+  "notes": "The bottom line comes first, but the answer then volunteers a detailed breakdown well over 120 words that the user didn't ask for."
+ },
+ "error": null,
+ "cost_usd": 0.0141242,
+ "seconds": 4.2,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"applied\": \"partial\", \"evidence\": \"Opens with \\\"I'd get the **Larkspur R7**.\\\" and then gives a five-bullet breakdown (coverage, video calls, wired ports, VPN, price), plus an alternative-case paragraph and a caveat, roughly 200 words in total.\", \"notes\": \"The bottom line comes first, but the answer then volunteers a detailed breakdown well over 120 words that the user didn't ask for.\"}"
+}

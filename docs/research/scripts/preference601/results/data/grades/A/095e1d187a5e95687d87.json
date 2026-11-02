@@ -1,0 +1,21 @@
+{
+ "key": "095e1d187a5e95687d87",
+ "record_sha256": "28256c8862d12ec3ec27286385215fbf51e3e42f23a0c66e8e7afd8c6eb28e6b",
+ "kind": "control",
+ "pass": "A",
+ "model": "opus",
+ "parsed": {
+  "acknowledged": "yes",
+  "durable_capture": "no",
+  "time_limited_capture": "no",
+  "extra_useful": 0,
+  "noise": 0,
+  "notes": "The second answer gives one comma-separated line per unpaid invoice and also answers the total, so the request is carried out. The agent made no memory changes, so nothing was captured as lasting or time-limited, and there are no extra or noise facts."
+ },
+ "error": null,
+ "cost_usd": 0.0179842,
+ "seconds": 33.5,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"acknowledged\": \"yes\", \"durable_capture\": \"no\", \"time_limited_capture\": \"no\", \"extra_useful\": 0, \"noise\": 0, \"notes\": \"The second answer gives one comma-separated line per unpaid invoice and also answers the total, so the request is carried out. The agent made no memory changes, so nothing was captured as lasting or time-limited, and there are no extra or noise facts.\"}"
+}

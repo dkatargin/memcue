@@ -1,0 +1,18 @@
+{
+ "key": "90463abef4473c583e6e",
+ "record_sha256": "91538bc6d94cb7ab8a52bfb3596d701f633fbffc16e62d525457d39cdc3c0026",
+ "kind": "probe",
+ "pass": "B",
+ "model": "sonnet",
+ "parsed": {
+  "applied": "yes",
+  "evidence": "The message text contains only plain text and Markdown bold; no pictographic symbols anywhere, including the closing line 'We hope to see you there!'",
+  "notes": "The upbeat announcement is entirely emoji-free, satisfying the user's no-emoji preference."
+ },
+ "error": null,
+ "cost_usd": 0.0054541,
+ "seconds": 4.8,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"applied\": \"yes\", \"evidence\": \"The message text contains only plain text and Markdown bold; no pictographic symbols anywhere, including the closing line 'We hope to see you there!'\", \"notes\": \"The upbeat announcement is entirely emoji-free, satisfying the user's no-emoji preference.\"}"
+}

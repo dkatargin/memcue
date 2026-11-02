@@ -1,0 +1,23 @@
+{
+ "key": "5efc725efc5d17eebaea",
+ "record_sha256": "2b4253c22813584651a32752558f2f4139744e27f7bda66ccbd3ce045dc94a0d",
+ "kind": "durable",
+ "pass": "B",
+ "model": "sonnet",
+ "parsed": {
+  "acknowledged": "yes",
+  "preference_stored": "yes",
+  "preference_fact_ids": [
+   "01M6EJZKBV2YD5G5WK0FHW2RS0"
+  ],
+  "extra_useful": 0,
+  "noise": 0,
+  "notes": "The answer says the no-emoji preference was saved and the rewritten announcement and reminder contain no emoji. The stored global rule says never use emoji in anything written for the user or in their name, with the right polarity and no narrowing to this task."
+ },
+ "error": null,
+ "cost_usd": 0.0116361,
+ "seconds": 5.0,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"acknowledged\": \"yes\", \"preference_stored\": \"yes\", \"preference_fact_ids\": [\"01M6EJZKBV2YD5G5WK0FHW2RS0\"], \"extra_useful\": 0, \"noise\": 0, \"notes\": \"The answer says the no-emoji preference was saved and the rewritten announcement and reminder contain no emoji. The stored global rule says never use emoji in anything written for the user or in their name, with the right polarity and no narrowing to this task.\"}"
+}

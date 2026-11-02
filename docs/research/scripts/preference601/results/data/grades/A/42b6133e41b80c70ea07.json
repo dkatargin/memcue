@@ -1,0 +1,23 @@
+{
+ "key": "42b6133e41b80c70ea07",
+ "record_sha256": "a16997dd74cfc8e7c7fd2de2b7bf290cf5e29e7f15de1c3bd6676fc479f3e98c",
+ "kind": "durable",
+ "pass": "A",
+ "model": "opus",
+ "parsed": {
+  "acknowledged": "yes",
+  "preference_stored": "yes",
+  "preference_fact_ids": [
+   "01M6EJZ4WCVME5TK2E30YCN0C7"
+  ],
+  "extra_useful": 0,
+  "noise": 0,
+  "notes": "The second answer switches to a list with no table and says outright that it will use plain lists from now on. The single stored fact records the lasting no-tables, use-lists preference with the phone reason and the right polarity, and it isn't tied to kettles; no other facts were stored."
+ },
+ "error": null,
+ "cost_usd": 0.0249802,
+ "seconds": 4.2,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"acknowledged\": \"yes\", \"preference_stored\": \"yes\", \"preference_fact_ids\": [\"01M6EJZ4WCVME5TK2E30YCN0C7\"], \"extra_useful\": 0, \"noise\": 0, \"notes\": \"The second answer switches to a list with no table and says outright that it will use plain lists from now on. The single stored fact records the lasting no-tables, use-lists preference with the phone reason and the right polarity, and it isn't tied to kettles; no other facts were stored.\"}"
+}

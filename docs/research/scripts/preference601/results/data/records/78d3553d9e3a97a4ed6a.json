@@ -1,0 +1,160 @@
+{
+ "key": "78d3553d9e3a97a4ed6a",
+ "sha256": "9dae0e5e523742955fc5502997ae0d0ba11b1946d4800baeac09f53c8c2a78a1",
+ "grade_kind": "probe",
+ "record": {
+  "scenario": "D3",
+  "kind": "probe",
+  "labels": {
+   "preference": "The user wants the bottom line first, in one or two sentences, and the reasoning or details only when they ask for them.",
+   "probe_applied_if": "The probe answer opens with the recommendation in one or two sentences and is short overall (roughly under 120 words), or offers the reasoning only on request.",
+   "probe_partial_if": "The answer opens with the recommendation but then gives a long breakdown (well over 120 words) anyway."
+  },
+  "prompt": "Should I get the Larkspur R7 or the Tamsin AX2 router from routers.md for a small flat where two people work from home?",
+  "answer": "Get the Larkspur R7. It covers about 90 m², which is plenty for a small flat. It has four LAN ports and a built-in VPN server, which helps with working from home. It also costs 60 EUR less than the Tamsin AX2.\n\nThe Tamsin AX2 only makes sense if you want Wi-Fi 6E or a 2.5 gigabit port, and two remote workers probably don't need either."
+ },
+ "meta": {
+  "phase": "probe",
+  "arm": "cand",
+  "scenario": "D3",
+  "repeat": 1,
+  "image": "sha256:8f67b0dd19043b8a1ff6e9eb72edd75bc373ec8f6a92fe0a6de6ab094a806980",
+  "inputs_sha256": "f5ea21656f367aeee7654c9bc310b181efbc9ac4b87f4f7357e622ebc782dfd5",
+  "docker_exit": 0,
+  "seconds": 14.3,
+  "base_copied": true,
+  "streams": {
+   "probe": {
+    "cost_usd": 0.0298678,
+    "usage": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 6203,
+     "cache_read_input_tokens": 22278,
+     "output_tokens": 282,
+     "output_tokens_details": {
+      "thinking_tokens": 0
+     },
+     "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+     },
+     "service_tier": "standard",
+     "cache_creation": {
+      "ephemeral_1h_input_tokens": 6203,
+      "ephemeral_5m_input_tokens": 0
+     },
+     "inference_geo": "global",
+     "iterations": [],
+     "speed": "standard",
+     "fallback_credit": null
+    },
+    "duration_ms": 11958,
+    "num_turns": 3,
+    "models": [
+     "claude-sonnet-5-5"
+    ],
+    "subtype": "success",
+    "memcue_calls": 1,
+    "searches": 1,
+    "tool_calls": [
+     "Read",
+     "Bash"
+    ],
+    "hooks": [
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 265
+     },
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 265
+     },
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 265
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": false,
+      "reminder": false,
+      "chars": 346
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": false,
+      "reminder": false,
+      "chars": 346
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": true,
+      "reminder": true,
+      "chars": 11232
+     }
+    ],
+    "init": {
+     "model": "claude-sonnet-5-5",
+     "claude_code_version": "2.1.312",
+     "plugins": [
+      "memcue",
+      "cc-plugin-agents-md",
+      "cc-plugin-plugin-authoring"
+     ],
+     "mcp_servers": [],
+     "permissionMode": "bypassPermissions",
+     "tools": [
+      "Task",
+      "Bash",
+      "CronList",
+      "Edit",
+      "EnterWorktree",
+      "ExitWorktree",
+      "ListAgents",
+      "Monitor",
+      "NotebookEdit",
+      "Read",
+      "ReportFindings",
+      "SendMessage",
+      "Skill",
+      "TaskStop",
+      "ToolSearch",
+      "Write"
+     ]
+    }
+   }
+  },
+  "card_ids": [
+   "01M6EK0B4KNNVGCSHSH7JVWS7X"
+  ]
+ }
+}

@@ -1,0 +1,18 @@
+{
+ "key": "cbde56f0c4af48d0926a",
+ "record_sha256": "b27c2b9494e352019c09f3f84979fa81ef272fc1c8aeb70f6b09e44597c2bda1",
+ "kind": "probe",
+ "pass": "B",
+ "model": "sonnet",
+ "parsed": {
+  "applied": "yes",
+  "evidence": "Each bike is presented as a bolded heading with bulleted Range/Weight/Price lines; the recommendation and alternatives are also bullets. No Markdown table or aligned columns.",
+  "notes": "The answer uses only lists and prose, fully matching the plain-list preference, and even says it chose a list because the user reads on a phone."
+ },
+ "error": null,
+ "cost_usd": 0.0070961,
+ "seconds": 5.2,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"applied\": \"yes\", \"evidence\": \"Each bike is presented as a bolded heading with bulleted Range/Weight/Price lines; the recommendation and alternatives are also bullets. No Markdown table or aligned columns.\", \"notes\": \"The answer uses only lists and prose, fully matching the plain-list preference, and even says it chose a list because the user reads on a phone.\"}"
+}

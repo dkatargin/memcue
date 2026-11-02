@@ -1,0 +1,18 @@
+{
+ "key": "6599e98ef638c76e430c",
+ "record_sha256": "02cee2799ada9e88f09cd7b9c36832660e93e0e466ce605c5c10c4d7792b4c6b",
+ "kind": "probe",
+ "pass": "A",
+ "model": "opus",
+ "parsed": {
+  "applied": "partial",
+  "evidence": "Opens with a 4-column Markdown table (Bike | Range | Weight | Price, 3 rows). The rest restates the comparison in bold prose lines and uses bullet lists for the recommendation.",
+  "notes": "The answer is mostly lists and prose but still includes a small Markdown table, which is unreadable on the user's phone, so it matches the partial criterion."
+ },
+ "error": null,
+ "cost_usd": 0.0202402,
+ "seconds": 6.6,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"applied\": \"partial\", \"evidence\": \"Opens with a 4-column Markdown table (Bike | Range | Weight | Price, 3 rows). The rest restates the comparison in bold prose lines and uses bullet lists for the recommendation.\", \"notes\": \"The answer is mostly lists and prose but still includes a small Markdown table, which is unreadable on the user's phone, so it matches the partial criterion.\"}"
+}

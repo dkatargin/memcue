@@ -1,0 +1,23 @@
+{
+ "key": "78c61c5a864fe2b61641",
+ "record_sha256": "2d2c051e5dbac0861b5f3e7c02ca5d433e0ef32c2be36a3cba535d8045076c64",
+ "kind": "durable",
+ "pass": "A",
+ "model": "opus",
+ "parsed": {
+  "acknowledged": "yes",
+  "preference_stored": "yes",
+  "preference_fact_ids": [
+   "01M6EK5J9YYD267GH5YB1XW20E"
+  ],
+  "extra_useful": 0,
+  "noise": 0,
+  "notes": "The second answer drops the emoji, says so explicitly, and confirms it saved a note to keep emoji out in future sessions. The single stored fact is a global rule with the correct no-emoji polarity: the listed examples illustrate it rather than narrow it to the offsite, and it includes the stated reason; no other facts were stored."
+ },
+ "error": null,
+ "cost_usd": 0.0240042,
+ "seconds": 5.0,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"acknowledged\": \"yes\", \"preference_stored\": \"yes\", \"preference_fact_ids\": [\"01M6EK5J9YYD267GH5YB1XW20E\"], \"extra_useful\": 0, \"noise\": 0, \"notes\": \"The second answer drops the emoji, says so explicitly, and confirms it saved a note to keep emoji out in future sessions. The single stored fact is a global rule with the correct no-emoji polarity: the listed examples illustrate it rather than narrow it to the offsite, and it includes the stated reason; no other facts were stored.\"}"
+}

@@ -1,0 +1,158 @@
+{
+ "key": "379308be7c3495b65301",
+ "sha256": "7cfbdc8c3812a6873910179b51aeaf4b2b9f31235ed5b2754b9639d9db14410a",
+ "grade_kind": "probe",
+ "record": {
+  "scenario": "D3",
+  "kind": "probe",
+  "labels": {
+   "preference": "The user wants the bottom line first, in one or two sentences, and the reasoning or details only when they ask for them.",
+   "probe_applied_if": "The probe answer opens with the recommendation in one or two sentences and is short overall (roughly under 120 words), or offers the reasoning only on request.",
+   "probe_partial_if": "The answer opens with the recommendation but then gives a long breakdown (well over 120 words) anyway."
+  },
+  "prompt": "Should I get the Larkspur R7 or the Tamsin AX2 router from routers.md for a small flat where two people work from home?",
+  "answer": "**Get the Larkspur R7.**\n\n- **Coverage:** A small flat fits well within its ~90 m². The Tamsin's 140 m² is more than you need.\n- **Remote work:** The built-in VPN server lets you reach your home network from outside. Wi-Fi 6 dual band is enough for two people on video calls and cloud tools.\n- **Ports:** Four gigabit LAN ports are handy for wiring in two work PCs, a dock or a printer.\n- **Price:** It costs 129 EUR, 60 EUR less than the Tamsin.\n\nThe Tamsin AX2 is worth the extra 60 EUR only in a few cases:\n- You have many Wi-Fi 6E devices and a crowded neighbourhood, where the extra 6 GHz band helps.\n- You have a multi-gig connection or a NAS that could use the 2.5 gigabit port.\n- You want the parental controls app.\n\nIt also has no VPN server, and it has only three wired ports.\n\nI didn't find any earlier notes on these routers, so this is based only on `routers.md`."
+ },
+ "meta": {
+  "phase": "probe",
+  "arm": "base",
+  "scenario": "D3",
+  "repeat": 1,
+  "image": "sha256:8f67b0dd19043b8a1ff6e9eb72edd75bc373ec8f6a92fe0a6de6ab094a806980",
+  "inputs_sha256": "f5ea21656f367aeee7654c9bc310b181efbc9ac4b87f4f7357e622ebc782dfd5",
+  "docker_exit": 0,
+  "seconds": 7.5,
+  "base_copied": true,
+  "streams": {
+   "probe": {
+    "cost_usd": 0.030913200000000002,
+    "usage": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 5983,
+     "cache_read_input_tokens": 22132,
+     "output_tokens": 476,
+     "output_tokens_details": {
+      "thinking_tokens": 0
+     },
+     "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+     },
+     "service_tier": "standard",
+     "cache_creation": {
+      "ephemeral_1h_input_tokens": 5983,
+      "ephemeral_5m_input_tokens": 0
+     },
+     "inference_geo": "global",
+     "iterations": [],
+     "speed": "standard",
+     "fallback_credit": null
+    },
+    "duration_ms": 5292,
+    "num_turns": 3,
+    "models": [
+     "claude-sonnet-5-5"
+    ],
+    "subtype": "success",
+    "memcue_calls": 1,
+    "searches": 1,
+    "tool_calls": [
+     "Bash",
+     "Bash"
+    ],
+    "hooks": [
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 265
+     },
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 265
+     },
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 265
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": true,
+      "reminder": false,
+      "chars": 10508
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": false,
+      "reminder": false,
+      "chars": 346
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": false,
+      "reminder": false,
+      "chars": 346
+     }
+    ],
+    "init": {
+     "model": "claude-sonnet-5-5",
+     "claude_code_version": "2.1.312",
+     "plugins": [
+      "memcue",
+      "cc-plugin-agents-md",
+      "cc-plugin-plugin-authoring"
+     ],
+     "mcp_servers": [],
+     "permissionMode": "bypassPermissions",
+     "tools": [
+      "Task",
+      "Bash",
+      "CronList",
+      "Edit",
+      "EnterWorktree",
+      "ExitWorktree",
+      "ListAgents",
+      "Monitor",
+      "NotebookEdit",
+      "Read",
+      "ReportFindings",
+      "SendMessage",
+      "Skill",
+      "TaskStop",
+      "ToolSearch",
+      "Write"
+     ]
+    }
+   }
+  },
+  "card_ids": []
+ }
+}

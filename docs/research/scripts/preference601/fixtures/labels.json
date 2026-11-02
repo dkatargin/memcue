@@ -1,0 +1,52 @@
+{
+  "D1": {
+    "purpose": "The user says in passing that they read answers on a phone and that tables are unreadable there; lists work better.",
+    "preference": "The user prefers plain lists to tables in answers, because they read answers on a phone where tables are unreadable.",
+    "expected_scope": "global",
+    "polarity": "Avoid tables, use lists. A fact that says to use tables, or that ties the preference to kettles or to this one answer only, is wrong.",
+    "acknowledged_if": "The second answer recognises the request (for example says it will use lists from now on, or apologises for the table) or visibly switches to a list without a table.",
+    "probe_applied_if": "The probe answer has no table (no Markdown table, no aligned column layout) and presents the comparison as lists or prose.",
+    "probe_partial_if": "The answer is mostly lists but still contains a small table."
+  },
+  "D2": {
+    "purpose": "The user asks to leave out emoji and says they cannot stand emoji in anything written for them or in their name.",
+    "preference": "The user does not want emoji in anything written for them or in their name; they find emoji unprofessional.",
+    "expected_scope": "global",
+    "polarity": "No emoji. A fact that limits it to the offsite announcement or to this chat only is too narrow.",
+    "acknowledged_if": "The second answer recognises the request (says it will leave emoji out, or the rewritten text visibly drops them and says so).",
+    "probe_applied_if": "The probe message contains no emoji (pictographic symbols such as a plant, sparkles or a party popper).",
+    "probe_partial_if": "One emoji is left in an otherwise emoji-free text."
+  },
+  "D3": {
+    "purpose": "After a long answer the user says that generally they want the bottom line in a sentence or two first and the reasoning only on request.",
+    "preference": "The user wants the bottom line first, in one or two sentences, and the reasoning or details only when they ask for them.",
+    "expected_scope": "global",
+    "polarity": "Short answer first, details on request. A fact that limits it to backup plans or to this one question is too narrow.",
+    "acknowledged_if": "The second answer recognises the request (says it will keep answers short or lead with the answer) or visibly answers in one or two sentences.",
+    "probe_applied_if": "The probe answer opens with the recommendation in one or two sentences and is short overall (roughly under 120 words), or offers the reasoning only on request.",
+    "probe_partial_if": "The answer opens with the recommendation but then gives a long breakdown (well over 120 words) anyway."
+  },
+  "D4": {
+    "purpose": "The user says Fahrenheit means little to them and they think in Celsius, and asks for the numbers again.",
+    "preference": "The user thinks in Celsius: give temperatures in degrees Celsius, not (only) Fahrenheit.",
+    "expected_scope": "global",
+    "polarity": "Celsius first or only. A fact that says to use Fahrenheit, or that limits Celsius to this brewing recipe, is wrong or too narrow.",
+    "acknowledged_if": "The second answer recognises the request and gives the temperatures in Celsius.",
+    "probe_applied_if": "The probe answer gives the temperatures in degrees Celsius, either alone or first with Fahrenheit secondary.",
+    "probe_partial_if": "The answer gives Fahrenheit first and Celsius only as a secondary conversion."
+  },
+  "C1": {
+    "purpose": "Control: the user mentions a bad night and a rough day. It is a passing mood of today, not a lasting preference about answers.",
+    "preference": null,
+    "acknowledged_if": "The second answer responds to the mood in some way (sympathy, no problem, keeps it brief for today) and does the task.",
+    "durable_capture_if": "A fact stored as lasting (a rule, a decision, a trait of the user, a preference without an expiry) about the user's mood, tiredness or how to answer them.",
+    "time_limited_capture_if": "A fact about the mood that is explicitly limited to today, for example an event or a fact with an expiry date of today or tomorrow."
+  },
+  "C2": {
+    "purpose": "Control: the user asks for comma-separated lines for this one answer, to paste into a spreadsheet import. It is not a lasting preference.",
+    "preference": null,
+    "acknowledged_if": "The second answer gives the invoices as comma-separated lines (the request is carried out).",
+    "durable_capture_if": "A fact stored as lasting (a rule, a decision, a preference without an expiry) that the user wants comma-separated or CSV output in general.",
+    "time_limited_capture_if": "A fact about the CSV request that is explicitly limited to this task or to today."
+  }
+}

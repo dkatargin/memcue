@@ -1,0 +1,23 @@
+{
+ "key": "9fe5fb5c5a67359727c7",
+ "record_sha256": "81e621dc3407fd0351ad1ca187f50131197fa61d4df069310b527292ab349bb8",
+ "kind": "durable",
+ "pass": "B",
+ "model": "sonnet",
+ "parsed": {
+  "acknowledged": "yes",
+  "preference_stored": "yes",
+  "preference_fact_ids": [
+   "01M6EK671C2QMV8NH34GR52APR"
+  ],
+  "extra_useful": 0,
+  "noise": 0,
+  "notes": "The second answer is short, leads with the answer, and explicitly says the preference was saved. The stored global rule matches the preference with correct polarity (bottom line first, reasoning only on request) and is not narrowed to this topic."
+ },
+ "error": null,
+ "cost_usd": 0.0124421,
+ "seconds": 4.6,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"acknowledged\": \"yes\", \"preference_stored\": \"yes\", \"preference_fact_ids\": [\"01M6EK671C2QMV8NH34GR52APR\"], \"extra_useful\": 0, \"noise\": 0, \"notes\": \"The second answer is short, leads with the answer, and explicitly says the preference was saved. The stored global rule matches the preference with correct polarity (bottom line first, reasoning only on request) and is not narrowed to this topic.\"}"
+}

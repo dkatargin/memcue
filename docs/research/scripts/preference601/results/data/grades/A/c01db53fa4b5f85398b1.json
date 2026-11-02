@@ -1,0 +1,18 @@
+{
+ "key": "c01db53fa4b5f85398b1",
+ "record_sha256": "63a0d3ed23fa2d100f7da530569b58dfcbe6ed37a5fa608739510c29e450a6e1",
+ "kind": "probe",
+ "pass": "A",
+ "model": "opus",
+ "parsed": {
+  "applied": "yes",
+  "evidence": "Range, weight and price each given as bulleted lists under bold headings; no Markdown table or aligned columns anywhere.",
+  "notes": "The answer presents the whole comparison as plain lists and prose, which fully meets the preference."
+ },
+ "error": null,
+ "cost_usd": 0.0140962,
+ "seconds": 14.5,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"applied\": \"yes\", \"evidence\": \"Range, weight and price each given as bulleted lists under bold headings; no Markdown table or aligned columns anywhere.\", \"notes\": \"The answer presents the whole comparison as plain lists and prose, which fully meets the preference.\"}"
+}

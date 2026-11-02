@@ -1,0 +1,18 @@
+{
+ "key": "53f825ad38c7764a7ad8",
+ "record_sha256": "d98c219962ee6d542e0f167a6ebfd9634a7a3c6bfa16afc3337f9bee7578f19e",
+ "kind": "probe",
+ "pass": "A",
+ "model": "opus",
+ "parsed": {
+  "applied": "yes",
+  "evidence": "Comparison is given as bulleted lists under bold headings for Range, Weight and Price, followed by prose; there is no Markdown table or aligned column layout.",
+  "notes": "The answer presents the whole comparison as lists and prose with no table, which meets the applied condition."
+ },
+ "error": null,
+ "cost_usd": 0.0134202,
+ "seconds": 4.3,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"applied\": \"yes\", \"evidence\": \"Comparison is given as bulleted lists under bold headings for Range, Weight and Price, followed by prose; there is no Markdown table or aligned column layout.\", \"notes\": \"The answer presents the whole comparison as lists and prose with no table, which meets the applied condition.\"}"
+}

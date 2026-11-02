@@ -1,0 +1,21 @@
+{
+ "key": "f526a65d14a56f246c6a",
+ "record_sha256": "321ffe86d6936389aeeeb8bbdf0e66490b72e9f749474459db0e36a9cb701c27",
+ "kind": "durable",
+ "pass": "B",
+ "model": "sonnet",
+ "parsed": {
+  "acknowledged": "yes",
+  "preference_stored": "no",
+  "preference_fact_ids": [],
+  "extra_useful": 0,
+  "noise": 0,
+  "notes": "The second answer recognises the request and gives all temperatures in Celsius (16.7-20 °C, 16.1 °C, 66.7 °C mash). However, base_changes is empty, so the Celsius preference was never stored."
+ },
+ "error": null,
+ "cost_usd": 0.0108881,
+ "seconds": 4.9,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"acknowledged\": \"yes\", \"preference_stored\": \"no\", \"preference_fact_ids\": [], \"extra_useful\": 0, \"noise\": 0, \"notes\": \"The second answer recognises the request and gives all temperatures in Celsius (16.7-20 °C, 16.1 °C, 66.7 °C mash). However, base_changes is empty, so the Celsius preference was never stored.\"}"
+}

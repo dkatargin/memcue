@@ -1,0 +1,158 @@
+{
+ "key": "a5983f530b71d1c2aa71",
+ "sha256": "11fcd0b4487f3e99958fc5728adbd030549f5379178df316e03f506afe6edf11",
+ "grade_kind": "probe",
+ "record": {
+  "scenario": "D3",
+  "kind": "probe",
+  "labels": {
+   "preference": "The user wants the bottom line first, in one or two sentences, and the reasoning or details only when they ask for them.",
+   "probe_applied_if": "The probe answer opens with the recommendation in one or two sentences and is short overall (roughly under 120 words), or offers the reasoning only on request.",
+   "probe_partial_if": "The answer opens with the recommendation but then gives a long breakdown (well over 120 words) anyway."
+  },
+  "prompt": "Should I get the Larkspur R7 or the Tamsin AX2 router from routers.md for a small flat where two people work from home?",
+  "answer": "**Get the Larkspur R7.**\n\n- **Coverage:** It covers about 90 m², which is plenty for a small flat. The Tamsin's 140 m² is more than you need.\n- **Work from home:** A built-in VPN server lets you reach the home network remotely. Video calls and everyday work traffic run fine on Wi-Fi 6 with dual band.\n- **Ports:** Four gigabit LAN ports are enough for a couple of desks, with room for a docking station or printer.\n- **Price:** It costs 129 EUR, which is 60 EUR less than the Tamsin.\n\nThe Tamsin AX2 (189 EUR) makes sense in a few cases:\n- You have a multi-gig connection or a NAS, because it has a 2.5 gigabit port.\n- Your neighbours' Wi-Fi is crowded, because the 6 GHz band of Wi-Fi 6E helps there. Your devices also need to support 6E.\n- You want its parental controls app.\n\nThe file doesn't say whether either router handles your internet speed, so check that your plan fits within their ports."
+ },
+ "meta": {
+  "phase": "probe",
+  "arm": "base",
+  "scenario": "D3",
+  "repeat": 2,
+  "image": "sha256:8f67b0dd19043b8a1ff6e9eb72edd75bc373ec8f6a92fe0a6de6ab094a806980",
+  "inputs_sha256": "f5ea21656f367aeee7654c9bc310b181efbc9ac4b87f4f7357e622ebc782dfd5",
+  "docker_exit": 0,
+  "seconds": 12.2,
+  "base_copied": true,
+  "streams": {
+   "probe": {
+    "cost_usd": 0.0309172,
+    "usage": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 5989,
+     "cache_read_input_tokens": 22132,
+     "output_tokens": 474,
+     "output_tokens_details": {
+      "thinking_tokens": 0
+     },
+     "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+     },
+     "service_tier": "standard",
+     "cache_creation": {
+      "ephemeral_1h_input_tokens": 5989,
+      "ephemeral_5m_input_tokens": 0
+     },
+     "inference_geo": "global",
+     "iterations": [],
+     "speed": "standard",
+     "fallback_credit": null
+    },
+    "duration_ms": 9881,
+    "num_turns": 3,
+    "models": [
+     "claude-sonnet-5-5"
+    ],
+    "subtype": "success",
+    "memcue_calls": 1,
+    "searches": 1,
+    "tool_calls": [
+     "Bash",
+     "Bash"
+    ],
+    "hooks": [
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 265
+     },
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 265
+     },
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 265
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": false,
+      "reminder": false,
+      "chars": 346
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": false,
+      "reminder": false,
+      "chars": 346
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": true,
+      "reminder": false,
+      "chars": 10508
+     }
+    ],
+    "init": {
+     "model": "claude-sonnet-5-5",
+     "claude_code_version": "2.1.312",
+     "plugins": [
+      "memcue",
+      "cc-plugin-agents-md",
+      "cc-plugin-plugin-authoring"
+     ],
+     "mcp_servers": [],
+     "permissionMode": "bypassPermissions",
+     "tools": [
+      "Task",
+      "Bash",
+      "CronList",
+      "Edit",
+      "EnterWorktree",
+      "ExitWorktree",
+      "ListAgents",
+      "Monitor",
+      "NotebookEdit",
+      "Read",
+      "ReportFindings",
+      "SendMessage",
+      "Skill",
+      "TaskStop",
+      "ToolSearch",
+      "Write"
+     ]
+    }
+   }
+  },
+  "card_ids": []
+ }
+}

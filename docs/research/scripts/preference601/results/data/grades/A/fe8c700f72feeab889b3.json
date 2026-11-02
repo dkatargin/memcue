@@ -1,0 +1,23 @@
+{
+ "key": "fe8c700f72feeab889b3",
+ "record_sha256": "77b21db5c3b026fb92b659b29d3ba744f8536d31985ee54d15da7fa21b30213f",
+ "kind": "durable",
+ "pass": "A",
+ "model": "opus",
+ "parsed": {
+  "acknowledged": "yes",
+  "preference_stored": "yes",
+  "preference_fact_ids": [
+   "01M6EK32SMN8H2VQJ3X3AFED28"
+  ],
+  "extra_useful": 0,
+  "noise": 0,
+  "notes": "The second answer gives the noise comparison as a list with no table and says lists will be used from now on. The single stored fact is a lasting rule, not tied to kettles, to avoid tables and use plain lists because the user reads on a phone, which matches the preference with the right polarity."
+ },
+ "error": null,
+ "cost_usd": 0.026876200000000003,
+ "seconds": 4.8,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"acknowledged\": \"yes\", \"preference_stored\": \"yes\", \"preference_fact_ids\": [\"01M6EK32SMN8H2VQJ3X3AFED28\"], \"extra_useful\": 0, \"noise\": 0, \"notes\": \"The second answer gives the noise comparison as a list with no table and says lists will be used from now on. The single stored fact is a lasting rule, not tied to kettles, to avoid tables and use plain lists because the user reads on a phone, which matches the preference with the right polarity.\"}"
+}

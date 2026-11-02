@@ -1,0 +1,18 @@
+{
+ "key": "361c84162ca5b0706a03",
+ "record_sha256": "6701a1832692643bfb2e3326e1d3f849b6a360cf0cd6ac592920192b23ff5a94",
+ "kind": "probe",
+ "pass": "B",
+ "model": "sonnet",
+ "parsed": {
+  "applied": "yes",
+  "evidence": "The message uses bold headings and plain text only; no pictographic symbols anywhere, including the title and sign-off.",
+  "notes": "The upbeat announcement contains no emoji, so it meets the no-emoji preference."
+ },
+ "error": null,
+ "cost_usd": 0.0053921,
+ "seconds": 9.3,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"applied\": \"yes\", \"evidence\": \"The message uses bold headings and plain text only; no pictographic symbols anywhere, including the title and sign-off.\", \"notes\": \"The upbeat announcement contains no emoji, so it meets the no-emoji preference.\"}"
+}

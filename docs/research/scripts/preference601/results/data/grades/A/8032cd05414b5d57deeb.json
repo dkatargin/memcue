@@ -1,0 +1,18 @@
+{
+ "key": "8032cd05414b5d57deeb",
+ "record_sha256": "0e4c1111817a7d3feda951e81b6989198adb06f66f12582a9c50e35212502007",
+ "kind": "probe",
+ "pass": "A",
+ "model": "opus",
+ "parsed": {
+  "applied": "yes",
+  "evidence": "The message uses only text and bold Markdown headings (\"**Plant Swap at the Courtyard!**\", \"**When:**\", \"**Where:**\"), with no plant, sparkle, party popper or other pictographic symbols anywhere.",
+  "notes": "The announcement stays upbeat through its wording and exclamation marks alone, so it fully meets the no-emoji preference."
+ },
+ "error": null,
+ "cost_usd": 0.0118082,
+ "seconds": 4.2,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"applied\": \"yes\", \"evidence\": \"The message uses only text and bold Markdown headings (\\\"**Plant Swap at the Courtyard!**\\\", \\\"**When:**\\\", \\\"**Where:**\\\"), with no plant, sparkle, party popper or other pictographic symbols anywhere.\", \"notes\": \"The announcement stays upbeat through its wording and exclamation marks alone, so it fully meets the no-emoji preference.\"}"
+}

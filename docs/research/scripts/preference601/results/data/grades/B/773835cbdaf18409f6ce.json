@@ -1,0 +1,18 @@
+{
+ "key": "773835cbdaf18409f6ce",
+ "record_sha256": "d825164219db599f430b07fa4d341db869beeeeca61a089a993b9648375d2ffd",
+ "kind": "probe",
+ "pass": "B",
+ "model": "sonnet",
+ "parsed": {
+  "applied": "no",
+  "evidence": "Smoker temperature: 250 °F; done at 203 °F; wrap at 165 °F — all Fahrenheit only, no Celsius given.",
+  "notes": "The answer gives every temperature only in Fahrenheit, plainly ignoring the Celsius preference."
+ },
+ "error": null,
+ "cost_usd": 0.0051841,
+ "seconds": 3.5,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"applied\": \"no\", \"evidence\": \"Smoker temperature: 250 °F; done at 203 °F; wrap at 165 °F — all Fahrenheit only, no Celsius given.\", \"notes\": \"The answer gives every temperature only in Fahrenheit, plainly ignoring the Celsius preference.\"}"
+}

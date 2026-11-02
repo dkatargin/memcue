@@ -1,0 +1,23 @@
+{
+ "key": "8c8be4eb6d22c8d7c31c",
+ "record_sha256": "19f5c63811b878ab3909de9968f5ed85ec13dfa958b07413f7a5a83a453c9768",
+ "kind": "durable",
+ "pass": "B",
+ "model": "sonnet",
+ "parsed": {
+  "acknowledged": "yes",
+  "preference_stored": "yes",
+  "preference_fact_ids": [
+   "01M6EK6T6AADE8WR51HPH9YH9W"
+  ],
+  "extra_useful": 0,
+  "noise": 0,
+  "notes": "The second answer gives all temperatures in Celsius first (Fahrenheit in parentheses) and says it saved a note. The stored rule states the lasting Celsius preference without limiting it to brewing, and allows Fahrenheit only as a secondary value."
+ },
+ "error": null,
+ "cost_usd": 0.0119761,
+ "seconds": 6.2,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"acknowledged\": \"yes\", \"preference_stored\": \"yes\", \"preference_fact_ids\": [\"01M6EK6T6AADE8WR51HPH9YH9W\"], \"extra_useful\": 0, \"noise\": 0, \"notes\": \"The second answer gives all temperatures in Celsius first (Fahrenheit in parentheses) and says it saved a note. The stored rule states the lasting Celsius preference without limiting it to brewing, and allows Fahrenheit only as a secondary value.\"}"
+}

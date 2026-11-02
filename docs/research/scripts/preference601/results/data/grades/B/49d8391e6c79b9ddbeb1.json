@@ -1,0 +1,18 @@
+{
+ "key": "49d8391e6c79b9ddbeb1",
+ "record_sha256": "4647673539c7e1b5b85f904e90d226fd7c48679a32afadf7314997943f1ef74d",
+ "kind": "probe",
+ "pass": "B",
+ "model": "sonnet",
+ "parsed": {
+  "applied": "yes",
+  "evidence": "Each bike is presented as a bold heading with bullet lists for Range, Weight, Price; the recommendation is in bullets and prose, with no Markdown table or aligned columns.",
+  "notes": "The answer avoids tables entirely and uses plain lists, matching the user's phone-reading preference."
+ },
+ "error": null,
+ "cost_usd": 0.0071081,
+ "seconds": 6.4,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"applied\": \"yes\", \"evidence\": \"Each bike is presented as a bold heading with bullet lists for Range, Weight, Price; the recommendation is in bullets and prose, with no Markdown table or aligned columns.\", \"notes\": \"The answer avoids tables entirely and uses plain lists, matching the user's phone-reading preference.\"}"
+}

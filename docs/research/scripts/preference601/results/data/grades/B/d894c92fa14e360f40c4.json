@@ -1,0 +1,18 @@
+{
+ "key": "d894c92fa14e360f40c4",
+ "record_sha256": "226b46882db67b42eb0a23117413597c013365b15094dabb098bdfaba5152bb2",
+ "kind": "probe",
+ "pass": "B",
+ "model": "sonnet",
+ "parsed": {
+  "applied": "partial",
+  "evidence": "Opens with \"I'd get the **Larkspur R7**.\" but then gives a five-bullet breakdown plus an alternatives paragraph and a caveat, roughly 230 words.",
+  "notes": "The bottom line comes first in one sentence, but the answer then volunteers a long breakdown instead of offering reasoning only on request."
+ },
+ "error": null,
+ "cost_usd": 0.006848099999999999,
+ "seconds": 7.3,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"applied\": \"partial\", \"evidence\": \"Opens with \\\"I'd get the **Larkspur R7**.\\\" but then gives a five-bullet breakdown plus an alternatives paragraph and a caveat, roughly 230 words.\", \"notes\": \"The bottom line comes first in one sentence, but the answer then volunteers a long breakdown instead of offering reasoning only on request.\"}"
+}
