@@ -2,7 +2,7 @@
 """Synthetic tests of replay606.py (#606). Every fact, label, case, repository, binary and client here is invented;
 nothing calls a model or opens a real store. Temporary files go under TMPDIR:
 
-    TMPDIR=/opt/data/cache/scratch python3 -I docs/research/scripts/card606/test_replay606.py
+    TMPDIR=/path/to/private/scratch python3 -I docs/research/scripts/card606/test_replay606.py
 """
 
 from __future__ import annotations
