@@ -1,0 +1,21 @@
+{
+ "key": "c8de15153dfbb7f249a9",
+ "record_sha256": "2cda4a7bf9424e89e1794184e3c3c6d9c372b0112a97057bd2bb5e2ca8c72da3",
+ "kind": "control",
+ "pass": "B",
+ "model": "sonnet",
+ "parsed": {
+  "acknowledged": "yes",
+  "durable_capture": "no",
+  "time_limited_capture": "no",
+  "extra_useful": 0,
+  "noise": 0,
+  "notes": "The second answer gives one comma-separated line per invoice (with a header the user can delete) and states the total outstanding of 3,135.50 EUR. The agent made no memory changes, so nothing was stored as lasting or time-limited."
+ },
+ "error": null,
+ "cost_usd": 0.0091181,
+ "seconds": 6.1,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"acknowledged\": \"yes\", \"durable_capture\": \"no\", \"time_limited_capture\": \"no\", \"extra_useful\": 0, \"noise\": 0, \"notes\": \"The second answer gives one comma-separated line per invoice (with a header the user can delete) and states the total outstanding of 3,135.50 EUR. The agent made no memory changes, so nothing was stored as lasting or time-limited.\"}"
+}

@@ -1,0 +1,36 @@
+{
+ "baseline_commit": "8ed3b53",
+ "fixtures": {
+  "candidate/reminder.md": "ba457e5c1f7de6a057072e8a679bafbee96860b7b53fd8845e7db118191218e3",
+  "fixtures/grade_control.md": "1b31e2699d840e62f09877a611dae8f609d8c5c137319f79aa673338efd0266c",
+  "fixtures/grade_durable.md": "452f47bbc2436fe3d1810f0124d845e30a5a152ec86068ce120a277d15658f5f",
+  "fixtures/grade_probe.md": "a8bb5339c7fedc466e2b47dd401e170f59034167662ff916794d4db9ba227dc5",
+  "fixtures/labels.json": "64b875903ec2b802e675ed7e3a28f071fd2dac7268c1e86622b013d3986233c3",
+  "fixtures/scenarios.json": "9e9b2c4d3c5868052aec9ed95fdd0f2b65077b25dffe965925bb299e4381e6fe",
+  "fixtures/workspaces/backups/plans.md": "9a44fd1318f92664b2c918d15ae6e9b42693e5ccb59a757ec408a8786ff59aa5",
+  "fixtures/workspaces/brewlog/brew.md": "8c9998842eccbcd31030debecc34b9ecde3ffa19ffcd601181d80c45549be7d5",
+  "fixtures/workspaces/ebikes/bikes.md": "31091d04fde69878edb530f4d8065d9425c144391ce5a48c70d91152d425e8d9",
+  "fixtures/workspaces/invoices/invoices.md": "5366261a5962e461ff001480b4970de4e8d35a030baafa98741701f840d2a5b7",
+  "fixtures/workspaces/kettles/kettles.md": "c1ec5a264e95688b9aa0d8958b52cd5b1e19db3899504872204ed1d5ffd74d74",
+  "fixtures/workspaces/offsite/notes.md": "4124964183ba7300da4269481ed30ac63aee225d1e1dd02abc4b8b054276ea63",
+  "fixtures/workspaces/pantry/pantry.md": "403748b2609aa656135cfb7b984b57736e7b01fa642ca5692cc95739abf79f96",
+  "fixtures/workspaces/plantswap/event.md": "4dc8438abe6c81db85c21bd93b7c615b66ce41c30cb52697d4c81fbb2597e1c3",
+  "fixtures/workspaces/routers/routers.md": "83f507ce35ddf8faafe86dbfe42295ae99b849b012fb579ee26203e6b17ffee1",
+  "fixtures/workspaces/smokehouse/recipe.md": "ca675e0e86a0bbb93ceb50ca4b386d978ca989bb4614dbf10442e8d08a3a75d2"
+ },
+ "frozen_at": "2026-11-02, before the grid; the smoke runs used an earlier copy of the inputs (inputs sha256 1040704\u2026) and are not counted",
+ "inputs": {
+  "agent601.sh": "9ff45191f643362cc207d875d0aa09cc4e1b698e587b528cab36e74c74269249",
+  "grade601.sh": "1c0af4153e076fa288cf8fb5424b749bf2460083a565efb21f80f3d1f01dc20c",
+  "memcue": "93726bb3c329236275f9cd468c68c44daf435c6bc7af15f9e5668edd57fb3251",
+  "plugin-base/.claude-plugin/plugin.json": "8f149e9fd2c0b53be545528e81e9fa8a7f46f746963b1e2524c4983c1c16d0b6",
+  "plugin-base/hooks/hooks.json": "9a8dcc363e87454675611602f54f5c54b0e9eee002d0321946d6bef1a64f3fc3",
+  "plugin-base/scripts/memcue.sh": "dd8531a002b41f57afb76832677757bf72329d80bc99d537ce0b513f9699bda8",
+  "plugin-base/skills/memcue/SKILL.md": "57eb51faad92bd1b396b164aeb438abcc9f5f28a0c10b77a9fd988543d800cf1",
+  "plugin-cand/hooks/hooks.json": "3abe1e1e83ea37069e71018aab9485da3dd9e75e26cbf1afb1333a3757867f3d",
+  "plugin-cand/scripts/reminder.md": "ba457e5c1f7de6a057072e8a679bafbee96860b7b53fd8845e7db118191218e3",
+  "plugin-cand/scripts/reminder601.py": "45c609aa735625c2d94712731d3a7f44c634fd047e4e64e4da8a75a6f2b8a9f9"
+ },
+ "inputs_manifest_sha256": "f5ea21656f367aeee7654c9bc310b181efbc9ac4b87f4f7357e622ebc782dfd5",
+ "memcue_version_string": "0.26.1-r601.8ed3b53"
+}

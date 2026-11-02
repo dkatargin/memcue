@@ -1,0 +1,323 @@
+{
+ "key": "10b95f4e1153802d8f59",
+ "sha256": "53cd09edf1453ff76974b17151f30baefc848d59deebc2925566044450ae1810",
+ "grade_kind": "durable",
+ "record": {
+  "scenario": "D4",
+  "kind": "durable",
+  "labels": {
+   "purpose": "The user says Fahrenheit means little to them and they think in Celsius, and asks for the numbers again.",
+   "preference": "The user thinks in Celsius: give temperatures in degrees Celsius, not (only) Fahrenheit.",
+   "expected_scope": "global",
+   "polarity": "Celsius first or only. A fact that says to use Fahrenheit, or that limits Celsius to this brewing recipe, is wrong or too narrow.",
+   "acknowledged_if": "The second answer recognises the request and gives the temperatures in Celsius.",
+   "probe_applied_if": "The probe answer gives the temperatures in degrees Celsius, either alone or first with Fahrenheit secondary.",
+   "probe_partial_if": "The answer gives Fahrenheit first and Celsius only as a secondary conversion."
+  },
+  "prompts": {
+   "turn1": "What fermentation temperature range does the recipe in brew.md call for, and is my garage, which sits at 61 degrees, okay for it?",
+   "turn2": "Honestly, Fahrenheit doesn't mean much to me. I grew up with Celsius and that's what I think in. Could you give me those numbers again, and also tell me the mash temperature?"
+  },
+  "answers": {
+   "turn1": "The recipe in brew.md calls for fermenting between **62 °F and 68 °F** for 14 days.\n\nYour garage at 61 °F is 1 degree below the bottom of that range, so it's slightly too cold. It's close, and the yeast should still ferment. But it may run slower and could stall or leave the beer under-attenuated, and the recipe also has you pitch at 64 °F, so the wort will cool further after pitching.\n\nTo bring it into range, you could:\n- Put the fermenter in an insulated box or wrap it in a blanket.\n- Use a heat wrap or a seedling mat with a thermostat.\n- Move it indoors to a closet for the first few days, when fermentation is most active.\n\nAlso note that active fermentation gives off a little heat, so the beer itself may run a degree or two warmer than the room. If you can measure the beer's temperature directly, with a stick-on strip thermometer for example, that's more reliable than the air temperature.",
+   "turn2": "Here are the numbers in Celsius:\n\n- **Fermentation range:** 16.7 °C to 20 °C, for 14 days.\n- **Your garage:** 61 °F is about 16.1 °C. That's just under the 16.7 °C minimum, by roughly half a degree.\n- **Mash temperature:** 152 °F is about 66.7 °C, held for 60 minutes.\n\nThe other temperatures in the recipe are:\n- **Pitch the yeast:** 64 °F is about 17.8 °C.\n- **Cold crash:** 35 °F is about 1.7 °C, for 2 days before bottling.\n\nThe gap is smaller than it sounded in Fahrenheit. Your garage is only about half a degree under the range, and fermentation warms the beer a little, so it will probably be fine. A stick-on thermometer on the fermenter would tell you for sure. I've also saved a note to give temperatures in Celsius from now on."
+  },
+  "base_changes": [
+   {
+    "id": "01M6EK4829SS5HVQ2W9W1BNPCK",
+    "change": "added",
+    "version": 1,
+    "kind": "rule",
+    "scope": "repo:example.com/acme/brewlog",
+    "source": "user",
+    "expires": "",
+    "content": "The user thinks in Celsius: give temperatures in °C (optionally with °F in brackets).",
+    "keywords": [
+     "celsius fahrenheit temperature units"
+    ]
+   }
+  ],
+  "memcue_calls": [
+   {
+    "command": "memcue search \"brew fermentation temperature garage\"",
+    "output": "No facts of this repository, this host or global match; -in all searches every repository.",
+    "turn": 1
+   },
+   {
+    "command": "memcue add -kind rule -source user -keywords \"celsius fahrenheit temperature units\" -- \"The user thinks in Celsius: give temperatures in °C (optionally with °F in brackets).\"",
+    "output": "01M6EK4829SS5HVQ2W9W1BNPCK",
+    "turn": 2
+   }
+  ]
+ },
+ "meta": {
+  "phase": "capture",
+  "arm": "cand",
+  "scenario": "D4",
+  "repeat": 2,
+  "image": "sha256:8f67b0dd19043b8a1ff6e9eb72edd75bc373ec8f6a92fe0a6de6ab094a806980",
+  "inputs_sha256": "f5ea21656f367aeee7654c9bc310b181efbc9ac4b87f4f7357e622ebc782dfd5",
+  "docker_exit": 0,
+  "seconds": 15.3,
+  "changes_after_turn1": 0,
+  "facts_before": 0,
+  "streams": {
+   "turn1": {
+    "cost_usd": 0.03041,
+    "usage": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 5971,
+     "cache_read_input_tokens": 22180,
+     "output_tokens": 430,
+     "output_tokens_details": {
+      "thinking_tokens": 0
+     },
+     "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+     },
+     "service_tier": "standard",
+     "cache_creation": {
+      "ephemeral_1h_input_tokens": 5971,
+      "ephemeral_5m_input_tokens": 0
+     },
+     "inference_geo": "global",
+     "iterations": [],
+     "speed": "standard",
+     "fallback_credit": null
+    },
+    "duration_ms": 5664,
+    "num_turns": 3,
+    "models": [
+     "claude-sonnet-5-5"
+    ],
+    "subtype": "success",
+    "memcue_calls": 1,
+    "searches": 1,
+    "tool_calls": [
+     "Bash",
+     "Bash"
+    ],
+    "hooks": [
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 265
+     },
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 265
+     },
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 265
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": false,
+      "reminder": false,
+      "chars": 346
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": false,
+      "reminder": false,
+      "chars": 346
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": true,
+      "reminder": true,
+      "chars": 10620
+     }
+    ],
+    "init": {
+     "model": "claude-sonnet-5-5",
+     "claude_code_version": "2.1.312",
+     "plugins": [
+      "memcue",
+      "cc-plugin-agents-md",
+      "cc-plugin-plugin-authoring"
+     ],
+     "mcp_servers": [],
+     "permissionMode": "bypassPermissions",
+     "tools": [
+      "Task",
+      "Bash",
+      "CronList",
+      "Edit",
+      "EnterWorktree",
+      "ExitWorktree",
+      "ListAgents",
+      "Monitor",
+      "NotebookEdit",
+      "Read",
+      "ReportFindings",
+      "SendMessage",
+      "Skill",
+      "TaskStop",
+      "ToolSearch",
+      "Write"
+     ]
+    }
+   },
+   "turn2": {
+    "cost_usd": 0.0427542,
+    "usage": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 816,
+     "cache_read_input_tokens": 28922,
+     "output_tokens": 618,
+     "output_tokens_details": {
+      "thinking_tokens": 194
+     },
+     "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+     },
+     "service_tier": "standard",
+     "cache_creation": {
+      "ephemeral_1h_input_tokens": 816,
+      "ephemeral_5m_input_tokens": 0
+     },
+     "inference_geo": "global",
+     "iterations": [],
+     "speed": "standard",
+     "fallback_credit": null
+    },
+    "duration_ms": 6755,
+    "num_turns": 2,
+    "models": [
+     "claude-sonnet-5-5"
+    ],
+    "subtype": "success",
+    "memcue_calls": 1,
+    "searches": 0,
+    "tool_calls": [
+     "Bash"
+    ],
+    "hooks": [
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:resume",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 264
+     },
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:resume",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 264
+     },
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:resume",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 264
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:resume",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": false,
+      "reminder": false,
+      "chars": 345
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:resume",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": false,
+      "reminder": false,
+      "chars": 345
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:resume",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": true,
+      "reminder": true,
+      "chars": 10619
+     }
+    ],
+    "init": {
+     "model": "claude-sonnet-5-5",
+     "claude_code_version": "2.1.312",
+     "plugins": [
+      "memcue",
+      "cc-plugin-agents-md",
+      "cc-plugin-plugin-authoring"
+     ],
+     "mcp_servers": [],
+     "permissionMode": "bypassPermissions",
+     "tools": [
+      "Task",
+      "Bash",
+      "CronList",
+      "Edit",
+      "EnterWorktree",
+      "ExitWorktree",
+      "ListAgents",
+      "Monitor",
+      "NotebookEdit",
+      "Read",
+      "ReportFindings",
+      "SendMessage",
+      "Skill",
+      "TaskStop",
+      "ToolSearch",
+      "Write"
+     ]
+    }
+   }
+  },
+  "card_ids": []
+ }
+}

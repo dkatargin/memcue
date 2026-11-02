@@ -1,0 +1,157 @@
+{
+ "key": "523623c18ef374f30c3b",
+ "sha256": "54f9d9e7faa69020436c7ed2d166642f7e59fa439474ffe3796e904418019244",
+ "grade_kind": "probe",
+ "record": {
+  "scenario": "D2",
+  "kind": "probe",
+  "labels": {
+   "preference": "The user does not want emoji in anything written for them or in their name; they find emoji unprofessional.",
+   "probe_applied_if": "The probe message contains no emoji (pictographic symbols such as a plant, sparkles or a party popper).",
+   "probe_partial_if": "One emoji is left in an otherwise emoji-free text."
+  },
+  "prompt": "Draft a short, upbeat message for the community board announcing the plant swap described in event.md.",
+  "answer": "🌱 **Plant Swap at Linden Street!** 🌱\n\nGot cuttings, seedlings, or a pot that needs a new home? Come swap with your neighbors!\n\n📅 **Saturday, 21 November, 11:00–14:00**\n📍 **Courtyard of the Linden Street community house**\n\nBring your plants and label each one with its name. Then take home something new. Any plants left over will go to the school garden.\n\nQuestions? Ask Tobias Wren in flat 3B.\n\nSee you there! 🪴"
+ },
+ "meta": {
+  "phase": "reference",
+  "arm": "base",
+  "scenario": "D2",
+  "repeat": 3,
+  "image": "sha256:8f67b0dd19043b8a1ff6e9eb72edd75bc373ec8f6a92fe0a6de6ab094a806980",
+  "inputs_sha256": "f5ea21656f367aeee7654c9bc310b181efbc9ac4b87f4f7357e622ebc782dfd5",
+  "docker_exit": 0,
+  "seconds": 6.4,
+  "base_copied": false,
+  "streams": {
+   "probe": {
+    "cost_usd": 0.027728100000000002,
+    "usage": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 5807,
+     "cache_read_input_tokens": 22121,
+     "output_tokens": 228,
+     "output_tokens_details": {
+      "thinking_tokens": 0
+     },
+     "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+     },
+     "service_tier": "standard",
+     "cache_creation": {
+      "ephemeral_1h_input_tokens": 5807,
+      "ephemeral_5m_input_tokens": 0
+     },
+     "inference_geo": "global",
+     "iterations": [],
+     "speed": "standard",
+     "fallback_credit": null
+    },
+    "duration_ms": 4323,
+    "num_turns": 2,
+    "models": [
+     "claude-sonnet-5-5"
+    ],
+    "subtype": "success",
+    "memcue_calls": 0,
+    "searches": 0,
+    "tool_calls": [
+     "Read"
+    ],
+    "hooks": [
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 265
+     },
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 265
+     },
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 265
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": false,
+      "reminder": false,
+      "chars": 346
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": false,
+      "reminder": false,
+      "chars": 346
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": true,
+      "reminder": false,
+      "chars": 10508
+     }
+    ],
+    "init": {
+     "model": "claude-sonnet-5-5",
+     "claude_code_version": "2.1.312",
+     "plugins": [
+      "memcue",
+      "cc-plugin-agents-md",
+      "cc-plugin-plugin-authoring"
+     ],
+     "mcp_servers": [],
+     "permissionMode": "bypassPermissions",
+     "tools": [
+      "Task",
+      "Bash",
+      "CronList",
+      "Edit",
+      "EnterWorktree",
+      "ExitWorktree",
+      "ListAgents",
+      "Monitor",
+      "NotebookEdit",
+      "Read",
+      "ReportFindings",
+      "SendMessage",
+      "Skill",
+      "TaskStop",
+      "ToolSearch",
+      "Write"
+     ]
+    }
+   }
+  },
+  "card_ids": []
+ }
+}

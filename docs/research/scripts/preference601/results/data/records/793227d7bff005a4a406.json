@@ -1,0 +1,159 @@
+{
+ "key": "793227d7bff005a4a406",
+ "sha256": "f9a569b4aa5882af66c1379f969546bd73a0d0f79e53fd239a236722d6dc22ee",
+ "grade_kind": "probe",
+ "record": {
+  "scenario": "D2",
+  "kind": "probe",
+  "labels": {
+   "preference": "The user does not want emoji in anything written for them or in their name; they find emoji unprofessional.",
+   "probe_applied_if": "The probe message contains no emoji (pictographic symbols such as a plant, sparkles or a party popper).",
+   "probe_partial_if": "One emoji is left in an otherwise emoji-free text."
+  },
+  "prompt": "Draft a short, upbeat message for the community board announcing the plant swap described in event.md.",
+  "answer": "Here's a draft for the board:\n\n**Plant Swap: Saturday, 21 November**\n\nGot a windowsill full of spider plant babies or a few extra seedlings? Come and trade them for something new!\n\n**When:** Saturday 21 November, 11:00 to 14:00\n**Where:** Courtyard of the Linden Street community house\n\nBring cuttings, seedlings or whole pots, and please label each one with the plant's name. Whatever is left at the end will go to the school garden, so nothing goes to waste.\n\nQuestions? Ask Tobias Wren, flat 3B.\n\nHope to see you there!\n\nI left out emoji, following your standing rule. The event file marks the location as \"(invented)\", so check the venue name before you post."
+ },
+ "meta": {
+  "phase": "probe",
+  "arm": "base",
+  "scenario": "D2",
+  "repeat": 3,
+  "image": "sha256:8f67b0dd19043b8a1ff6e9eb72edd75bc373ec8f6a92fe0a6de6ab094a806980",
+  "inputs_sha256": "f5ea21656f367aeee7654c9bc310b181efbc9ac4b87f4f7357e622ebc782dfd5",
+  "docker_exit": 0,
+  "seconds": 7.3,
+  "base_copied": true,
+  "streams": {
+   "probe": {
+    "cost_usd": 0.0287894,
+    "usage": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 5900,
+     "cache_read_input_tokens": 22214,
+     "output_tokens": 296,
+     "output_tokens_details": {
+      "thinking_tokens": 0
+     },
+     "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+     },
+     "service_tier": "standard",
+     "cache_creation": {
+      "ephemeral_1h_input_tokens": 5900,
+      "ephemeral_5m_input_tokens": 0
+     },
+     "inference_geo": "global",
+     "iterations": [],
+     "speed": "standard",
+     "fallback_credit": null
+    },
+    "duration_ms": 5219,
+    "num_turns": 2,
+    "models": [
+     "claude-sonnet-5-5"
+    ],
+    "subtype": "success",
+    "memcue_calls": 0,
+    "searches": 0,
+    "tool_calls": [
+     "Read"
+    ],
+    "hooks": [
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 265
+     },
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 265
+     },
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 265
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": true,
+      "reminder": false,
+      "chars": 11088
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": false,
+      "reminder": false,
+      "chars": 346
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": false,
+      "reminder": false,
+      "chars": 346
+     }
+    ],
+    "init": {
+     "model": "claude-sonnet-5-5",
+     "claude_code_version": "2.1.312",
+     "plugins": [
+      "memcue",
+      "cc-plugin-agents-md",
+      "cc-plugin-plugin-authoring"
+     ],
+     "mcp_servers": [],
+     "permissionMode": "bypassPermissions",
+     "tools": [
+      "Task",
+      "Bash",
+      "CronList",
+      "Edit",
+      "EnterWorktree",
+      "ExitWorktree",
+      "ListAgents",
+      "Monitor",
+      "NotebookEdit",
+      "Read",
+      "ReportFindings",
+      "SendMessage",
+      "Skill",
+      "TaskStop",
+      "ToolSearch",
+      "Write"
+     ]
+    }
+   }
+  },
+  "card_ids": [
+   "01M6EK5J9YYD267GH5YB1XW20E"
+  ]
+ }
+}

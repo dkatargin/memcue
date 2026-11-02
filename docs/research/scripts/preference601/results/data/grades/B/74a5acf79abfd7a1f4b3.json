@@ -1,0 +1,18 @@
+{
+ "key": "74a5acf79abfd7a1f4b3",
+ "record_sha256": "15243576053f492e3f56c77032a54c16d2bfe8bcf921f1e1f89512b7745c08db",
+ "kind": "probe",
+ "pass": "B",
+ "model": "sonnet",
+ "parsed": {
+  "applied": "partial",
+  "evidence": "Opens with \"**Get the Larkspur R7.**\" but then gives a bulleted breakdown of coverage, ports, price, plus a list of cases where the Tamsin fits, roughly 190 words.",
+  "notes": "The bottom line comes first, but the answer then volunteers a long breakdown the user didn't ask for, well over 120 words."
+ },
+ "error": null,
+ "cost_usd": 0.0066421,
+ "seconds": 4.9,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"applied\": \"partial\", \"evidence\": \"Opens with \\\"**Get the Larkspur R7.**\\\" but then gives a bulleted breakdown of coverage, ports, price, plus a list of cases where the Tamsin fits, roughly 190 words.\", \"notes\": \"The bottom line comes first, but the answer then volunteers a long breakdown the user didn't ask for, well over 120 words.\"}"
+}

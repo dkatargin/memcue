@@ -1,0 +1,18 @@
+{
+ "key": "523623c18ef374f30c3b",
+ "record_sha256": "54f9d9e7faa69020436c7ed2d166642f7e59fa439474ffe3796e904418019244",
+ "kind": "probe",
+ "pass": "B",
+ "model": "sonnet",
+ "parsed": {
+  "applied": "no",
+  "evidence": "Message includes multiple emoji: 🌱 (twice), 📅, 📍, and 🪴.",
+  "notes": "The draft is full of pictographic emoji despite the user's preference for none."
+ },
+ "error": null,
+ "cost_usd": 0.0051401,
+ "seconds": 4.4,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"applied\": \"no\", \"evidence\": \"Message includes multiple emoji: 🌱 (twice), 📅, 📍, and 🪴.\", \"notes\": \"The draft is full of pictographic emoji despite the user's preference for none.\"}"
+}

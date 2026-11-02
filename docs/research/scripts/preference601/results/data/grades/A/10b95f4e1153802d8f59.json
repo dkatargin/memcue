@@ -1,0 +1,23 @@
+{
+ "key": "10b95f4e1153802d8f59",
+ "record_sha256": "53cd09edf1453ff76974b17151f30baefc848d59deebc2925566044450ae1810",
+ "kind": "durable",
+ "pass": "A",
+ "model": "opus",
+ "parsed": {
+  "acknowledged": "yes",
+  "preference_stored": "yes",
+  "preference_fact_ids": [
+   "01M6EK4829SS5HVQ2W9W1BNPCK"
+  ],
+  "extra_useful": 0,
+  "noise": 0,
+  "notes": "The second answer explicitly gives all temperatures in Celsius and says it saved the preference. The single stored fact states a general Celsius-first preference (°F optional, secondary) that is not limited to the recipe; repo scope is left to the stand."
+ },
+ "error": null,
+ "cost_usd": 0.0245922,
+ "seconds": 5.5,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"acknowledged\": \"yes\", \"preference_stored\": \"yes\", \"preference_fact_ids\": [\"01M6EK4829SS5HVQ2W9W1BNPCK\"], \"extra_useful\": 0, \"noise\": 0, \"notes\": \"The second answer explicitly gives all temperatures in Celsius and says it saved the preference. The single stored fact states a general Celsius-first preference (°F optional, secondary) that is not limited to the recipe; repo scope is left to the stand.\"}"
+}

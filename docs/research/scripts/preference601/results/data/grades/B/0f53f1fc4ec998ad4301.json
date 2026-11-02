@@ -1,0 +1,18 @@
+{
+ "key": "0f53f1fc4ec998ad4301",
+ "record_sha256": "61751f0743bf8f0553dc93a6092e7c98ab002bcfb2ec2f74cd48a746a439699d",
+ "kind": "probe",
+ "pass": "B",
+ "model": "sonnet",
+ "parsed": {
+  "applied": "no",
+  "evidence": "Contains multiple emoji: 🌱 at the start and after the title, 📅, 📍, and 🪴 at the end.",
+  "notes": "The announcement is full of pictographic emoji, directly violating the user's no-emoji preference."
+ },
+ "error": null,
+ "cost_usd": 0.0053641,
+ "seconds": 5.2,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"applied\": \"no\", \"evidence\": \"Contains multiple emoji: 🌱 at the start and after the title, 📅, 📍, and 🪴 at the end.\", \"notes\": \"The announcement is full of pictographic emoji, directly violating the user's no-emoji preference.\"}"
+}

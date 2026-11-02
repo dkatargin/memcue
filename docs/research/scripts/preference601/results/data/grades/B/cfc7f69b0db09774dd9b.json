@@ -1,0 +1,18 @@
+{
+ "key": "cfc7f69b0db09774dd9b",
+ "record_sha256": "fcd69b93f6ffdf029e6398456eeaed929166f6aaf15f3b89fb96958acf45c371",
+ "kind": "probe",
+ "pass": "B",
+ "model": "sonnet",
+ "parsed": {
+  "applied": "no",
+  "evidence": "Temperatures given only in Fahrenheit: \"250 °F\", \"203 °F\", \"165 °F\" with no Celsius conversion.",
+  "notes": "The answer ignores the Celsius preference entirely, giving all temperatures solely in Fahrenheit."
+ },
+ "error": null,
+ "cost_usd": 0.0013000000000000002,
+ "seconds": 4.2,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"applied\": \"no\", \"evidence\": \"Temperatures given only in Fahrenheit: \\\"250 °F\\\", \\\"203 °F\\\", \\\"165 °F\\\" with no Celsius conversion.\", \"notes\": \"The answer ignores the Celsius preference entirely, giving all temperatures solely in Fahrenheit.\"}"
+}

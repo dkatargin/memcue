@@ -1,0 +1,21 @@
+{
+ "key": "0481445abadec8657723",
+ "record_sha256": "759ab3e1acd96c782a492c6919ac88243005366638b5e507824c48bb544256fa",
+ "kind": "control",
+ "pass": "A",
+ "model": "opus",
+ "parsed": {
+  "acknowledged": "yes",
+  "durable_capture": "no",
+  "time_limited_capture": "no",
+  "extra_useful": 0,
+  "noise": 0,
+  "notes": "The second answer gives one comma-separated line per unpaid invoice, with separator-free amounts, and also gives the total. The agent made no memory changes, which is correct for a one-off format request."
+ },
+ "error": null,
+ "cost_usd": 0.0177882,
+ "seconds": 169.3,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"acknowledged\": \"yes\", \"durable_capture\": \"no\", \"time_limited_capture\": \"no\", \"extra_useful\": 0, \"noise\": 0, \"notes\": \"The second answer gives one comma-separated line per unpaid invoice, with separator-free amounts, and also gives the total. The agent made no memory changes, which is correct for a one-off format request.\"}"
+}

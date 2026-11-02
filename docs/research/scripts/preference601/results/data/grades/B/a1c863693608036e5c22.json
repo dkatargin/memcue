@@ -1,0 +1,21 @@
+{
+ "key": "a1c863693608036e5c22",
+ "record_sha256": "e398f40f78461144cb6c6098a041a3c6d0db9b6806ccfc4d88ead242881f2934",
+ "kind": "control",
+ "pass": "B",
+ "model": "sonnet",
+ "parsed": {
+  "acknowledged": "yes",
+  "durable_capture": "no",
+  "time_limited_capture": "no",
+  "extra_useful": 0,
+  "noise": 0,
+  "notes": "The second answer gives one comma-separated line per invoice, with amounts written so they don't split columns, and states the total outstanding. The agent made no memory changes, so nothing was stored durably or time-limited."
+ },
+ "error": null,
+ "cost_usd": 0.0088041,
+ "seconds": 3.8,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"acknowledged\": \"yes\", \"durable_capture\": \"no\", \"time_limited_capture\": \"no\", \"extra_useful\": 0, \"noise\": 0, \"notes\": \"The second answer gives one comma-separated line per invoice, with amounts written so they don't split columns, and states the total outstanding. The agent made no memory changes, so nothing was stored durably or time-limited.\"}"
+}

@@ -1,0 +1,18 @@
+{
+ "key": "49d8391e6c79b9ddbeb1",
+ "record_sha256": "4647673539c7e1b5b85f904e90d226fd7c48679a32afadf7314997943f1ef74d",
+ "kind": "probe",
+ "pass": "A",
+ "model": "opus",
+ "parsed": {
+  "applied": "yes",
+  "evidence": "Each bike is a bold heading with a bulleted list of range, weight and price, and the recommendation is in bullets and prose; there is no Markdown table or aligned columns.",
+  "notes": "The answer uses only lists and prose for the comparison, which meets the no-table condition."
+ },
+ "error": null,
+ "cost_usd": 0.0140242,
+ "seconds": 5.2,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"applied\": \"yes\", \"evidence\": \"Each bike is a bold heading with a bulleted list of range, weight and price, and the recommendation is in bullets and prose; there is no Markdown table or aligned columns.\", \"notes\": \"The answer uses only lists and prose for the comparison, which meets the no-table condition.\"}"
+}

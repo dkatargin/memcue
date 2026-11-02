@@ -1,0 +1,18 @@
+{
+ "key": "78d3553d9e3a97a4ed6a",
+ "record_sha256": "9dae0e5e523742955fc5502997ae0d0ba11b1946d4800baeac09f53c8c2a78a1",
+ "kind": "probe",
+ "pass": "B",
+ "model": "sonnet",
+ "parsed": {
+  "applied": "yes",
+  "evidence": "Opens with \"Get the Larkspur R7.\" and the whole answer is roughly 80 words, with a short supporting paragraph.",
+  "notes": "Leads with the recommendation and stays under about 120 words, though it adds a few supporting details without being asked."
+ },
+ "error": null,
+ "cost_usd": 0.0053541000000000005,
+ "seconds": 5.8,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"applied\": \"yes\", \"evidence\": \"Opens with \\\"Get the Larkspur R7.\\\" and the whole answer is roughly 80 words, with a short supporting paragraph.\", \"notes\": \"Leads with the recommendation and stays under about 120 words, though it adds a few supporting details without being asked.\"}"
+}

@@ -1,0 +1,18 @@
+{
+ "key": "523623c18ef374f30c3b",
+ "record_sha256": "54f9d9e7faa69020436c7ed2d166642f7e59fa439474ffe3796e904418019244",
+ "kind": "probe",
+ "pass": "A",
+ "model": "opus",
+ "parsed": {
+  "applied": "no",
+  "evidence": "Multiple emoji: 🌱 twice in the heading, 📅, 📍, and 🪴 at the end",
+  "notes": "The answer uses five emoji throughout, which plainly goes against the user's no-emoji preference."
+ },
+ "error": null,
+ "cost_usd": 0.0104682,
+ "seconds": 6.3,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"applied\": \"no\", \"evidence\": \"Multiple emoji: 🌱 twice in the heading, 📅, 📍, and 🪴 at the end\", \"notes\": \"The answer uses five emoji throughout, which plainly goes against the user's no-emoji preference.\"}"
+}

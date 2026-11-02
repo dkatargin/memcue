@@ -1,0 +1,23 @@
+{
+ "key": "4f45141120d6e947dcc0",
+ "record_sha256": "b3e9dfbde927bd8810d7940029271eeb2b9a2e388949cb4a3b1efa4b8ea656fe",
+ "kind": "durable",
+ "pass": "A",
+ "model": "opus",
+ "parsed": {
+  "acknowledged": "yes",
+  "preference_stored": "yes",
+  "preference_fact_ids": [
+   "01M6EK2SFBJKXFG6MWKW1ABS2P"
+  ],
+  "extra_useful": 0,
+  "noise": 0,
+  "notes": "The second answer explicitly drops the emoji and says so, and the reminder is emoji-free. The single stored fact states a lasting, general no-emoji rule with the reason (unprofessional), not limited to the offsite."
+ },
+ "error": null,
+ "cost_usd": 0.0233242,
+ "seconds": 4.7,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"acknowledged\": \"yes\", \"preference_stored\": \"yes\", \"preference_fact_ids\": [\"01M6EK2SFBJKXFG6MWKW1ABS2P\"], \"extra_useful\": 0, \"noise\": 0, \"notes\": \"The second answer explicitly drops the emoji and says so, and the reminder is emoji-free. The single stored fact states a lasting, general no-emoji rule with the reason (unprofessional), not limited to the offsite.\"}"
+}

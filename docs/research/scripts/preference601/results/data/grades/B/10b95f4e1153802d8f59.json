@@ -1,0 +1,23 @@
+{
+ "key": "10b95f4e1153802d8f59",
+ "record_sha256": "53cd09edf1453ff76974b17151f30baefc848d59deebc2925566044450ae1810",
+ "kind": "durable",
+ "pass": "B",
+ "model": "sonnet",
+ "parsed": {
+  "acknowledged": "yes",
+  "preference_stored": "yes",
+  "preference_fact_ids": [
+   "01M6EK4829SS5HVQ2W9W1BNPCK"
+  ],
+  "extra_useful": 0,
+  "noise": 0,
+  "notes": "The second answer gives all temperatures in Celsius, including the mash temperature, and says it saved a note. The stored fact states the lasting Celsius preference with no topic limit; the optional °F in brackets keeps Celsius first, which fits the label."
+ },
+ "error": null,
+ "cost_usd": 0.0123321,
+ "seconds": 5.2,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"acknowledged\": \"yes\", \"preference_stored\": \"yes\", \"preference_fact_ids\": [\"01M6EK4829SS5HVQ2W9W1BNPCK\"], \"extra_useful\": 0, \"noise\": 0, \"notes\": \"The second answer gives all temperatures in Celsius, including the mash temperature, and says it saved a note. The stored fact states the lasting Celsius preference with no topic limit; the optional °F in brackets keeps Celsius first, which fits the label.\"}"
+}

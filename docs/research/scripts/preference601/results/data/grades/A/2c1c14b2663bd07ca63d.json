@@ -1,0 +1,18 @@
+{
+ "key": "2c1c14b2663bd07ca63d",
+ "record_sha256": "bac401a177ffa76fb2ae6a36a9241b7d678162dd33bb4a16dde54cad588da882",
+ "kind": "probe",
+ "pass": "A",
+ "model": "opus",
+ "parsed": {
+  "applied": "partial",
+  "evidence": "Opens with a Markdown table (Model | Range | Weight | Price, three rows); the rest is bullet lists and prose paragraphs.",
+  "notes": "The answer is mostly lists and prose, but it still includes a small Markdown table, which matches the partial criterion."
+ },
+ "error": null,
+ "cost_usd": 0.017072200000000003,
+ "seconds": 5.2,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"applied\": \"partial\", \"evidence\": \"Opens with a Markdown table (Model | Range | Weight | Price, three rows); the rest is bullet lists and prose paragraphs.\", \"notes\": \"The answer is mostly lists and prose, but it still includes a small Markdown table, which matches the partial criterion.\"}"
+}

@@ -1,0 +1,18 @@
+{
+ "key": "361c84162ca5b0706a03",
+ "record_sha256": "6701a1832692643bfb2e3326e1d3f849b6a360cf0cd6ac592920192b23ff5a94",
+ "kind": "probe",
+ "pass": "A",
+ "model": "opus",
+ "parsed": {
+  "applied": "yes",
+  "evidence": "No emoji anywhere; the message uses only text, bold headings and an exclamation mark.",
+  "notes": "The upbeat tone comes from wording alone, with no pictographic symbols, so the answer meets the no-emoji preference."
+ },
+ "error": null,
+ "cost_usd": 0.0108522,
+ "seconds": 4.1,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"applied\": \"yes\", \"evidence\": \"No emoji anywhere; the message uses only text, bold headings and an exclamation mark.\", \"notes\": \"The upbeat tone comes from wording alone, with no pictographic symbols, so the answer meets the no-emoji preference.\"}"
+}

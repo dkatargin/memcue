@@ -1,0 +1,21 @@
+{
+ "key": "fa33c83cfa93d4edfa66",
+ "record_sha256": "472651e79debbb2243711d1e735b98b4dbf2c6b28e7d192455ec6ee4194d19f3",
+ "kind": "control",
+ "pass": "B",
+ "model": "sonnet",
+ "parsed": {
+  "acknowledged": "yes",
+  "durable_capture": "no",
+  "time_limited_capture": "no",
+  "extra_useful": 0,
+  "noise": 0,
+  "notes": "The second answer gives one comma-separated line per invoice (with a header) and the total outstanding of 3,135.50 EUR. No memory changes or calls were made, so nothing was captured either durably or time-limited."
+ },
+ "error": null,
+ "cost_usd": 0.0015783,
+ "seconds": 7.3,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"acknowledged\": \"yes\", \"durable_capture\": \"no\", \"time_limited_capture\": \"no\", \"extra_useful\": 0, \"noise\": 0, \"notes\": \"The second answer gives one comma-separated line per invoice (with a header) and the total outstanding of 3,135.50 EUR. No memory changes or calls were made, so nothing was captured either durably or time-limited.\"}"
+}

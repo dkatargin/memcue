@@ -1,0 +1,21 @@
+{
+ "key": "e092e64c1cc75189fa16",
+ "record_sha256": "f23b03c9824818ca250e990c445b8f913b569fba685bb6976e22182e2af463e2",
+ "kind": "durable",
+ "pass": "B",
+ "model": "sonnet",
+ "parsed": {
+  "acknowledged": "yes",
+  "preference_stored": "no",
+  "preference_fact_ids": [],
+  "extra_useful": 0,
+  "noise": 0,
+  "notes": "The second answer is a single short sentence giving the bottom line first, so it follows the preference. However, base_changes is empty, so the preference was never stored in memory."
+ },
+ "error": null,
+ "cost_usd": 0.0103181,
+ "seconds": 7.5,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"acknowledged\": \"yes\", \"preference_stored\": \"no\", \"preference_fact_ids\": [], \"extra_useful\": 0, \"noise\": 0, \"notes\": \"The second answer is a single short sentence giving the bottom line first, so it follows the preference. However, base_changes is empty, so the preference was never stored in memory.\"}"
+}

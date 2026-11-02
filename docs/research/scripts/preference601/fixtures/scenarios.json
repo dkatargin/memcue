@@ -1,0 +1,65 @@
+{
+  "frozen": "2026-11-02, before the first grid run; changing a scenario after that is a new study",
+  "scenarios": [
+    {
+      "id": "D1",
+      "kind": "durable",
+      "workspace": "kettles",
+      "turn1": "Compare the three kettles in kettles.md for me: capacity, boil time and price. Which one is the best value?",
+      "turn2": "Thanks. One thing, though: I read your answers on my phone almost all the time, and tables turn into an unreadable mess on that screen. Plain lists work much better for me. Which of the three is the quietest?",
+      "probe": {
+        "workspace": "ebikes",
+        "prompt": "Compare the three e-bikes in bikes.md on range, weight and price, and tell me which one suits a 12 km daily commute."
+      }
+    },
+    {
+      "id": "D2",
+      "kind": "durable",
+      "workspace": "offsite",
+      "turn1": "Write a short announcement for the team chat about the offsite, using notes.md.",
+      "turn2": "Looks fine, but please leave out the emoji. I can't stand them in anything written for me or in my name; to me they read as unprofessional. Can you also make a two-line reminder for the day before?",
+      "probe": {
+        "workspace": "plantswap",
+        "prompt": "Draft a short, upbeat message for the community board announcing the plant swap described in event.md."
+      }
+    },
+    {
+      "id": "D3",
+      "kind": "durable",
+      "workspace": "backups",
+      "turn1": "Which of the two backup plans in plans.md should we go with?",
+      "turn2": "That's a lot of text to get through. Generally I'd rather get the bottom line in a sentence or two first; I'll ask if I want the reasoning. Quick one then: how often does plan B run a full backup?",
+      "probe": {
+        "workspace": "routers",
+        "prompt": "Should I get the Larkspur R7 or the Tamsin AX2 router from routers.md for a small flat where two people work from home?"
+      }
+    },
+    {
+      "id": "D4",
+      "kind": "durable",
+      "workspace": "brewlog",
+      "turn1": "What fermentation temperature range does the recipe in brew.md call for, and is my garage, which sits at 61 degrees, okay for it?",
+      "turn2": "Honestly, Fahrenheit doesn't mean much to me. I grew up with Celsius and that's what I think in. Could you give me those numbers again, and also tell me the mash temperature?",
+      "probe": {
+        "workspace": "smokehouse",
+        "prompt": "What should I set the smoker to for the brisket in recipe.md, and at what internal temperature is it done?"
+      }
+    },
+    {
+      "id": "C1",
+      "kind": "control",
+      "workspace": "pantry",
+      "turn1": "Which items in pantry.md expire in the next two weeks? Today is 2026-11-02.",
+      "turn2": "Ugh, sorry if I'm short with you. Rough night, barely slept, and today has been one thing after another. Anyway: can you sort those by date and tell me which one to use first?",
+      "probe": null
+    },
+    {
+      "id": "C2",
+      "kind": "control",
+      "workspace": "invoices",
+      "turn1": "Summarise the unpaid invoices in invoices.md.",
+      "turn2": "Thanks. For this one, could you redo it as one comma-separated line per invoice? I'm pasting it straight into a spreadsheet import. And what's the total outstanding?",
+      "probe": null
+    }
+  ]
+}

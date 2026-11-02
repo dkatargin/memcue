@@ -1,0 +1,18 @@
+{
+ "key": "a5983f530b71d1c2aa71",
+ "record_sha256": "11fcd0b4487f3e99958fc5728adbd030549f5379178df316e03f506afe6edf11",
+ "kind": "probe",
+ "pass": "A",
+ "model": "opus",
+ "parsed": {
+  "applied": "partial",
+  "evidence": "Opens with \"**Get the Larkspur R7.**\" but follows with four reasoning bullets, a three-bullet section on when the Tamsin makes sense, and a closing caveat (~155 words).",
+  "notes": "The bottom line comes first, but the answer then gives an unrequested breakdown well past the short-answer threshold."
+ },
+ "error": null,
+ "cost_usd": 0.0153442,
+ "seconds": 5.8,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"applied\": \"partial\", \"evidence\": \"Opens with \\\"**Get the Larkspur R7.**\\\" but follows with four reasoning bullets, a three-bullet section on when the Tamsin makes sense, and a closing caveat (~155 words).\", \"notes\": \"The bottom line comes first, but the answer then gives an unrequested breakdown well past the short-answer threshold.\"}"
+}

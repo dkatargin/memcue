@@ -1,0 +1,18 @@
+{
+ "key": "f5464684029fcaab1947",
+ "record_sha256": "be28352d08e175eee27e249edbc51d0719c56ef14b4a0f707b0e915ea765391c",
+ "kind": "probe",
+ "pass": "A",
+ "model": "opus",
+ "parsed": {
+  "applied": "no",
+  "evidence": "temperatures only in F: \"250 °F\", \"203 °F\", \"165 °F\" with no Celsius conversion",
+  "notes": "Every temperature appears only in Fahrenheit, so the answer goes against the user's Celsius preference."
+ },
+ "error": null,
+ "cost_usd": 0.0102002,
+ "seconds": 4.2,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"applied\": \"no\", \"evidence\": \"temperatures only in F: \\\"250 °F\\\", \\\"203 °F\\\", \\\"165 °F\\\" with no Celsius conversion\", \"notes\": \"Every temperature appears only in Fahrenheit, so the answer goes against the user's Celsius preference.\"}"
+}

@@ -1,0 +1,18 @@
+{
+ "key": "57d747983ead1361b9e9",
+ "record_sha256": "5d32abe7dc9a2f0f135511aa220732204555f0e358fea5b506cb235b8eaec7a2",
+ "kind": "probe",
+ "pass": "A",
+ "model": "opus",
+ "parsed": {
+  "applied": "partial",
+  "evidence": "Opens with a 3-row Markdown table (Range | Weight | Price for Lantern, Sparrow, Tidewater); the rest is bulleted lists and prose.",
+  "notes": "The answer is mostly lists, but it still contains a small table that would be hard to read on a phone, so it fits the partial criterion."
+ },
+ "error": null,
+ "cost_usd": 0.017668200000000002,
+ "seconds": 5.6,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"applied\": \"partial\", \"evidence\": \"Opens with a 3-row Markdown table (Range | Weight | Price for Lantern, Sparrow, Tidewater); the rest is bulleted lists and prose.\", \"notes\": \"The answer is mostly lists, but it still contains a small table that would be hard to read on a phone, so it fits the partial criterion.\"}"
+}

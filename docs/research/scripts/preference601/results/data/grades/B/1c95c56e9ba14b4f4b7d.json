@@ -1,0 +1,18 @@
+{
+ "key": "1c95c56e9ba14b4f4b7d",
+ "record_sha256": "e8b2163bba2c202a1865bb0a4ad2092c09a6b804e3eef4763059887d868c5fa6",
+ "kind": "probe",
+ "pass": "B",
+ "model": "sonnet",
+ "parsed": {
+  "applied": "no",
+  "evidence": "Contains multiple emoji: 🌱, 🌿, 📅, 📍, 🪴 in the title, date/location lines, and sign-off.",
+  "notes": "The announcement uses five pictographic emoji, directly contrary to the user's no-emoji preference."
+ },
+ "error": null,
+ "cost_usd": 0.0054120999999999996,
+ "seconds": 4.0,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"applied\": \"no\", \"evidence\": \"Contains multiple emoji: 🌱, 🌿, 📅, 📍, 🪴 in the title, date/location lines, and sign-off.\", \"notes\": \"The announcement uses five pictographic emoji, directly contrary to the user's no-emoji preference.\"}"
+}

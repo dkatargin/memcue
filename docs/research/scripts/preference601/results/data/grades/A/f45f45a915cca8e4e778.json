@@ -1,0 +1,23 @@
+{
+ "key": "f45f45a915cca8e4e778",
+ "record_sha256": "a74e384c9d90d4d7b8402de689c64b1e48cebbfc269a5be429baf1cd6121f0e2",
+ "kind": "durable",
+ "pass": "A",
+ "model": "opus",
+ "parsed": {
+  "acknowledged": "yes",
+  "preference_stored": "yes",
+  "preference_fact_ids": [
+   "01M6EJZCQKXV2S1BXRWMEGV3R7"
+  ],
+  "extra_useful": 0,
+  "noise": 0,
+  "notes": "The second answer switches to a plain list with no table and explicitly says it saved a note to use lists instead of tables in future. The single stored fact captures the lasting preference with correct polarity (no tables, use lists, because of phone reading) and is not tied to kettles."
+ },
+ "error": null,
+ "cost_usd": 0.0247282,
+ "seconds": 4.3,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"acknowledged\": \"yes\", \"preference_stored\": \"yes\", \"preference_fact_ids\": [\"01M6EJZCQKXV2S1BXRWMEGV3R7\"], \"extra_useful\": 0, \"noise\": 0, \"notes\": \"The second answer switches to a plain list with no table and explicitly says it saved a note to use lists instead of tables in future. The single stored fact captures the lasting preference with correct polarity (no tables, use lists, because of phone reading) and is not tied to kettles.\"}"
+}

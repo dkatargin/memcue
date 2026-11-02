@@ -1,0 +1,18 @@
+{
+ "key": "cbde56f0c4af48d0926a",
+ "record_sha256": "b27c2b9494e352019c09f3f84979fa81ef272fc1c8aeb70f6b09e44597c2bda1",
+ "kind": "probe",
+ "pass": "A",
+ "model": "opus",
+ "parsed": {
+  "applied": "yes",
+  "evidence": "Each bike gets a bold heading followed by bullet lists of range, weight and price, and the answer contains no Markdown table or aligned columns.",
+  "notes": "The comparison is given entirely as lists and prose, so it meets the applied condition, though the opening remark about the user reading on a phone is unnecessary."
+ },
+ "error": null,
+ "cost_usd": 0.0140002,
+ "seconds": 5.8,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"applied\": \"yes\", \"evidence\": \"Each bike gets a bold heading followed by bullet lists of range, weight and price, and the answer contains no Markdown table or aligned columns.\", \"notes\": \"The comparison is given entirely as lists and prose, so it meets the applied condition, though the opening remark about the user reading on a phone is unnecessary.\"}"
+}

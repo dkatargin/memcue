@@ -1,0 +1,21 @@
+{
+ "key": "095e1d187a5e95687d87",
+ "record_sha256": "28256c8862d12ec3ec27286385215fbf51e3e42f23a0c66e8e7afd8c6eb28e6b",
+ "kind": "control",
+ "pass": "B",
+ "model": "sonnet",
+ "parsed": {
+  "acknowledged": "yes",
+  "durable_capture": "no",
+  "time_limited_capture": "no",
+  "extra_useful": 0,
+  "noise": 0,
+  "notes": "The second answer gives one comma-separated line per invoice and states the total outstanding (3,135.50 EUR). base_changes and memcue_calls are empty, so nothing was stored, either as a lasting preference or as a time-limited fact."
+ },
+ "error": null,
+ "cost_usd": 0.0090281,
+ "seconds": 3.9,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"acknowledged\": \"yes\", \"durable_capture\": \"no\", \"time_limited_capture\": \"no\", \"extra_useful\": 0, \"noise\": 0, \"notes\": \"The second answer gives one comma-separated line per invoice and states the total outstanding (3,135.50 EUR). base_changes and memcue_calls are empty, so nothing was stored, either as a lasting preference or as a time-limited fact.\"}"
+}

@@ -1,0 +1,18 @@
+{
+ "key": "90463abef4473c583e6e",
+ "record_sha256": "91538bc6d94cb7ab8a52bfb3596d701f633fbffc16e62d525457d39cdc3c0026",
+ "kind": "probe",
+ "pass": "A",
+ "model": "opus",
+ "parsed": {
+  "applied": "yes",
+  "evidence": "The message uses only plain text and bold headings, with no emoji anywhere.",
+  "notes": "The announcement stays upbeat without any pictographic symbols, so it meets the no-emoji preference."
+ },
+ "error": null,
+ "cost_usd": 0.0104362,
+ "seconds": 5.1,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"applied\": \"yes\", \"evidence\": \"The message uses only plain text and bold headings, with no emoji anywhere.\", \"notes\": \"The announcement stays upbeat without any pictographic symbols, so it meets the no-emoji preference.\"}"
+}

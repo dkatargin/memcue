@@ -1,0 +1,18 @@
+{
+ "key": "78d3553d9e3a97a4ed6a",
+ "record_sha256": "9dae0e5e523742955fc5502997ae0d0ba11b1946d4800baeac09f53c8c2a78a1",
+ "kind": "probe",
+ "pass": "A",
+ "model": "opus",
+ "parsed": {
+  "applied": "yes",
+  "evidence": "Opens with \"Get the Larkspur R7.\" and the whole answer is about 75 words, with only brief supporting reasons.",
+  "notes": "The bottom line comes first and the answer stays well under the roughly 120-word limit, which meets probe_applied_if."
+ },
+ "error": null,
+ "cost_usd": 0.0116962,
+ "seconds": 4.4,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"applied\": \"yes\", \"evidence\": \"Opens with \\\"Get the Larkspur R7.\\\" and the whole answer is about 75 words, with only brief supporting reasons.\", \"notes\": \"The bottom line comes first and the answer stays well under the roughly 120-word limit, which meets probe_applied_if.\"}"
+}

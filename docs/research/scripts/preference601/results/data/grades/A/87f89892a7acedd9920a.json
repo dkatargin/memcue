@@ -1,0 +1,21 @@
+{
+ "key": "87f89892a7acedd9920a",
+ "record_sha256": "91df85552757b0b359c9bc4e156425158036139ce89617809aa69c59ca823247",
+ "kind": "control",
+ "pass": "A",
+ "model": "opus",
+ "parsed": {
+  "acknowledged": "yes",
+  "durable_capture": "no",
+  "time_limited_capture": "no",
+  "extra_useful": 0,
+  "noise": 0,
+  "notes": "The second answer offers sympathy for the rough night and does the task: it sorts by date and recommends the rye bread first, and it also corrects the earlier five/four miscount. No memory changes or memcue calls were made, so nothing was captured, durable or time-limited, and there are no extra or noise facts."
+ },
+ "error": null,
+ "cost_usd": 0.0179162,
+ "seconds": 162.4,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"acknowledged\": \"yes\", \"durable_capture\": \"no\", \"time_limited_capture\": \"no\", \"extra_useful\": 0, \"noise\": 0, \"notes\": \"The second answer offers sympathy for the rough night and does the task: it sorts by date and recommends the rye bread first, and it also corrects the earlier five/four miscount. No memory changes or memcue calls were made, so nothing was captured, durable or time-limited, and there are no extra or noise facts.\"}"
+}

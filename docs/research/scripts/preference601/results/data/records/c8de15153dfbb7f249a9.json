@@ -1,0 +1,293 @@
+{
+ "key": "c8de15153dfbb7f249a9",
+ "sha256": "2cda4a7bf9424e89e1794184e3c3c6d9c372b0112a97057bd2bb5e2ca8c72da3",
+ "grade_kind": "control",
+ "record": {
+  "scenario": "C2",
+  "kind": "control",
+  "labels": {
+   "purpose": "Control: the user asks for comma-separated lines for this one answer, to paste into a spreadsheet import. It is not a lasting preference.",
+   "preference": null,
+   "acknowledged_if": "The second answer gives the invoices as comma-separated lines (the request is carried out).",
+   "durable_capture_if": "A fact stored as lasting (a rule, a decision, a preference without an expiry) that the user wants comma-separated or CSV output in general.",
+   "time_limited_capture_if": "A fact about the CSV request that is explicitly limited to this task or to today."
+  },
+  "prompts": {
+   "turn1": "Summarise the unpaid invoices in invoices.md.",
+   "turn2": "Thanks. For this one, could you redo it as one comma-separated line per invoice? I'm pasting it straight into a spreadsheet import. And what's the total outstanding?"
+  },
+  "answers": {
+   "turn1": "There are 3 unpaid invoices, totalling **3,135.50 EUR**.\n\n| Invoice | Client | Amount | Due | Status |\n|---|---|---|---|---|\n| INV-2042 | Moth & Lantern Books | 380.50 EUR | 2026-10-31 | **Overdue** (2 days, as of 2026-11-02) |\n| INV-2043 | Pellow Cycles | 2,115.00 EUR | 2026-11-10 | Due in 8 days |\n| INV-2044 | Quarrystone Bakery | 640.00 EUR | 2026-11-20 | Due in 18 days |\n\n- **Overdue:** INV-2042 is 380.50 EUR and is the only invoice past its due date.\n- **Largest:** INV-2043 is 2,115.00 EUR, which is about 67% of the unpaid total.\n- **Paid:** INV-2041 and INV-2045 are paid, so I left them out.",
+   "turn2": "```\nnumber,client,amount,currency,due,status\nINV-2042,Moth & Lantern Books,380.50,EUR,2026-10-31,unpaid\nINV-2043,Pellow Cycles,2115.00,EUR,2026-11-10,unpaid\nINV-2044,Quarrystone Bakery,640.00,EUR,2026-11-20,unpaid\n```\n\nI removed the thousands separator from 2,115.00 so it doesn't split into two columns on import. I also moved the currency into its own column. Delete the first line if your import doesn't expect a header.\n\n**Total outstanding: 3,135.50 EUR** (380.50 + 2,115.00 + 640.00)."
+  },
+  "base_changes": [],
+  "memcue_calls": []
+ },
+ "meta": {
+  "phase": "capture",
+  "arm": "cand",
+  "scenario": "C2",
+  "repeat": 1,
+  "image": "sha256:8f67b0dd19043b8a1ff6e9eb72edd75bc373ec8f6a92fe0a6de6ab094a806980",
+  "inputs_sha256": "f5ea21656f367aeee7654c9bc310b181efbc9ac4b87f4f7357e622ebc782dfd5",
+  "docker_exit": 0,
+  "seconds": 16.3,
+  "changes_after_turn1": 0,
+  "facts_before": 0,
+  "streams": {
+   "turn1": {
+    "cost_usd": 0.0299674,
+    "usage": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 5986,
+     "cache_read_input_tokens": 22154,
+     "output_tokens": 380,
+     "output_tokens_details": {
+      "thinking_tokens": 0
+     },
+     "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+     },
+     "service_tier": "standard",
+     "cache_creation": {
+      "ephemeral_1h_input_tokens": 5986,
+      "ephemeral_5m_input_tokens": 0
+     },
+     "inference_geo": "global",
+     "iterations": [],
+     "speed": "standard",
+     "fallback_credit": null
+    },
+    "duration_ms": 8230,
+    "num_turns": 2,
+    "models": [
+     "claude-sonnet-5-5"
+    ],
+    "subtype": "success",
+    "memcue_calls": 0,
+    "searches": 0,
+    "tool_calls": [
+     "Read"
+    ],
+    "hooks": [
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 265
+     },
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 265
+     },
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 265
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": false,
+      "reminder": false,
+      "chars": 346
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": false,
+      "reminder": false,
+      "chars": 346
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": true,
+      "reminder": true,
+      "chars": 10620
+     }
+    ],
+    "init": {
+     "model": "claude-sonnet-5-5",
+     "claude_code_version": "2.1.312",
+     "plugins": [
+      "memcue",
+      "cc-plugin-agents-md",
+      "cc-plugin-plugin-authoring"
+     ],
+     "mcp_servers": [],
+     "permissionMode": "bypassPermissions",
+     "tools": [
+      "Task",
+      "Bash",
+      "CronList",
+      "Edit",
+      "EnterWorktree",
+      "ExitWorktree",
+      "ListAgents",
+      "Monitor",
+      "NotebookEdit",
+      "Read",
+      "ReportFindings",
+      "SendMessage",
+      "Skill",
+      "TaskStop",
+      "ToolSearch",
+      "Write"
+     ]
+    }
+   },
+   "turn2": {
+    "cost_usd": 0.0364619,
+    "usage": {
+     "input_tokens": 2,
+     "cache_creation_input_tokens": 426,
+     "cache_read_input_tokens": 14265,
+     "output_tokens": 336,
+     "output_tokens_details": {
+      "thinking_tokens": 106
+     },
+     "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+     },
+     "service_tier": "standard",
+     "cache_creation": {
+      "ephemeral_1h_input_tokens": 426,
+      "ephemeral_5m_input_tokens": 0
+     },
+     "inference_geo": "global",
+     "iterations": [],
+     "speed": "standard",
+     "fallback_credit": null
+    },
+    "duration_ms": 5108,
+    "num_turns": 1,
+    "models": [
+     "claude-sonnet-5-5"
+    ],
+    "subtype": "success",
+    "memcue_calls": 0,
+    "searches": 0,
+    "tool_calls": [],
+    "hooks": [
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:resume",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 264
+     },
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:resume",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 264
+     },
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:resume",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 264
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:resume",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": false,
+      "reminder": false,
+      "chars": 345
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:resume",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": false,
+      "reminder": false,
+      "chars": 345
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:resume",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": true,
+      "reminder": true,
+      "chars": 10619
+     }
+    ],
+    "init": {
+     "model": "claude-sonnet-5-5",
+     "claude_code_version": "2.1.312",
+     "plugins": [
+      "memcue",
+      "cc-plugin-agents-md",
+      "cc-plugin-plugin-authoring"
+     ],
+     "mcp_servers": [],
+     "permissionMode": "bypassPermissions",
+     "tools": [
+      "Task",
+      "Bash",
+      "CronList",
+      "Edit",
+      "EnterWorktree",
+      "ExitWorktree",
+      "ListAgents",
+      "Monitor",
+      "NotebookEdit",
+      "Read",
+      "ReportFindings",
+      "SendMessage",
+      "Skill",
+      "TaskStop",
+      "ToolSearch",
+      "Write"
+     ]
+    }
+   }
+  },
+  "card_ids": []
+ }
+}

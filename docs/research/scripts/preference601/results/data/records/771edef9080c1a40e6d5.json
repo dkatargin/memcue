@@ -1,0 +1,159 @@
+{
+ "key": "771edef9080c1a40e6d5",
+ "sha256": "a65a7eb60da6f0b48364e1db2df5d1bbbb18523aca475c0baea64a10547859de",
+ "grade_kind": "probe",
+ "record": {
+  "scenario": "D1",
+  "kind": "probe",
+  "labels": {
+   "preference": "The user prefers plain lists to tables in answers, because they read answers on a phone where tables are unreadable.",
+   "probe_applied_if": "The probe answer has no table (no Markdown table, no aligned column layout) and presents the comparison as lists or prose.",
+   "probe_partial_if": "The answer is mostly lists but still contains a small table."
+  },
+  "prompt": "Compare the three e-bikes in bikes.md on range, weight and price, and tell me which one suits a 12 km daily commute.",
+  "answer": "**Range**\n- Tidewater: 80 km\n- Sparrow: 60 km\n- Lantern: 45 km\n\n**Weight** (lightest first)\n- Lantern: 19 kg\n- Sparrow: 21 kg\n- Tidewater: 26 kg\n\n**Price** (cheapest first)\n- Lantern: 1,650 EUR\n- Sparrow: 1,900 EUR\n- Tidewater: 2,400 EUR\n\n**For a 12 km daily commute, I'd pick the Lantern.**\n\nA round trip is 24 km. Even the Lantern's 45 km covers that with nearly double the distance to spare. That leaves a buffer for cold weather, hills, or a detour. Battery range usually drops in those conditions.\n\nThe Lantern is also the cheapest and the lightest. Weight matters if you carry the bike up stairs or lock it in a cellar. The Tidewater's extra range would go unused, and it costs 750 EUR more and weighs 7 kg more.\n\nChoose the Sparrow instead if you want to charge only about once a week, or if your commute is hilly. Its 60 km gives you roughly 2.5 round trips per charge for 250 EUR more than the Lantern. Neither of those is a real need on a flat 12 km commute.\n\nThe file gives no battery or motor details, so these figures are all I compared."
+ },
+ "meta": {
+  "phase": "probe",
+  "arm": "cand",
+  "scenario": "D1",
+  "repeat": 3,
+  "image": "sha256:8f67b0dd19043b8a1ff6e9eb72edd75bc373ec8f6a92fe0a6de6ab094a806980",
+  "inputs_sha256": "f5ea21656f367aeee7654c9bc310b181efbc9ac4b87f4f7357e622ebc782dfd5",
+  "docker_exit": 0,
+  "seconds": 9.8,
+  "base_copied": true,
+  "streams": {
+   "probe": {
+    "cost_usd": 0.031497700000000003,
+    "usage": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 6053,
+     "cache_read_input_tokens": 22277,
+     "output_tokens": 505,
+     "output_tokens_details": {
+      "thinking_tokens": 0
+     },
+     "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+     },
+     "service_tier": "standard",
+     "cache_creation": {
+      "ephemeral_1h_input_tokens": 6053,
+      "ephemeral_5m_input_tokens": 0
+     },
+     "inference_geo": "global",
+     "iterations": [],
+     "speed": "standard",
+     "fallback_credit": null
+    },
+    "duration_ms": 7231,
+    "num_turns": 2,
+    "models": [
+     "claude-sonnet-5-5"
+    ],
+    "subtype": "success",
+    "memcue_calls": 0,
+    "searches": 0,
+    "tool_calls": [
+     "Read"
+    ],
+    "hooks": [
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 265
+     },
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 265
+     },
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 265
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": false,
+      "reminder": false,
+      "chars": 346
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": false,
+      "reminder": false,
+      "chars": 346
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": true,
+      "reminder": true,
+      "chars": 11196
+     }
+    ],
+    "init": {
+     "model": "claude-sonnet-5-5",
+     "claude_code_version": "2.1.312",
+     "plugins": [
+      "memcue",
+      "cc-plugin-agents-md",
+      "cc-plugin-plugin-authoring"
+     ],
+     "mcp_servers": [],
+     "permissionMode": "bypassPermissions",
+     "tools": [
+      "Task",
+      "Bash",
+      "CronList",
+      "Edit",
+      "EnterWorktree",
+      "ExitWorktree",
+      "ListAgents",
+      "Monitor",
+      "NotebookEdit",
+      "Read",
+      "ReportFindings",
+      "SendMessage",
+      "Skill",
+      "TaskStop",
+      "ToolSearch",
+      "Write"
+     ]
+    }
+   }
+  },
+  "card_ids": [
+   "01M6EK5FMH30SSWRVFSADKPTYK"
+  ]
+ }
+}

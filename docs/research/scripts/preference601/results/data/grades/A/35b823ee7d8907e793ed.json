@@ -1,0 +1,23 @@
+{
+ "key": "35b823ee7d8907e793ed",
+ "record_sha256": "501f9d7ac589bb5362db6701bba680a8559ba52d5977784912ca84fc161c52f1",
+ "kind": "durable",
+ "pass": "A",
+ "model": "opus",
+ "parsed": {
+  "acknowledged": "yes",
+  "preference_stored": "yes",
+  "preference_fact_ids": [
+   "01M6EK6B9494QPZXS4WZ52JZH9"
+  ],
+  "extra_useful": 0,
+  "noise": 0,
+  "notes": "The second answer leads with a two-sentence bottom line and explicitly confirms the standing rule. The single stored fact captures the lasting preference (bottom line first in one or two sentences, reasoning on request) with correct polarity and is not limited to backup plans."
+ },
+ "error": null,
+ "cost_usd": 0.0256002,
+ "seconds": 5.3,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"acknowledged\": \"yes\", \"preference_stored\": \"yes\", \"preference_fact_ids\": [\"01M6EK6B9494QPZXS4WZ52JZH9\"], \"extra_useful\": 0, \"noise\": 0, \"notes\": \"The second answer leads with a two-sentence bottom line and explicitly confirms the standing rule. The single stored fact captures the lasting preference (bottom line first in one or two sentences, reasoning on request) with correct polarity and is not limited to backup plans.\"}"
+}

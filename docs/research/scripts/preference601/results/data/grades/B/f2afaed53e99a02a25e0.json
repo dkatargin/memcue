@@ -1,0 +1,18 @@
+{
+ "key": "f2afaed53e99a02a25e0",
+ "record_sha256": "f7cf261dfcaccf6170147b8a7fe402a313faf77dec96340505a23140a752e2a6",
+ "kind": "probe",
+ "pass": "B",
+ "model": "sonnet",
+ "parsed": {
+  "applied": "yes",
+  "evidence": "Opens with \"Get the Larkspur R7.\" followed by a one-sentence rationale; whole answer is about 50 words.",
+  "notes": "Bottom line comes first and the answer is well under 120 words, with only a brief caveat about when the other router fits."
+ },
+ "error": null,
+ "cost_usd": 0.0052101000000000005,
+ "seconds": 8.4,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"applied\": \"yes\", \"evidence\": \"Opens with \\\"Get the Larkspur R7.\\\" followed by a one-sentence rationale; whole answer is about 50 words.\", \"notes\": \"Bottom line comes first and the answer is well under 120 words, with only a brief caveat about when the other router fits.\"}"
+}

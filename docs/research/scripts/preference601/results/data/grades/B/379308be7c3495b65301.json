@@ -1,0 +1,18 @@
+{
+ "key": "379308be7c3495b65301",
+ "record_sha256": "7cfbdc8c3812a6873910179b51aeaf4b2b9f31235ed5b2754b9639d9db14410a",
+ "kind": "probe",
+ "pass": "B",
+ "model": "sonnet",
+ "parsed": {
+  "applied": "partial",
+  "evidence": "Opens with \"**Get the Larkspur R7.**\" but then gives bulleted breakdown of coverage, remote work, ports, price, plus when the Tamsin is worth it (~150 words).",
+  "notes": "The bottom line comes first, but the answer then volunteers a long breakdown (well over 120 words) instead of offering reasoning only on request."
+ },
+ "error": null,
+ "cost_usd": 0.0066141,
+ "seconds": 7.2,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"applied\": \"partial\", \"evidence\": \"Opens with \\\"**Get the Larkspur R7.**\\\" but then gives bulleted breakdown of coverage, remote work, ports, price, plus when the Tamsin is worth it (~150 words).\", \"notes\": \"The bottom line comes first, but the answer then volunteers a long breakdown (well over 120 words) instead of offering reasoning only on request.\"}"
+}

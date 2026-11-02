@@ -1,0 +1,324 @@
+{
+ "key": "426690199feafe9b9999",
+ "sha256": "2630e940262e7bbb5f742d6cd9efb1e0e1e7981276a19698390a17dde0612ceb",
+ "grade_kind": "durable",
+ "record": {
+  "scenario": "D2",
+  "kind": "durable",
+  "labels": {
+   "purpose": "The user asks to leave out emoji and says they cannot stand emoji in anything written for them or in their name.",
+   "preference": "The user does not want emoji in anything written for them or in their name; they find emoji unprofessional.",
+   "expected_scope": "global",
+   "polarity": "No emoji. A fact that limits it to the offsite announcement or to this chat only is too narrow.",
+   "acknowledged_if": "The second answer recognises the request (says it will leave emoji out, or the rewritten text visibly drops them and says so).",
+   "probe_applied_if": "The probe message contains no emoji (pictographic symbols such as a plant, sparkles or a party popper).",
+   "probe_partial_if": "One emoji is left in an otherwise emoji-free text."
+  },
+  "prompts": {
+   "turn1": "Write a short announcement for the team chat about the offsite, using notes.md.",
+   "turn2": "Looks fine, but please leave out the emoji. I can't stand them in anything written for me or in my name; to me they read as unprofessional. Can you also make a two-line reminder for the day before?"
+  },
+  "answers": {
+   "turn1": "📣 **Team offsite: Thursday 19 Nov**\n\n- **When:** 10:00–17:00\n- **Where:** the Millpond Barn, 14 Weir Lane\n- **Bus:** leaves the office at 09:15 and gets us back by 18:00\n- **Lunch:** provided. Please tell Odile Varga about any dietary needs by **Friday 13 Nov**.\n- **Bring:** a laptop for the afternoon planning session\n\nSee you there!",
+   "turn2": "Here is the announcement without the emoji:\n\n**Team offsite: Thursday 19 Nov**\n\n- **When:** 10:00–17:00\n- **Where:** the Millpond Barn, 14 Weir Lane\n- **Bus:** leaves the office at 09:15 and gets us back by 18:00\n- **Lunch:** provided. Please tell Odile Varga about any dietary needs by **Friday 13 Nov**.\n- **Bring:** a laptop for the afternoon planning session\n\nSee you there!\n\nHere is the reminder for Wednesday 18 Nov:\n\nReminder: the offsite is tomorrow, Thursday 19 Nov. The bus leaves the office at 09:15 sharp, so please be there by 09:10.\nBring a laptop for the afternoon planning session. The venue is the Millpond Barn, 14 Weir Lane.\n\nThe notes don't give a \"be there by\" time, so I made up 09:10. Change or drop it if you like.\n\nI've saved your no-emoji preference to memory, so I'll apply it to future writing too."
+  },
+  "base_changes": [
+   {
+    "id": "01M6EK61W79KWZ7JDZ6D8D631F",
+    "change": "added",
+    "version": 1,
+    "kind": "rule",
+    "scope": "global",
+    "source": "user",
+    "expires": "",
+    "content": "Never use emoji in anything written for the user or in their name (chat announcements, messages, drafts); the user finds them unprofessional.",
+    "keywords": [
+     "emoji",
+     "эмодзи",
+     "tone",
+     "style",
+     "announcement",
+     "messages",
+     "professional"
+    ]
+   }
+  ],
+  "memcue_calls": [
+   {
+    "command": "memcue search -in all \"emoji\" ; memcue add -kind rule -scope global -source user -keywords \"emoji, эмодзи, tone, style, announcement, messages, professional\" -- \"Never use emoji in anything written for the user or in their name (chat announcements, messages, drafts); the user finds them unprofessional.\"",
+    "output": "No stored facts match.\n01M6EK61W79KWZ7JDZ6D8D631F",
+    "turn": 2
+   }
+  ]
+ },
+ "meta": {
+  "phase": "capture",
+  "arm": "cand",
+  "scenario": "D2",
+  "repeat": 3,
+  "image": "sha256:8f67b0dd19043b8a1ff6e9eb72edd75bc373ec8f6a92fe0a6de6ab094a806980",
+  "inputs_sha256": "f5ea21656f367aeee7654c9bc310b181efbc9ac4b87f4f7357e622ebc782dfd5",
+  "docker_exit": 0,
+  "seconds": 28.0,
+  "changes_after_turn1": 0,
+  "facts_before": 0,
+  "streams": {
+   "turn1": {
+    "cost_usd": 0.02789,
+    "usage": {
+     "input_tokens": 4,
+     "cache_creation_input_tokens": 5874,
+     "cache_read_input_tokens": 22160,
+     "output_tokens": 217,
+     "output_tokens_details": {
+      "thinking_tokens": 0
+     },
+     "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+     },
+     "service_tier": "standard",
+     "cache_creation": {
+      "ephemeral_1h_input_tokens": 5874,
+      "ephemeral_5m_input_tokens": 0
+     },
+     "inference_geo": "global",
+     "iterations": [],
+     "speed": "standard",
+     "fallback_credit": null
+    },
+    "duration_ms": 11776,
+    "num_turns": 2,
+    "models": [
+     "claude-sonnet-5-5"
+    ],
+    "subtype": "success",
+    "memcue_calls": 0,
+    "searches": 0,
+    "tool_calls": [
+     "Read"
+    ],
+    "hooks": [
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 265
+     },
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 265
+     },
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 265
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": false,
+      "reminder": false,
+      "chars": 346
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": false,
+      "reminder": false,
+      "chars": 346
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": true,
+      "reminder": true,
+      "chars": 10620
+     }
+    ],
+    "init": {
+     "model": "claude-sonnet-5-5",
+     "claude_code_version": "2.1.312",
+     "plugins": [
+      "memcue",
+      "cc-plugin-agents-md",
+      "cc-plugin-plugin-authoring"
+     ],
+     "mcp_servers": [],
+     "permissionMode": "bypassPermissions",
+     "tools": [
+      "Task",
+      "Bash",
+      "CronList",
+      "Edit",
+      "EnterWorktree",
+      "ExitWorktree",
+      "ListAgents",
+      "Monitor",
+      "NotebookEdit",
+      "Read",
+      "ReportFindings",
+      "SendMessage",
+      "Skill",
+      "TaskStop",
+      "ToolSearch",
+      "Write"
+     ]
+    }
+   },
+   "turn2": {
+    "cost_usd": 0.049595600000000004,
+    "usage": {
+     "input_tokens": 6,
+     "cache_creation_input_tokens": 2650,
+     "cache_read_input_tokens": 45136,
+     "output_tokens": 658,
+     "output_tokens_details": {
+      "thinking_tokens": 100
+     },
+     "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+     },
+     "service_tier": "standard",
+     "cache_creation": {
+      "ephemeral_1h_input_tokens": 2650,
+      "ephemeral_5m_input_tokens": 0
+     },
+     "inference_geo": "global",
+     "iterations": [],
+     "speed": "standard",
+     "fallback_credit": null
+    },
+    "duration_ms": 13394,
+    "num_turns": 4,
+    "models": [
+     "claude-sonnet-5-5"
+    ],
+    "subtype": "success",
+    "memcue_calls": 1,
+    "searches": 1,
+    "tool_calls": [
+     "Skill",
+     "Bash"
+    ],
+    "hooks": [
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:resume",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 264
+     },
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:resume",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 264
+     },
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:resume",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 264
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:resume",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": false,
+      "reminder": false,
+      "chars": 345
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:resume",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": false,
+      "reminder": false,
+      "chars": 345
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:resume",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": true,
+      "reminder": true,
+      "chars": 10619
+     }
+    ],
+    "init": {
+     "model": "claude-sonnet-5-5",
+     "claude_code_version": "2.1.312",
+     "plugins": [
+      "memcue",
+      "cc-plugin-agents-md",
+      "cc-plugin-plugin-authoring"
+     ],
+     "mcp_servers": [],
+     "permissionMode": "bypassPermissions",
+     "tools": [
+      "Task",
+      "Bash",
+      "CronList",
+      "Edit",
+      "EnterWorktree",
+      "ExitWorktree",
+      "ListAgents",
+      "Monitor",
+      "NotebookEdit",
+      "Read",
+      "ReportFindings",
+      "SendMessage",
+      "Skill",
+      "TaskStop",
+      "ToolSearch",
+      "Write"
+     ]
+    }
+   }
+  },
+  "card_ids": []
+ }
+}

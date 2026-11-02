@@ -1,0 +1,18 @@
+{
+ "key": "2c1c14b2663bd07ca63d",
+ "record_sha256": "bac401a177ffa76fb2ae6a36a9241b7d678162dd33bb4a16dde54cad588da882",
+ "kind": "probe",
+ "pass": "B",
+ "model": "sonnet",
+ "parsed": {
+  "applied": "no",
+  "evidence": "The answer opens with a Markdown table: \"| Model | Range | Weight | Price |\" with three model rows.",
+  "notes": "The comparison leads with a full Markdown table, which goes against the preference for plain lists, even though lists follow it."
+ },
+ "error": null,
+ "cost_usd": 0.0070121,
+ "seconds": 6.2,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"applied\": \"no\", \"evidence\": \"The answer opens with a Markdown table: \\\"| Model | Range | Weight | Price |\\\" with three model rows.\", \"notes\": \"The comparison leads with a full Markdown table, which goes against the preference for plain lists, even though lists follow it.\"}"
+}

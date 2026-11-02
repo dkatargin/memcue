@@ -1,0 +1,18 @@
+{
+ "key": "7d13149cef267851b725",
+ "record_sha256": "4bc4815584fec8729132ef039978f17096b9155187708071a84a06208877f469",
+ "kind": "probe",
+ "pass": "B",
+ "model": "sonnet",
+ "parsed": {
+  "applied": "yes",
+  "evidence": "Opens with \"Get the Larkspur R7.\" followed by a one-sentence justification; whole answer is about 45 words.",
+  "notes": "Bottom line comes first and the answer is short, well under 120 words, with no extended breakdown."
+ },
+ "error": null,
+ "cost_usd": 0.0050861000000000005,
+ "seconds": 4.6,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"applied\": \"yes\", \"evidence\": \"Opens with \\\"Get the Larkspur R7.\\\" followed by a one-sentence justification; whole answer is about 45 words.\", \"notes\": \"Bottom line comes first and the answer is short, well under 120 words, with no extended breakdown.\"}"
+}

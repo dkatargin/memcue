@@ -1,0 +1,21 @@
+{
+ "key": "a36c03b297daa9fc6dbb",
+ "record_sha256": "83f72e9460bd7da3d0e263256c5cff32df8eb3b12239f1559240d6958daf413b",
+ "kind": "control",
+ "pass": "B",
+ "model": "sonnet",
+ "parsed": {
+  "acknowledged": "yes",
+  "durable_capture": "no",
+  "time_limited_capture": "no",
+  "extra_useful": 0,
+  "noise": 0,
+  "notes": "The second answer says no need to apologize, wishes the user an easier rest of the day, and sorts the items with the rye bread first. base_changes and memcue_calls are empty, so nothing was stored."
+ },
+ "error": null,
+ "cost_usd": 0.0083241,
+ "seconds": 5.6,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"acknowledged\": \"yes\", \"durable_capture\": \"no\", \"time_limited_capture\": \"no\", \"extra_useful\": 0, \"noise\": 0, \"notes\": \"The second answer says no need to apologize, wishes the user an easier rest of the day, and sorts the items with the rye bread first. base_changes and memcue_calls are empty, so nothing was stored.\"}"
+}

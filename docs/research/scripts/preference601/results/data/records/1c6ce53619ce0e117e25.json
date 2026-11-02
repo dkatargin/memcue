@@ -1,0 +1,296 @@
+{
+ "key": "1c6ce53619ce0e117e25",
+ "sha256": "02bd0829629ca2b855d8fbdfa4a7b943fa8e1f5d26a3d98b2a15e6d42a5f5ee9",
+ "grade_kind": "durable",
+ "record": {
+  "scenario": "D4",
+  "kind": "durable",
+  "labels": {
+   "purpose": "The user says Fahrenheit means little to them and they think in Celsius, and asks for the numbers again.",
+   "preference": "The user thinks in Celsius: give temperatures in degrees Celsius, not (only) Fahrenheit.",
+   "expected_scope": "global",
+   "polarity": "Celsius first or only. A fact that says to use Fahrenheit, or that limits Celsius to this brewing recipe, is wrong or too narrow.",
+   "acknowledged_if": "The second answer recognises the request and gives the temperatures in Celsius.",
+   "probe_applied_if": "The probe answer gives the temperatures in degrees Celsius, either alone or first with Fahrenheit secondary.",
+   "probe_partial_if": "The answer gives Fahrenheit first and Celsius only as a secondary conversion."
+  },
+  "prompts": {
+   "turn1": "What fermentation temperature range does the recipe in brew.md call for, and is my garage, which sits at 61 degrees, okay for it?",
+   "turn2": "Honestly, Fahrenheit doesn't mean much to me. I grew up with Celsius and that's what I think in. Could you give me those numbers again, and also tell me the mash temperature?"
+  },
+  "answers": {
+   "turn1": "The recipe in `brew.md` (Hazel Porter) says to ferment between **62 °F and 68 °F** for 14 days.\n\nYour garage at 61 °F is 1 degree under the bottom of that range, so it's not quite okay. At that temperature, fermentation will likely run slow, and the yeast may stall or leave the beer under-attenuated. The recipe also pitches the yeast at 64 °F, so 61 °F is a bit colder than the pitch temperature too.\n\nA few easy ways to fix it:\n- Wrap the fermenter in a blanket or insulation.\n- Put it on a heat mat, or use a small heating wrap with a thermostat.\n- Move it to a warmer spot in the house, such as a closet or basement.\n\nAlso, the air temperature in the garage isn't the same as the temperature of the beer. Active fermentation usually warms the beer a few degrees above the room. So if the garage really holds steady at 61 °F, the beer might end up around 63–65 °F, which would be fine. A stick-on thermometer on the fermenter will tell you for sure.",
+   "turn2": "Here are the numbers in Celsius:\n\n- **Fermentation range:** 62-68 °F is about **16.7-20 °C**, for 14 days.\n- **Your garage:** 61 °F is about **16.1 °C**. That's roughly half a degree under the bottom of the range, so it's very close. The advice is the same as before, but the gap is small. If the beer runs a degree or two warmer than the air during active fermentation, you'll be inside the range.\n- **Mash temperature:** 152 °F is about **66.7 °C**, held for 60 minutes.\n\nThe other temperatures in the recipe:\n- **Yeast pitch:** 64 °F is about 17.8 °C.\n- **Cold crash:** 35 °F is about 1.7 °C, for 2 days before bottling."
+  },
+  "base_changes": [],
+  "memcue_calls": []
+ },
+ "meta": {
+  "phase": "capture",
+  "arm": "base",
+  "scenario": "D4",
+  "repeat": 2,
+  "image": "sha256:8f67b0dd19043b8a1ff6e9eb72edd75bc373ec8f6a92fe0a6de6ab094a806980",
+  "inputs_sha256": "f5ea21656f367aeee7654c9bc310b181efbc9ac4b87f4f7357e622ebc782dfd5",
+  "docker_exit": 0,
+  "seconds": 18.7,
+  "changes_after_turn1": 0,
+  "facts_before": 0,
+  "streams": {
+   "turn1": {
+    "cost_usd": 0.032716300000000004,
+    "usage": {
+     "input_tokens": 6,
+     "cache_creation_input_tokens": 5982,
+     "cache_read_input_tokens": 36163,
+     "output_tokens": 516,
+     "output_tokens_details": {
+      "thinking_tokens": 0
+     },
+     "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+     },
+     "service_tier": "standard",
+     "cache_creation": {
+      "ephemeral_1h_input_tokens": 5982,
+      "ephemeral_5m_input_tokens": 0
+     },
+     "inference_geo": "global",
+     "iterations": [],
+     "speed": "standard",
+     "fallback_credit": null
+    },
+    "duration_ms": 10069,
+    "num_turns": 3,
+    "models": [
+     "claude-sonnet-5-5"
+    ],
+    "subtype": "success",
+    "memcue_calls": 0,
+    "searches": 0,
+    "tool_calls": [
+     "Bash",
+     "Read"
+    ],
+    "hooks": [
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 265
+     },
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 265
+     },
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 265
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": false,
+      "reminder": false,
+      "chars": 346
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": false,
+      "reminder": false,
+      "chars": 346
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:startup",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": true,
+      "reminder": false,
+      "chars": 10508
+     }
+    ],
+    "init": {
+     "model": "claude-sonnet-5-5",
+     "claude_code_version": "2.1.312",
+     "plugins": [
+      "memcue",
+      "cc-plugin-agents-md",
+      "cc-plugin-plugin-authoring"
+     ],
+     "mcp_servers": [],
+     "permissionMode": "bypassPermissions",
+     "tools": [
+      "Task",
+      "Bash",
+      "CronList",
+      "Edit",
+      "EnterWorktree",
+      "ExitWorktree",
+      "ListAgents",
+      "Monitor",
+      "NotebookEdit",
+      "Read",
+      "ReportFindings",
+      "SendMessage",
+      "Skill",
+      "TaskStop",
+      "ToolSearch",
+      "Write"
+     ]
+    }
+   },
+   "turn2": {
+    "cost_usd": 0.0401284,
+    "usage": {
+     "input_tokens": 2,
+     "cache_creation_input_tokens": 468,
+     "cache_read_input_tokens": 14261,
+     "output_tokens": 411,
+     "output_tokens_details": {
+      "thinking_tokens": 150
+     },
+     "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+     },
+     "service_tier": "standard",
+     "cache_creation": {
+      "ephemeral_1h_input_tokens": 468,
+      "ephemeral_5m_input_tokens": 0
+     },
+     "inference_geo": "global",
+     "iterations": [],
+     "speed": "standard",
+     "fallback_credit": null
+    },
+    "duration_ms": 5650,
+    "num_turns": 1,
+    "models": [
+     "claude-sonnet-5-5"
+    ],
+    "subtype": "success",
+    "memcue_calls": 0,
+    "searches": 0,
+    "tool_calls": [],
+    "hooks": [
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:resume",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 264
+     },
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:resume",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 264
+     },
+     {
+      "subtype": "hook_started",
+      "hook_name": "SessionStart:resume",
+      "hook_event": "SessionStart",
+      "exit_code": null,
+      "outcome": null,
+      "note_end": false,
+      "reminder": false,
+      "chars": 264
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:resume",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": false,
+      "reminder": false,
+      "chars": 345
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:resume",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": false,
+      "reminder": false,
+      "chars": 345
+     },
+     {
+      "subtype": "hook_response",
+      "hook_name": "SessionStart:resume",
+      "hook_event": "SessionStart",
+      "exit_code": 0,
+      "outcome": "success",
+      "note_end": true,
+      "reminder": false,
+      "chars": 10507
+     }
+    ],
+    "init": {
+     "model": "claude-sonnet-5-5",
+     "claude_code_version": "2.1.312",
+     "plugins": [
+      "memcue",
+      "cc-plugin-agents-md",
+      "cc-plugin-plugin-authoring"
+     ],
+     "mcp_servers": [],
+     "permissionMode": "bypassPermissions",
+     "tools": [
+      "Task",
+      "Bash",
+      "CronList",
+      "Edit",
+      "EnterWorktree",
+      "ExitWorktree",
+      "ListAgents",
+      "Monitor",
+      "NotebookEdit",
+      "Read",
+      "ReportFindings",
+      "SendMessage",
+      "Skill",
+      "TaskStop",
+      "ToolSearch",
+      "Write"
+     ]
+    }
+   }
+  },
+  "card_ids": []
+ }
+}

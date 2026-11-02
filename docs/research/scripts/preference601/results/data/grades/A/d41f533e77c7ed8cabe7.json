@@ -1,0 +1,23 @@
+{
+ "key": "d41f533e77c7ed8cabe7",
+ "record_sha256": "2593e9b21e877fc7fbdf17d44e4fddd0406314daad4049b2deeeb5586951a81e",
+ "kind": "durable",
+ "pass": "A",
+ "model": "opus",
+ "parsed": {
+  "acknowledged": "yes",
+  "preference_stored": "yes",
+  "preference_fact_ids": [
+   "01M6EK584WHW0RE916C03K1H2C"
+  ],
+  "extra_useful": 0,
+  "noise": 0,
+  "notes": "The second answer switches to a plain list with no table and explicitly says it will use lists instead of tables from now on. The single stored fact records the lasting, global preference with the right polarity (lists instead of tables, because of phone reading), and there are no other facts."
+ },
+ "error": null,
+ "cost_usd": 0.0245562,
+ "seconds": 4.6,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"acknowledged\": \"yes\", \"preference_stored\": \"yes\", \"preference_fact_ids\": [\"01M6EK584WHW0RE916C03K1H2C\"], \"extra_useful\": 0, \"noise\": 0, \"notes\": \"The second answer switches to a plain list with no table and explicitly says it will use lists instead of tables from now on. The single stored fact records the lasting, global preference with the right polarity (lists instead of tables, because of phone reading), and there are no other facts.\"}"
+}

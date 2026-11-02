@@ -1,0 +1,21 @@
+{
+ "key": "e092e64c1cc75189fa16",
+ "record_sha256": "f23b03c9824818ca250e990c445b8f913b569fba685bb6976e22182e2af463e2",
+ "kind": "durable",
+ "pass": "A",
+ "model": "opus",
+ "parsed": {
+  "acknowledged": "yes",
+  "preference_stored": "no",
+  "preference_fact_ids": [],
+  "extra_useful": 0,
+  "noise": 0,
+  "notes": "The second answer is one short sentence giving the bottom line, which visibly follows the preference. base_changes is empty, so the preference was never stored; the only memcue call was a search in turn 1."
+ },
+ "error": null,
+ "cost_usd": 0.0208042,
+ "seconds": 4.2,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"acknowledged\": \"yes\", \"preference_stored\": \"no\", \"preference_fact_ids\": [], \"extra_useful\": 0, \"noise\": 0, \"notes\": \"The second answer is one short sentence giving the bottom line, which visibly follows the preference. base_changes is empty, so the preference was never stored; the only memcue call was a search in turn 1.\"}"
+}

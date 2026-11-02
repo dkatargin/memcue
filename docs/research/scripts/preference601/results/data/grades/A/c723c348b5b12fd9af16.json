@@ -1,0 +1,18 @@
+{
+ "key": "c723c348b5b12fd9af16",
+ "record_sha256": "209c0878aaddc29aae47c4009db3654dc8fa906b449b04210017823252b09a64",
+ "kind": "probe",
+ "pass": "A",
+ "model": "opus",
+ "parsed": {
+  "applied": "yes",
+  "evidence": "Comparison given as three bolded bulleted lists (Range, Weight, Price) followed by prose recommendation; no Markdown table or aligned columns.",
+  "notes": "The answer presents the full comparison in plain lists and prose, matching the phone-friendly no-table preference."
+ },
+ "error": null,
+ "cost_usd": 0.0130802,
+ "seconds": 6.9,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"applied\": \"yes\", \"evidence\": \"Comparison given as three bolded bulleted lists (Range, Weight, Price) followed by prose recommendation; no Markdown table or aligned columns.\", \"notes\": \"The answer presents the full comparison in plain lists and prose, matching the phone-friendly no-table preference.\"}"
+}

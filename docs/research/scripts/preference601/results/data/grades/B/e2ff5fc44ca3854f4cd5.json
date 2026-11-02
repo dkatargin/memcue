@@ -1,0 +1,18 @@
+{
+ "key": "e2ff5fc44ca3854f4cd5",
+ "record_sha256": "86baf1a4dd78609efcf56b7905aa6b17f1f69b08a27a4144e079024aa24981cf",
+ "kind": "probe",
+ "pass": "B",
+ "model": "sonnet",
+ "parsed": {
+  "applied": "yes",
+  "evidence": "Opens with \"Get the Larkspur R7.\" and the whole answer is three short sentences (~30 words) with brief justification.",
+  "notes": "Recommendation comes first and the answer is well under 120 words, matching the bottom-line-first preference."
+ },
+ "error": null,
+ "cost_usd": 0.0049881000000000005,
+ "seconds": 6.1,
+ "docker_exit": 0,
+ "grader_exit": "0",
+ "raw_result": "{\"applied\": \"yes\", \"evidence\": \"Opens with \\\"Get the Larkspur R7.\\\" and the whole answer is three short sentences (~30 words) with brief justification.\", \"notes\": \"Recommendation comes first and the answer is well under 120 words, matching the bottom-line-first preference.\"}"
+}
