@@ -49,6 +49,21 @@ jobs:
       - name: test plugins
         run: node --test plugins/deepseek-harness/test/*.test.mjs plugins/claude-code/test/*.test.mjs
 
+  card-research:
+    name: card research contracts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      # Synthetic fixtures only: no provider credentials, private corpus, or model calls.
+      - name: test card audit and replay contracts
+        run: |
+          umask 077
+          export TMPDIR="$(mktemp -d "$RUNNER_TEMP/memcue-card-research.XXXXXX")"
+          python3 -I -B docs/research/scripts/test_card_audit_606.py
+          python3 -I -B docs/research/scripts/card606/test_label606.py
+          python3 -I -B docs/research/scripts/card606/test_replay606.py
+
   hermes-contract:
     name: hermes contract
     runs-on: ubuntu-latest
