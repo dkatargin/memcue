@@ -346,6 +346,20 @@ func TestDreamDueOnlyAfterTheIntervalWithAFreshFact(t *testing.T) {
 	}
 }
 
+// The suite's environment does not decide the dream interval: env(t) drops an inherited MEMCUE_DREAM_EVERY, and a
+// test that sets it afterwards still gets its own.
+func TestEnvDropsTheInheritedDreamInterval(t *testing.T) {
+	t.Setenv("MEMCUE_DREAM_EVERY", "87600h")
+	env(t)
+	if got := dreamEveryFromEnv(dreamEvery); got != dreamEvery {
+		t.Errorf("inherited MEMCUE_DREAM_EVERY gives %v, want the default %v", got, dreamEvery)
+	}
+	t.Setenv("MEMCUE_DREAM_EVERY", "30m")
+	if got := dreamEveryFromEnv(dreamEvery); got != 30*time.Minute {
+		t.Errorf("MEMCUE_DREAM_EVERY=30m after env gives %v", got)
+	}
+}
+
 func addFact(t *testing.T, content string, keywords ...string) string {
 	t.Helper()
 	s, err := store.Open(factsPath())

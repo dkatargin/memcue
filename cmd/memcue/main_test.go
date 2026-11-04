@@ -43,6 +43,8 @@ func env(t *testing.T) string {
 	// A background dream (#569) has its own tests; elsewhere the machine's claude must not decide whether the session
 	// start says a dream is due, and a session start must not start a process.
 	t.Setenv("MEMCUE_DREAM_BACKGROUND", "")
+	// The gateway sets a long dream interval; inherited, it would make every dream the tests expect not due.
+	t.Setenv("MEMCUE_DREAM_EVERY", "")
 	oldLook, oldSpawn := lookClaude, spawnDream
 	lookClaude = func() bool { return false }
 	spawnDream = func(string) error { return nil }
