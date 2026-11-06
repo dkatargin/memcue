@@ -30,6 +30,32 @@ the difference between the arms is two scenarios moving, not a rate.
 
 ## Method
 
+### The motivating comparison, before the grid
+
+The [#601 body](https://github.com/juev/memcue/issues/601) records an earlier **2 November** invented scenario,
+**2 conversations / 7 fresh-session probes**, planting **7 facts and 1 noise item**. Claude Code used **Sonnet 5.5**
+with the memcue plugin and an isolated base; **Letta Code 0.34.23** used **DeepSeek V4.1 Flash through RouterAI**.
+This was one run per arm on different models, not the controlled grid below.
+
+| Planted category | Claude Code + memcue | Letta Code |
+|---|---|---|
+| Response preference | Not stored; fresh probe violated it | Stored in two root files; probe followed it |
+| Explicit remember request | Stored | Stored |
+| Operating decision | Stored; missed by the card, see #600 | Stored |
+| User correction | Stored | Stored |
+| Failure with a reusable workaround | Not stored; probe failed before applying workaround | Same miss |
+| Changed environment fact | Corrected as v2 of one fact | Edited in three files |
+| External pointer | Stored | Stored |
+| Temporary mood/noise | Not stored | Stored |
+
+The memcue preference was acknowledged in the active conversation without a write. Letta's reflection subagent did
+not run: all **7** memory commits came from main-agent turns. Its configured reminder interval was **25 steps**;
+the comparison did not isolate that reminder's effect. The pitfall miss occurred with the #566 capture line already
+present and is not a new estimate of that line's failure rate. This source explains the question; the multi-scenario
+grid supplies the separate counts in this report.
+
+### Controlled grid
+
 Scripts, fixtures, tests and the data are in [`scripts/preference601/`](scripts/preference601/).
 
 - **Stand.** The Docker image of the #531 stand with Claude Code 2.1.312. Its old memcue binary and plugins were not

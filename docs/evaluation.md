@@ -5,6 +5,11 @@ samples are small and come from one person's work, so read the numbers as direct
 itself (real prompts, notes and transcripts) stays private; the method is described so it can be repeated on other
 data.
 
+For the complete report catalog and results previously recorded only in issues or PRs, see the
+[research index](research/README.md) and [issue coverage](research/issue-coverage-2026-11.md).
+The catalog includes negative results, invalidated diagnoses and later decisions. The sections below retain the
+conditions of their original measurements; removed commands are historical reproduction instructions.
+
 Labelling was done blind by separate Claude agents, not by people: each got the transcript or the prompt and the
 candidate facts without knowing which system produced them, and labelled every fact against the source.
 

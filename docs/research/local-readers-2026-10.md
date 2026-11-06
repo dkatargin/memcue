@@ -15,7 +15,7 @@ They ship as the opt-in reader `MEMCUE_RERANK=local` ([#321](#shipped-as-local-3
 - Labels: Opus, blind, the `judge_ab_report.py` definitions. The 767 labels of earlier notes were extended to 1405 by
   labelling every pair any reader below serves at any reported threshold ($7.18 in four passes). Every number below
   has no unlabelled pair.
-- Features ([rankfeat](scripts/rankfeat/main.go)): the candidates recomputed with `RecallJudge` on the same base and
+- Features ([rankfeat](https://github.com/juev/memcue/blob/8be75ee/docs/research/scripts/rankfeat/main.go)): the candidates recomputed with `RecallJudge` on the same base and
   checked equal to the file, then per pair BM25 rank, gate verdict, coverage, matched terms, the rarest matched term's
   weight, coverage on content, keywords and queries separately, ticket match, length, keywords, queries, kind, scope,
   source, provisional, age, expiry, versions; per list the best coverage, the gap to the second, the coverage rank,
@@ -123,7 +123,7 @@ is offline-only and nothing in memcue reads its output.
 
 The model memcue embeds is trained by [local_train.py](scripts/local_train.py) on the 1442 pool prompts alone, with
 one Jev run as the target and no Platt scaling, so the gold set is unseen by it and nothing below was fitted on it.
-recall hands the reader the features of [rankfeat](scripts/rankfeat/main.go) through `recall.FeatureRanker`;
+recall hands the reader the features of [rankfeat](https://github.com/juev/memcue/blob/8be75ee/docs/research/scripts/rankfeat/main.go) through `recall.FeatureRanker`;
 rankfeat now records them through the same path and reproduces the features of the runs above on all 171 prompts.
 `internal/localrank` builds the vector in Go and walks the trees with `leaves`; its test reproduces LightGBM's raw
 score on every gold pair within 1e-9, and `RecallJudge` with the reader gave the same scores on all 171 prompts.
@@ -318,3 +318,19 @@ tree-mix-p1442 0.40     37    41      51       36     13    98      0
 tree-mix-p1442 0.45     24    24      30       16      4   132      0
 tree-mix-p1442 0.50     12    12      14        6      2   153      0
 ```
+
+## Early model-size and compatibility probes
+
+The [#321 pre-implementation measurement](https://github.com/juev/memcue/issues/321), **23 October**, trained
+`tree-jev` on **3,377 gold pairs**, **300 trees / 43 features**: **234 KB** LightGBM text (**69 KB gzipped**),
+**726 KB** JSON. `leaves` plus the embedded text added **475 KB** to a stripped static binary; the then-local
+binary was **20.9 MB**. The loader accepted LightGBM `version=v3` while **4.7.0** wrote `v4`. Rewriting the header
+loaded the model, with the all-zero vector predicting **0.33449414270136546**, identical to Python. Real vectors
+were explicitly untested at that stage. These are not the later product binary-size measurements.
+
+[PR #322](https://github.com/juev/memcue/pull/322) subsequently checked all gold-pair Go predictions within **1e-9**
+of LightGBM, and scores on all **171** prompts. At threshold **0.5**, Opus-labelled top-1/any was **47/55**, with
+**30 noise facts**, versus lexical **45/54 / 66 noise** and Jev **92/101 / 44 noise**; the stripped binary grew
+**332 KB**. Linux VPS latency and a live local-reader session were unmeasured. The research variants above and
+the [end-to-end sixth mode](e2e-files-2026-10.md#a-sixth-mode-local-321) use different training/evaluation settings;
+their rows must not replace this product threshold. The reader was later removed after no demonstrated E2E gain.

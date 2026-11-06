@@ -60,7 +60,10 @@ tenth at 0.14–0.39) the share of the best cannot tell a fact that answers one 
 vocabulary, and neither the index nor a coverage score changes that. The next mechanism worth trying is a model-based
 ranker over the BM25 top ten — the one removed in 0.8.0 as too expensive — and the price to beat is now measured: a
 second process of 15–21 ms is acceptable on a thin answer, so a ranker that costs one extra model call per *message* has
-to win at least the 29 unrelated facts of 74 to pay for itself. The issue stays open with this written down.
+to win at least the 29 unrelated facts of 74 to pay for itself. This was the recommendation when the report was written.
+The [closing comment on #436](https://github.com/juev/memcue/issues/436#issuecomment-6409391871) subsequently declined
+a model call per search and closed the issue as not planned. Both measured mechanisms remained rejected; the
+message-noise level was accepted. No model-based follow-up result is recorded in that closure.
 
 ## Reproduction
 
