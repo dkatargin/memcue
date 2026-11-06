@@ -1268,6 +1268,10 @@ Measured while building memcue; details and method in [docs/evaluation.md](docs/
   comes through search. A card without its global facts scored −0.13 [−0.24, −0.02], but no worse than no card at
   all, so the global part alone is not settled
   ([docs/research/card-search-split-636-2026-11.md](docs/research/card-search-split-636-2026-11.md)).
+- **When the agent searches, without a card (#647):** a session-start note that has the agent search the user's rules
+  and decisions at the start of a task, with no card, scored −0.04 [−0.18, +0.09] against memcue as installed; the
+  agent searched rules and decisions in 66 of 80 memory runs instead of 3, and only 6 of 80 went without a search
+  ([docs/research/search-policy-647-2026-11.md](docs/research/search-policy-647-2026-11.md)).
 - **Recall on 100 unseen real prompts (the injection before #361):** 33 % of injected facts useful and 38 % noise, against 4 % useful and 87 %
   noise for the holographic memory plugin's prefetch on a comparable set. Useful facts reached 12 of the 41 prompts
   that needed memory: lexical search misses prompts that share no rare words with the fact.

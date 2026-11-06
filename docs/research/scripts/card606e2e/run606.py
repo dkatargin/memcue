@@ -56,8 +56,8 @@ def install_bin(data):
         if not os.path.exists(dst) and os.path.exists(src):  # #636 has no keep list
             shutil.copy2(src, dst + ".tmp")
             os.replace(dst + ".tmp", dst)
-    for name in os.listdir(data):  # a keep list of its own for an arm: keep-ARM.txt
-        if name.startswith("keep-") and name.endswith(".txt"):
+    for name in os.listdir(data):  # a keep list or a session note of its own for an arm: keep-ARM.txt, note-ARM.txt
+        if name.startswith(("keep-", "note-")) and name.endswith(".txt"):
             dst = os.path.join(BIN, name[:-4])
             if not os.path.exists(dst):
                 shutil.copy2(os.path.join(data, name), dst + ".tmp")
@@ -68,6 +68,8 @@ def install_bin(data):
 # The card/search split after #636 (E2E_ARMS=card,search,noglobal): card is the whole card with the agent's own
 # searches answered by an empty base; search and noglobal are the card of keep-search.txt (empty) and
 # keep-noglobal.txt (every fact not global) with search as usual.
+# #647 (E2E_ARMS=rule): no card (keep-rule.txt, empty) and the session note of note-rule.txt, read by a binary with
+# note-file.patch through MEMCUE_NOTE_FILE.
 ARMS = tuple(os.environ.get("E2E_ARMS", "current,trim").split(","))
 BARE = ("none", "note")
 NOSEARCH = ("card",)
@@ -191,6 +193,8 @@ def setup(data, p, arm, work):
         senv["MEMCUE_CARD_KEEP"] = os.path.join(BIN, f"keep-{arm}")
     elif arm not in ("current",) + BARE + NOSEARCH:
         senv["MEMCUE_CARD_KEEP"] = os.path.join(BIN, "keep")
+    if os.path.exists(os.path.join(BIN, f"note-{arm}")):
+        senv["MEMCUE_NOTE_FILE"] = os.path.join(BIN, f"note-{arm}")
     if arm in NOSEARCH:
         senv["MEMCUE_SEARCH_BASE"] = os.path.join(work, "base")
         os.makedirs(os.path.join(work, "base", "facts"))

@@ -1,0 +1,33 @@
+diff --git i/cmd/memcue/session.go w/cmd/memcue/session.go
+index 126e71d..e12d7ce 100644
+--- i/cmd/memcue/session.go
++++ w/cmd/memcue/session.go
+@@ -87,9 +87,18 @@ func runSessionStartPart(in io.Reader, out io.Writer, part int) error {
+ 			hints = append(hints, hint)
+ 		}
+ 	}
++	note := sessionNote
++	// #647 research only: MEMCUE_NOTE_FILE names a file whose text replaces the session note.
++	if f := os.Getenv("MEMCUE_NOTE_FILE"); f != "" {
++		b, err := os.ReadFile(f)
++		if err != nil {
++			return err
++		}
++		note = strings.TrimSpace(string(b))
++	}
+ 	var context string
+ 	if part == 0 {
+-		context = sessionNote
++		context = note
+ 		if card != "" {
+ 			context += "\n\n" + card
+ 		}
+@@ -100,7 +109,7 @@ func runSessionStartPart(in io.Reader, out io.Writer, part int) error {
+ 			logCard(h, ids, len([]rune(card)), excluded, 0, fit)
+ 		}
+ 	} else {
+-		parts, left := layoutParts(sessionNote, hints, card, startParts, partBudget)
++		parts, left := layoutParts(note, hints, card, startParts, partBudget)
+ 		if part == 1 && card != "" {
+ 			// The facts left out are the last ones in the card's order.
+ 			logCard(h, ids[:len(ids)-left], len([]rune(card)), excluded, left, fit)
