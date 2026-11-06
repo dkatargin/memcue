@@ -5,9 +5,12 @@ description: Tidy long-term memory (memcue dream). Use when the session start sa
 
 # memcue: the dream
 
-A dream splits compound facts, gives facts without search queries their queries, translates facts into the other
-language, retires or corrects duplicates and outdated facts, and moves a global fact that holds in one project to
-that project. You do it; memcue prepares the work and checks your answer.
+A dream splits compound facts, gives facts without search queries their queries, retires or corrects
+duplicates and outdated facts, and moves a global fact that holds in one project to that project. You do it; memcue prepares the work and checks your answer.
+
+Dreams do not translate facts or schedule work for missing translations. Existing indexed translations stay searchable.
+Old saved translation answers are ignored. Write necessary new and corrected content in English, preserving literals;
+never correct a fact solely to change its language.
 
 Never interrupt the user's work for it: finish or pause at a natural point first.
 
@@ -20,7 +23,7 @@ the background and says nothing (#569). The session start names the dream only w
    memcue dream -prepare
    ```
 
-   It prints the instructions, the five tasks with their rules and the data. "nothing for the dream" means you are
+   It prints the instructions, the four tasks with their rules and the data. "nothing for the dream" means you are
    done.
 2. Follow the instructions: write one JSON answer to a temporary file (`mktemp`), with `packet` exactly as printed.
 3. Apply it:
@@ -31,12 +34,12 @@ the background and says nothing (#569). The session start names the dream only w
 
    It prints what it changed and what it refused, with the reason. An answer to an older packet is refused whole:
    run `-prepare` again.
-4. Tell the user in one or two lines what changed: facts split, given queries, translated, retired,
+4. Tell the user in one or two lines what changed: facts split, given queries, retired,
    corrected, moved to a project.
 
 A packet is bounded; when the session start still says facts wait, the next packet takes the rest.
 
-A base far behind (hundreds of facts waiting, or a translation owed for most of them) takes dozens of packets, about
+A base far behind (hundreds of facts waiting for review or search queries) takes dozens of packets, about
 25,000 tokens of context each. Do not answer them in the session: when the user wants the whole base done, run it in
 the background on `claude -p` and report the result.
 

@@ -135,7 +135,6 @@ func TestDreamRunBackground(t *testing.T) {
 	dir := env(t)
 	dreamBase(t)
 	dreamedHoursAgo(t, dir)
-	translateAll(t)
 	calls := fakeDreamRun(t, nil)
 
 	unlock, err := lockDream(filepath.Join(dir, "state", "memcue"))

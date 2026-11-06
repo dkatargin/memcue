@@ -9,6 +9,10 @@ Memory is a base of atomic facts. You read it with `memcue search [flags] "<word
 You also write it: nothing is extracted from the session afterwards, so a fact you do not store now is lost. Store it
 when you learn it, not at the end of the session.
 
+Write new and corrected facts in English regardless of the chat language. Preserve identifiers, commands, paths, versions, exact values and verbatim quotes. Keep the user's reply language unchanged.
+
+Write the first search query in English regardless of the chat language; if English misses, retry with synonyms and Russian or another legacy language.
+
 ## What to store
 
 - **Rules and corrections of the user**, with the reason when the user gave one: `-kind rule`, `-scope global` unless
@@ -51,8 +55,7 @@ memcue add -kind rule -scope global -source user -keywords "word1, word2, син
 - One statement in one to three sentences; a rule goes with its reason.
 - Self-contained: name the system, host, repository, path. No "it", "this project", "above".
 - Exact values byte for byte: paths, commands with flags, versions, ports.
-- Keywords: 3–8 words someone would ask with, including synonyms and both languages: until a dream translates the
-  fact, a search in the other language finds it only through these words.
+- Keywords: 3–8 words someone would ask with, including synonyms. Legacy-language keywords can help find older facts; dreams do not add translations.
 - The origin is the repository of the working directory and today's date; pass `-origin` only to name another.
 
 ## When search finds nothing

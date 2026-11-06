@@ -113,6 +113,23 @@ class ProviderTest(unittest.TestCase):
                              capture_output=True, text=True, check=True).stdout
         return [line for line in out.splitlines() if line]
 
+    def test_english_first_delivered_instructions_and_tool_schemas(self):
+        """Instruction contract only; this does not measure agent compliance or recall."""
+        note = self.p.system_prompt_block()
+        for phrase in ("new and corrected facts in English", "regardless of the chat language",
+                       "first search query in English", "Russian or another legacy language",
+                       "identifiers, commands, paths, versions, exact values and verbatim quotes",
+                       "user's reply language"):
+            self.assertIn(phrase, note)
+        schemas = {s["name"]: s for s in self.p.get_tool_schemas()}
+        for name in ("memcue_add", "memcue_correct"):
+            content = schemas[name]["parameters"]["properties"]["content"]["description"]
+            self.assertIn("English", content)
+            self.assertIn("verbatim quotes", content)
+        query = schemas["memcue_search"]["parameters"]["properties"]["query"]["description"]
+        self.assertIn("first search query in English", query)
+        self.assertIn("Russian or another legacy language", query)
+
     def test_base_lives_in_hermes_home(self):
         self.assertEqual(self.p._facts, str(Path(self.home) / "memcue" / "facts.db"))
 
@@ -242,7 +259,8 @@ class ProviderTest(unittest.TestCase):
         fact_id = self.written()[self.p._key("memory", old)]
         self.p.on_memory_write("replace", "memory", new, {"previous_content": old})
         dump = "\n".join(self.memcue("dump", self.p._facts))
-        self.assertIn("55433", dump)
+        self.assertIn(old, dump)
+        self.assertIn(new, dump)
         self.assertIn(f"{fact_id} v2 active", "\n".join(self.memcue("dump", self.p._facts)))
         self.p.on_memory_write("remove", "memory", "", {"previous_content": new})
         self.assertEqual(self.facts(), [])
@@ -399,7 +417,8 @@ class ProviderTest(unittest.TestCase):
                 for word in ("must", "always", "every tool"):
                     self.assertNotIn(word, text.lower())
         block = self.p.system_prompt_block()
-        self.assertIn("several times with synonyms, the system name and both languages", block)
+        self.assertIn("first search query in English", block)
+        self.assertIn("retry with synonyms and Russian or another legacy language", block)
         self.assertIn("when you decide it may help", block)
         self.assertIn("when you decide it helps", search)
         # The note is deterministic: two builds give the same text. That alone does not show that Hermes reuses

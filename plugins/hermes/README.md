@@ -4,8 +4,8 @@ A memory provider for [Hermes Agent](https://github.com/NousResearch/hermes-agen
 memcue fact base:
 
 - **No facts come with a message** (#361). The system prompt block tells the model to search the base with
-  `memcue_search` before it answers a question that may depend on earlier sessions, several times with synonyms, the
-  system's name and both languages if the first try finds nothing, and to go on to Hermes's own `session_search`
+  `memcue_search` before it answers a question that may depend on earlier sessions, first in English, then with synonyms
+  and Russian or another legacy language if English misses, and to go on to Hermes's own `session_search`
   when memcue has nothing: a passage of an earlier session is history, not a fact (#621). It also lets the model search during work, when it
   decides that may help: on starting with a specific host, service or repository, and before it diagnoses an
   unexpected error, with a short query naming the system and the problem, checking the result against the current
@@ -49,9 +49,16 @@ memcue fact base:
   Subagents, cron and flush runs get only `memcue_search` and do not write facts; a cron run also gets the dream
   tools below.
 - **Dream tools** `memcue_dream_prepare` and `memcue_dream_apply` let the model tidy the base: the first returns the
-  instructions and the facts to split, give search queries, translate, review in groups, check the scope of and
-  label by channel (`since: all` for the first dream on a base), the second takes the JSON answer and reports what
+  instructions and the facts to split, give search queries, review in groups and check the scope of (`since: all` for the first
+  dream on a base), the second takes the JSON answer and reports what
   memcue applied and refused. See [Dream](#dream).
+
+The delivered prompt and tool schemas request new and corrected fact content in English regardless of chat language.
+They preserve identifiers, commands, paths, versions, exact values and verbatim quotes and leave the user's reply
+language unchanged. English misses may be retried in Russian or another legacy language. The binary and built-in
+memory mirror keep accepting non-English input unchanged. Dreams do not translate facts or create translation debt;
+existing indexed translations remain searchable, and saved translation answers are ignored.
+
 ## Candidates
 
 A mirrored memory write and a fact written by `memcue_add` are indexed at once, and `memcue_correct` writes a new
@@ -66,7 +73,7 @@ Hermes runs one external memory provider at a time, so memcue replaces the one y
 ## Dream
 
 A dream is due once `MEMCUE_DREAM_EVERY` (default `24h`, #665) has passed since the last one and some fact is fresh or lacks
-a translation. With an endpoint configured, the `session-card` call that builds the system prompt starts one
+ordinary search queries. With an endpoint configured, the `session-card` call that builds the system prompt starts one
 `memcue dream -run` pass in the background and the hints say nothing of the dream (#569):
 
 ```bash

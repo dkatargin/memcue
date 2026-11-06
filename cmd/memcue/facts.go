@@ -694,7 +694,7 @@ func shelfHint(s *store.Store, q recall.Query) (string, error) {
 
 // cjkHint follows the answer to a query in Chinese, Japanese or Korean: the facts are in Russian and English, and a
 // question translated into either finds its fact 54-60 times in 60, against 0-50 asked as it is (#410).
-const cjkHint = "The facts are in Russian and English: search again with the query translated into one of them."
+const cjkHint = "Legacy facts include Russian and English: search first in English; if English misses, retry in Russian or another legacy language."
 
 // searchRecord is one line of search.log: a query the agent wrote and the facts it got, the record the read side is
 // judged by since the agent searches itself (#361).

@@ -377,7 +377,6 @@ func TestDreamRunAllChecksEveryGlobalFact(t *testing.T) {
 	t.Cleanup(func() { packetScope = old })
 	fakeExpand(t, nil)
 	fakeDream(t, func(string) []extract.Action { return nil })
-	translateAll(t)
 	var given []string
 	scopeFn = func(in string) ([]extract.Rescope, error) {
 		given = append(given, in)
@@ -427,7 +426,6 @@ func TestDreamRunAllDoesNotStallOnScopeChecks(t *testing.T) {
 	t.Cleanup(func() { packetScope = old })
 	fakeExpand(t, nil)
 	fakeDream(t, func(string) []extract.Action { return nil })
-	translateAll(t)
 	var given []string
 	scopeFn = func(in string) ([]extract.Rescope, error) { given = append(given, in); return nil, nil }
 	t.Cleanup(func() { scopeFn = func(string) ([]extract.Rescope, error) { return nil, nil } })

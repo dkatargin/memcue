@@ -63,9 +63,6 @@ var (
 	packetFresh  = 40
 	packetGroups = 30
 	packetExpand = 50
-	// packetTranslate is the facts a dream translates (#396): 40 kept every answer in one call when #395 measured
-	// a whole base, and a base of 3 000 facts is done in about 75 dreams.
-	packetTranslate = 40
 	// packetScope is the global facts a dream checks the scope of (#607): a base of 500 of them is done in about 17
 	// dreams, and a fact stored global later is checked by the next one.
 	packetScope = 30
@@ -98,7 +95,7 @@ type dreamRecord struct {
 	ScopeChecked int      `json:"scope_checked,omitempty"`
 	// Expanded counts the facts that got search queries.
 	Expanded int `json:"expanded,omitempty"`
-	// Translated counts the facts that got their translation (#396).
+	// Translated reads historical dream.log records; new dreams never translate facts.
 	Translated int `json:"translated,omitempty"`
 	// Swept counts the facts seen before that the merge sweep grouped with their neighbours.
 	Swept int `json:"swept,omitempty"`
@@ -135,7 +132,7 @@ type dreamPlan struct {
 	Splits []dreamPlanSplit `json:"splits,omitempty"`
 	// Expansions are the search queries for facts that had none, with the version the model read.
 	Expansions []dreamPlanExpansion `json:"expansions,omitempty"`
-	// Translations are the facts' text in the other language, with the version the model read (#396).
+	// Translations is retained for legacy plans only and is never applied.
 	Translations []dreamPlanTranslation `json:"translations,omitempty"`
 	Groups       []dreamPlanGroup       `json:"groups"`
 	Merge        string                 `json:"merge,omitempty"` // the sweep cursor to keep once the plan is carried out
@@ -184,7 +181,7 @@ func runDream(args []string, out io.Writer) error {
 	fs := flag.NewFlagSet("dream", flag.ContinueOnError)
 	since := fs.String("since", "", "review facts written since this date or RFC 3339 time (default: since the last dream)")
 	all := fs.Bool("all", false, "review every active fact")
-	prep := fs.Bool("prepare", false, "print the work of the dream for the session's model and keep it for -apply")
+	prep := fs.Bool("prepare", false, "print split, query, duplicate and scope work for the session's model (no translation); keep it for -apply")
 	list := fs.Bool("list", false, "print the groups and stop")
 	applyFile := fs.String("apply", "", "check and carry out the model's answer to the packet -prepare printed")
 	run := fs.Bool("run", false, "when a dream is due, send its packet to MEMCUE_API_URL and apply the answer (#401); "+
@@ -295,10 +292,9 @@ func freshFacts(s *store.Store, active []store.Fact, from time.Time, seen map[st
 	return fresh, nil
 }
 
-// dreamDue says, when a dream is due, how many facts are fresh and how many are owed a translation (#396): the
-// interval since the last one has passed and some fact is either. The first call on a machine only marks the base, so
+// dreamDue counts fresh facts and facts without ordinary search queries after the interval has passed. The first call on a machine only marks the base, so
 // the facts it already had are not swept by surprise (memcue dream -prepare -all does that).
-func dreamDue(dir string, every time.Duration) (fresh, owed int, last time.Time, err error) {
+func dreamDue(dir string, every time.Duration) (fresh, pending int, last time.Time, err error) {
 	last, ok := lastDream(dir)
 	if !ok {
 		unlock, err := lockDream(dir)
@@ -328,19 +324,12 @@ func dreamDue(dir string, every time.Duration) (fresh, owed int, last time.Time,
 		return 0, 0, last, err
 	}
 	for _, f := range active {
-		if owesTranslation(f) {
-			owed++
+		if len(extract.SearchQueries(f.Queries)) == 0 {
+			pending++
 		}
 	}
 	fr, err := freshFacts(s, active, last, seen)
-	return len(fr), owed, last, err
-}
-
-// owesTranslation reports whether a fact has no translation among its queries yet: stored before #395, or corrected
-// since, which drops the queries of the old text. The dream gives it one, packetTranslate a dream.
-func owesTranslation(f store.Fact) bool {
-	_, ok := extract.Translation(f.Queries)
-	return !ok
+	return len(fr), pending, last, err
 }
 
 // dreamPacket is what -prepare handed to the model, kept in the state directory for -apply: the facts and versions
@@ -351,7 +340,7 @@ type dreamPacket struct {
 	Seen   map[string]int `json:"seen"`
 	Split  map[string]int `json:"split"`
 	Expand map[string]int `json:"expand"`
-	// Translate are the facts owed a translation (#396), which no other part of the packet changes.
+	// Translate decodes pre-upgrade packets only; translation answers are ignored.
 	Translate map[string]int `json:"translate,omitempty"`
 	// Scope are the global facts to check the scope of, and Projects the scopes the model may move them to: the
 	// projects the active facts of the base hold in (#607).
@@ -372,7 +361,7 @@ type dreamAnswer struct {
 	Splits       []extract.Split      `json:"splits"`
 	Expansions   []extract.Expansion  `json:"expansions"`
 	Actions      []extract.Action     `json:"actions"`
-	Translations []extract.Translated `json:"translations"`
+	Translations []extract.Translated `json:"translations,omitempty"`
 	Scopes       []extract.Rescope    `json:"scopes"`
 }
 
@@ -490,22 +479,6 @@ func prepare(dir string, from time.Time, seen map[string]int, list bool, packets
 	if len(bare) > packets*packetExpand {
 		bare = bare[:packets*packetExpand]
 	}
-	// Facts owed a translation get it a packet at a time, the newest first (#396). A fact another part of the packet
-	// may change waits: a split retires it, and an expansion or a group action writes a version the translation would
-	// race. A fresh fact the packet leaves for later is translated now: a base whose dream fell behind would otherwise
-	// translate nothing until it caught up.
-	busy := freshSet(bare)
-	for _, g := range groups {
-		for _, f := range g {
-			busy[f.ID] = true
-		}
-	}
-	var owed []store.Fact
-	for i := len(active) - 1; i >= 0 && len(owed) < packets*packetTranslate; i-- {
-		if f := active[i]; !isBatch[f.ID] && !busy[f.ID] && owesTranslation(f) {
-			owed = append(owed, f)
-		}
-	}
 	// Global facts get their scope checked a packet at a time, in the order of their ids, after a cursor (#607); a fact
 	// stored global later has a larger id and is checked by a later packet. A fact a group of the packet corrects is
 	// refused at apply, and the cursor goes back to before it, so a later packet gives it again.
@@ -529,7 +502,7 @@ func prepare(dir string, from time.Time, seen map[string]int, list bool, packets
 		scopeCursor = scoped[len(scoped)-1].ID
 	}
 	p := dreamPacket{ID: start.UTC().Format(time.RFC3339Nano), Start: start, Seen: versions(active),
-		Split: versions(batch), Expand: versions(bare), Translate: versions(owed), Deferred: deferred, Merge: cursor,
+		Split: versions(batch), Expand: versions(bare), Deferred: deferred, Merge: cursor,
 		Swept: swept, Scope: versions(scoped), Projects: projects, ScopeFrom: scopeFrom, ScopeCursor: scopeCursor}
 	for _, f := range fresh {
 		if !isBatch[f.ID] {
@@ -543,7 +516,7 @@ func prepare(dir string, from time.Time, seen map[string]int, list bool, packets
 	for _, g := range groups {
 		p.Groups = append(p.Groups, versions(g))
 	}
-	if len(batch) == 0 && len(bare) == 0 && len(groups) == 0 && len(owed) == 0 && len(scoped) == 0 {
+	if len(batch) == 0 && len(bare) == 0 && len(groups) == 0 && len(scoped) == 0 {
 		// Nothing to ask: the dream is done as of now.
 		_, err := fmt.Fprintln(out, "memcue: nothing for the dream")
 		return rec, work, errors.Join(err, writeDreamSeen(dir, p.Seen), writeMergeCursor(dir, cursor), markDream(dir, start))
@@ -552,9 +525,9 @@ func prepare(dir string, from time.Time, seen map[string]int, list bool, packets
 		return rec, work, err
 	}
 	rec.Packet = p.ID
-	work = dreamWork{id: p.ID, split: batch, expand: bare, translate: owed, groups: groups, fresh: isBatch,
+	work = dreamWork{id: p.ID, split: batch, expand: bare, groups: groups, fresh: isBatch,
 		scope: scoped, projects: projects}
-	text, err := renderPacket(p.ID, batch, bare, owed, scoped, projects, groups, isBatch)
+	text, err := renderPacket(p.ID, batch, bare, scoped, projects, groups, isBatch)
 	if err != nil {
 		return rec, work, err
 	}
@@ -562,19 +535,15 @@ func prepare(dir string, from time.Time, seen map[string]int, list bool, packets
 	return rec, work, err
 }
 
-// renderPacket is the text the model reads: the instructions, the groups, the facts to split, expand and translate,
+// renderPacket is the text the model reads: the instructions, the groups, the facts to split and expand,
 // and the global facts to check the scope of with the projects they may move to.
-func renderPacket(id string, split, expand, translate, scope []store.Fact, projects []string, groups [][]store.Fact,
+func renderPacket(id string, split, expand, scope []store.Fact, projects []string, groups [][]store.Fact,
 	fresh map[string]bool) (string, error) {
 	splitIn, err := renderSplitInput(split)
 	if err != nil {
 		return "", err
 	}
 	expandIn, err := renderSplitInput(expand)
-	if err != nil {
-		return "", err
-	}
-	translateIn, err := renderSplitInput(translate)
 	if err != nil {
 		return "", err
 	}
@@ -586,7 +555,6 @@ func renderPacket(id string, split, expand, translate, scope []store.Fact, proje
 	b.WriteString(extract.DreamInstructions(id))
 	b.WriteString("\n## Данные: разделение\n\n```json\n" + splitIn + "\n```\n")
 	b.WriteString("\n## Данные: поисковые запросы\n\n```json\n" + expandIn + "\n```\n")
-	b.WriteString("\n## Данные: перевод\n\n```json\n" + translateIn + "\n```\n")
 	b.WriteString("\n## Данные: область\n\n```json\n" + scopeIn + "\n```\n")
 	b.WriteString("\n## Данные: группы\n\n")
 	if len(groups) == 0 {
@@ -651,23 +619,14 @@ func applyAnswer(dir, path string, out io.Writer) (dreamRecord, error) {
 	expanded := map[string]bool{}
 	for _, e := range a.Expansions {
 		v, ok := p.Expand[e.ID]
-		q := extract.CleanQueries(e.Queries)
+		q := extract.SearchQueries(extract.CleanQueries(e.Queries))
 		if !ok || expanded[e.ID] || done[e.ID] || len(q) == 0 {
 			continue // a fact the packet did not give, a second answer, a split fact, or nothing to write
 		}
 		expanded[e.ID] = true
 		plan.Expansions = append(plan.Expansions, dreamPlanExpansion{ID: e.ID, Version: v, Queries: q})
 	}
-	translated := map[string]bool{}
-	for _, tr := range a.Translations {
-		v, ok := p.Translate[tr.ID]
-		t := strings.TrimSpace(tr.Translation)
-		if !ok || translated[tr.ID] || len(extract.WithTranslation(nil, t)) == 0 {
-			continue // a fact the packet did not give to translate, a second answer, or nothing to write
-		}
-		translated[tr.ID] = true
-		plan.Translations = append(plan.Translations, dreamPlanTranslation{ID: tr.ID, Version: v, Translation: t})
-	}
+	// Pre-upgrade packets and answers may contain translations. They never authorize new translation work.
 	plan.ScopeCursor, plan.ScopeFrom, plan.ScopeGiven = p.ScopeCursor, p.ScopeFrom, slices.Sorted(maps.Keys(p.Scope))
 	rec.ScopeChecked = len(p.Scope)
 	rescoped := map[string]bool{}
@@ -706,9 +665,9 @@ func applyAnswer(dir, path string, out io.Writer) (dreamRecord, error) {
 	applied.Groups = len(p.Groups) // the groups the model reviewed, not only those it acted on
 	applied.Grouped = groupRecords(p, a.Actions, applied.Actions)
 	if err == nil {
-		_, err = fmt.Fprintf(out, "dream: %d split, %d expanded, %d translated, %d retired or corrected, "+
+		_, err = fmt.Fprintf(out, "dream: %d split, %d expanded, %d retired or corrected, "+
 			"%d moved to a project, %d refused\n", len(applied.Splits), applied.Expanded,
-			applied.Translated, len(applied.Actions), len(applied.Rescoped), len(applied.Refused))
+			len(applied.Actions), len(applied.Rescoped), len(applied.Refused))
 	}
 	if err == nil {
 		err = os.Remove(filepath.Join(dir, packetFile))
@@ -808,11 +767,17 @@ func applyPlan(dir string, plan dreamPlan, rec dreamRecord, out io.Writer) (drea
 	// unchanged at that version; any other change refuses its group.
 	expandedFrom := map[string]int{}
 	for _, e := range plan.Expansions {
-		q := extract.CleanQueries(e.Queries)
+		q := extract.SearchQueries(extract.CleanQueries(e.Queries))
+		if len(q) == 0 {
+			continue // legacy translation-only expansion is not ordinary query work
+		}
 		if cur, err := s.Get(e.ID); err == nil && cur.Version == e.Version {
 			// The queries are written whole: the translation the fact already has stays with them.
-			tr, _ := extract.Translation(cur.Queries)
-			q = extract.WithTranslation(q, tr)
+			for _, old := range cur.Queries {
+				if strings.HasPrefix(old, extract.TranslationPrefix) {
+					q = append(q, old)
+				}
+			}
 		}
 		f, err := s.SetQueries(e.ID, e.Version, q)
 		switch {
@@ -828,38 +793,6 @@ func applyPlan(dir string, plan dreamPlan, rec dreamRecord, out io.Writer) (drea
 	}
 	if rec.Expanded > 0 {
 		if _, err := fmt.Fprintf(out, "expanded %d facts\n", rec.Expanded); err != nil {
-			return rec, err
-		}
-	}
-	// Translations write only the translation query; the rest of the queries stay. The packet gives them facts no
-	// other part touches, so a changed fact here was changed since the packet, and its translation may describe the
-	// old text.
-	for _, tr := range plan.Translations {
-		cur, err := s.Get(tr.ID)
-		switch {
-		case errors.Is(err, store.ErrNotFound):
-			rec.Refused = append(rec.Refused, "translate "+tr.ID+": "+err.Error())
-			continue
-		case err != nil:
-			return rec, err
-		}
-		f, err := s.SetQueries(tr.ID, tr.Version, extract.WithTranslation(cur.Queries, tr.Translation))
-		switch {
-		case errors.Is(err, store.ErrChanged) || errors.Is(err, store.ErrRetired):
-			rec.Refused = append(rec.Refused, "translate "+tr.ID+": "+err.Error())
-			continue
-		case err != nil:
-			return rec, err
-		}
-		// A fact the dream counts as seen stays seen at its new version; a fresh one the packet left for later stays
-		// fresh, so the next packet still reviews it.
-		if saw[tr.ID] == tr.Version {
-			saw[tr.ID] = f.Version
-		}
-		rec.Translated++
-	}
-	if rec.Translated > 0 {
-		if _, err := fmt.Fprintf(out, "translated %d facts\n", rec.Translated); err != nil {
 			return rec, err
 		}
 	}
@@ -1300,7 +1233,7 @@ func apply(s *store.Store, a extract.Action) (store.Fact, error) {
 	if err != nil {
 		return f, err
 	}
-	if q := extract.CleanQueries(a.Queries); len(q) > 0 {
+	if q := extract.SearchQueries(extract.CleanQueries(a.Queries)); len(q) > 0 {
 		return s.SetQueries(f.ID, f.Version, q)
 	}
 	return f, nil

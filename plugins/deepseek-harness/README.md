@@ -4,8 +4,8 @@ Long-term memory for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-
 fact base:
 
 - **No facts come with a prompt** (#361). The system-prompt section tells the model to search the base with
-  `memcue_search` when the answer or the next step may depend on what an earlier session knew, several times with
-  synonyms, the system's name and both languages if the first try finds nothing, and to skip it when the message and
+  `memcue_search` when the answer or the next step may depend on what an earlier session knew, first in English, then with
+  synonyms and Russian or another legacy language if English misses, and to skip it when the message and
   the files hold everything.
 - **No card of rules** (#656). The user's rules and decisions stay in the base: the section tells the model to search
   them (`kind rule,decision`, the words of the task) at the start of a task and when it turns to another system, as
@@ -27,6 +27,12 @@ fact base:
 
 The binary owns the base. This plugin is only the seam between it and the harness; the [harness support matrix](../../README.md#harness-support) lists what differs from Claude Code and
 Hermes.
+
+The delivered prompt and tool schemas request new and corrected fact content in English regardless of chat language.
+They preserve identifiers, commands, paths, versions, exact values and verbatim quotes and leave the user's reply
+language unchanged. English misses may be retried in Russian or another legacy language. The binary and built-in
+memory mirror keep accepting non-English input unchanged. Dreams do not translate facts or create translation debt;
+existing indexed translations remain searchable, and saved translation answers are ignored.
 
 ## Candidates
 
