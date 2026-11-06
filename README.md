@@ -1263,6 +1263,11 @@ Measured while building memcue; details and method in [docs/evaluation.md](docs/
   rules alone, as plain text, scored 1.00; on 10 prompts that need no memory, memcue did no measurable harm (1.62
   against 1.60). A session with memcue cost 13% more
   ([docs/research/memory-baseline-636-2026-11.md](docs/research/memory-baseline-636-2026-11.md)).
+- **The card against search (after #636):** on the same 50 prompts, search with an empty card scored the same as
+  memcue as installed (−0.02, [−0.14, +0.11]), while the card without search lost −0.19 [−0.34, −0.03]: the gain
+  comes through search. A card without its global facts scored −0.13 [−0.24, −0.02], but no worse than no card at
+  all, so the global part alone is not settled
+  ([docs/research/card-search-split-636-2026-11.md](docs/research/card-search-split-636-2026-11.md)).
 - **Recall on 100 unseen real prompts (the injection before #361):** 33 % of injected facts useful and 38 % noise, against 4 % useful and 87 %
   noise for the holographic memory plugin's prefetch on a comparable set. Useful facts reached 12 of the 41 prompts
   that needed memory: lexical search misses prompts that share no rare words with the fact.

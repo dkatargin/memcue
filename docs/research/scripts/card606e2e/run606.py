@@ -56,11 +56,21 @@ def install_bin(data):
         if not os.path.exists(dst) and os.path.exists(src):  # #636 has no keep list
             shutil.copy2(src, dst + ".tmp")
             os.replace(dst + ".tmp", dst)
+    for name in os.listdir(data):  # a keep list of its own for an arm: keep-ARM.txt
+        if name.startswith("keep-") and name.endswith(".txt"):
+            dst = os.path.join(BIN, name[:-4])
+            if not os.path.exists(dst):
+                shutil.copy2(os.path.join(data, name), dst + ".tmp")
+                os.replace(dst + ".tmp", dst)
 # The second arm is the card with MEMCUE_CARD_KEEP=keep.txt: trim in #606, select in #623 (E2E_ARMS=current,select).
 # #636 (E2E_ARMS=current,none,note): none runs without the memcue plugin and on an empty base; note is none plus the
 # global facts labelled behaviour as of the prompt, given once at session start as plain text.
+# The card/search split after #636 (E2E_ARMS=card,search,noglobal): card is the whole card with the agent's own
+# searches answered by an empty base; search and noglobal are the card of keep-search.txt (empty) and
+# keep-noglobal.txt (every fact not global) with search as usual.
 ARMS = tuple(os.environ.get("E2E_ARMS", "current,trim").split(","))
 BARE = ("none", "note")
+NOSEARCH = ("card",)
 
 
 def sh(*cmd, **kw):
@@ -177,8 +187,13 @@ def setup(data, p, arm, work):
     senv = {"MEMCUE_FACTS": base, "MEMCUE_STATE_DIR": state, "MEMCUE_BIN": binary, "MEMCUE_REAL": binary,
             "MEMCUE_DREAM_BACKGROUND": "0", "MEMCUE_AUTO_INSTALL": "0",
             "PATH": SHIM_SEARCH + ":" + SHIM + ":" + os.environ["PATH"]}
-    if arm not in ("current",) + BARE:
+    if os.path.exists(os.path.join(BIN, f"keep-{arm}")):
+        senv["MEMCUE_CARD_KEEP"] = os.path.join(BIN, f"keep-{arm}")
+    elif arm not in ("current",) + BARE + NOSEARCH:
         senv["MEMCUE_CARD_KEEP"] = os.path.join(BIN, "keep")
+    if arm in NOSEARCH:
+        senv["MEMCUE_SEARCH_BASE"] = os.path.join(work, "base")
+        os.makedirs(os.path.join(work, "base", "facts"))
     env = {k: v for k, v in os.environ.items() if not k.startswith(("MEMCUE_", "CLAUDECODE"))}
     env.update(senv)
     settings = {"autoMemoryEnabled": False, "enabledPlugins": {"memcue@memcue": arm not in BARE}, "env": senv}

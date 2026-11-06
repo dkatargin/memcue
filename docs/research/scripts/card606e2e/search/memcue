@@ -2,4 +2,12 @@
 # memcue for the agent: only search, over the session's base; every call logged.
 printf '%s\n' "$*" >> "$MEMCUE_STATE_DIR/search.log"
 [ "$1" = search ] || { echo "memcue: only search is available in this session" >&2; exit 126; }
+# The card arm of the card/search split (#636): the agent's own searches go to an empty base with its own state, the
+# program hook's (-kind pitfall,environment) to the session's base.
+if [ -n "$MEMCUE_SEARCH_BASE" ]; then
+	case " $* " in
+	*" -kind pitfall,environment "*) ;;
+	*) MEMCUE_FACTS="$MEMCUE_SEARCH_BASE/facts" MEMCUE_STATE_DIR="$MEMCUE_SEARCH_BASE/state" exec "$MEMCUE_REAL" "$@" ;;
+	esac
+fi
 exec "$MEMCUE_REAL" "$@"
