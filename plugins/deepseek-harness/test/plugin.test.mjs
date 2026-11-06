@@ -663,3 +663,21 @@ test('the repository root is installable without a path parameter', async () => 
 	await readFile(new URL(root.dsh.bundle.patch, rootDir), 'utf8')
 	await readFile(new URL(root.exports, rootDir), 'utf8')
 })
+
+// Instruction contract only: no measurement of model compliance or recall.
+test('English-first instructions reach the system prompt and registered tool schemas', () => {
+	const { sections, tools } = mount()
+	for (const phrase of ['new and corrected facts in English', 'regardless of the chat language',
+		'first search query in English', 'Russian or another legacy language',
+		'identifiers, commands, paths, versions, exact values and verbatim quotes', "user's reply language"]) {
+		assert.ok(sections[0].text.includes(phrase), phrase)
+	}
+	for (const name of ['memcue_add', 'memcue_correct']) {
+		const description = tools.get(name).parameters.properties.text.description
+		assert.match(description, /English/)
+		assert.match(description, /verbatim quotes/)
+	}
+	const query = tools.get('memcue_search').parameters.properties.query.description
+	assert.match(query, /first search query in English/)
+	assert.match(query, /Russian or another legacy language/)
+})

@@ -50,16 +50,28 @@ func TestDreamSchemaIsTheAnswer(t *testing.T) {
 	if err := json.Unmarshal([]byte(dreamSchema), &schema); err != nil {
 		t.Fatal(err)
 	}
-	want := []string{"packet", "splits", "expansions", "actions", "translations", "scopes"}
+	want := []string{"packet", "splits", "expansions", "actions", "scopes"}
 	if strings.Join(schema.Required, ",") != strings.Join(want, ",") || len(schema.Properties) != len(want) {
 		t.Errorf("schema requires %q with %d properties, want %q", schema.Required, len(schema.Properties), want)
 	}
-	for _, field := range []string{`"by"`, `"kind"`, `"parts"`, `"translation"`, `"queries"`, `"scope"`} {
+	for _, field := range []string{`"by"`, `"kind"`, `"parts"`, `"queries"`, `"scope"`} {
 		if !strings.Contains(dreamSchema, field) {
 			t.Errorf("schema lacks %s", field)
 		}
 	}
 	if strings.Contains(dreamSchema, "channel") || strings.Contains(DreamInstructions("p"), "канал") {
 		t.Error("the dream still asks for channels")
+	}
+}
+
+func TestDreamInstructionsEnglishContentWithoutLanguageOnlyRewrites(t *testing.T) {
+	text := DreamInstructions("policy-packet")
+	for _, phrase := range []string{"new and corrected facts in English", "identifiers, commands, paths, versions, exact values and verbatim quotes", "Never correct a fact solely to change its language"} {
+		if !strings.Contains(text, phrase) {
+			t.Errorf("missing %q", phrase)
+		}
+	}
+	if strings.Contains(text, `"translations"`) || strings.Contains(dreamSchema, `"translations"`) {
+		t.Error("dream still requests translation answers")
 	}
 }

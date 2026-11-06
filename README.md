@@ -269,6 +269,8 @@ included (#453); the Hermes and DSH plugins read both it and the bare array of a
 
 ## Upgrade
 
+These notes describe behaviour at each release. See [Use](#use) for the current language and dream policy.
+
 ### 0.30.0: a dream a day, and its calls cost less (#665, #660, #643)
 
 - **A dream is due a day after the last one by default** (#665): `MEMCUE_DREAM_EVERY` defaults to `24h` instead of
@@ -937,6 +939,22 @@ stems, which keep the word of a versioned name such as `PostgreSQL-16`.
 
 ## Use
 
+The Hermes provider, Claude Code plugin/skill/session-start and DeepSeek Harness instructions ask agents to write
+new and corrected facts in English regardless of the chat language, and to try the first memory search in English.
+Identifiers, commands, paths, versions, exact values and verbatim quotes stay unchanged, as does the user's reply
+language. If English misses, retry with synonyms and Russian or another legacy language. This is an instruction
+policy: the CLI, store and built-in memory mirror still accept non-English content without translating it.
+
+Dream translation is disabled for prepare/apply and automatic/background runs. Missing translations create no
+pending work, due hints or model calls. Old saved packets and answers cannot restart translation work; their
+translation fields are ignored, including full-fact `= ` entries proposed through dream query expansion or correction.
+This policy does not rewrite existing fact content or history. Previously indexed `= ` translations remain searchable;
+ordinary query expansion preserves them. Correcting changed content still clears queries that described the old text.
+
+[Research #661](docs/research/dream-ablations-661-2026-11.md) removed expansion and translation together. It does not
+isolate the value of translation, or establish recall or cost gains from disabling translation alone. The instruction
+tests check delivered text and tool schemas; they do not measure agent compliance or recall.
+
 Nothing to do in a session: the agent searches the base when it needs to and stores what it learns. A fact written
 with `memcue add` or stored by `memcue import` is indexed at once; nothing waits for approval (see
 [Candidates](#candidates)). A search returns it when it fits: by default a search in a repository reads that
@@ -981,10 +999,8 @@ memcue dream -apply answer.json      # check and carry out the model's answer to
 `migrate` and `import` skip such facts and report them without echoing the value, because the base may be synced
 through git.
 
-A fact is found by a question in either language. The dream stores, next to the search queries, the whole fact in
-the other language, Russian or English, as one query that starts with `= `: search reads it, while the
-search output shows the fact as it was written (#392, #395); it gives a translation to 40 facts a dream (#396). Until
-then the keywords the agent writes in both languages are what a question in the other language finds.
+Search indexes a fact's content, keywords and queries, including legacy `= ` translations, and shows the fact as
+stored. English-first searches may need a legacy-language retry for older facts without matching English terms.
 
 Every host also tells its model to store a failure it found by running something (#566): when a command fails and the
 agent fixes or works around it, the cause and the fix go in as a pitfall if a fresh checkout would hit it again, even
@@ -1045,8 +1061,8 @@ A session writes a fact without reading every neighbour, so two sessions can sto
 one that replaced it. A dream tidies the facts the last dream did not see. memcue starts no model for it: the model of a session does it.
 
 1. `memcue dream -prepare` groups each fresh fact with the stored facts close to it in words and prints one packet:
-   the instructions, the fresh facts to split, the facts without search queries to expand, the facts without a
-   translation to translate, the global facts to check the scope of, and the groups to review.
+   the instructions, the fresh facts to split, the facts without search queries to expand, the global facts to check
+   the scope of, and the groups to review.
    It keeps the packet in the state directory.
 2. The model answers in one JSON object, with the packet's id.
 3. `memcue dream -apply FILE` checks the answer against the packet and carries out what passes. It prints and logs
@@ -1055,8 +1071,8 @@ one that replaced it. A dream tidies the facts the last dream did not see. memcu
 Who runs it:
 
 - **The session start, in the background** (#569). A dream is due once `MEMCUE_DREAM_EVERY` (default `24h`, #665) has
-  passed since the last one and some fact is fresh or lacks a translation. The first check on a machine only marks
-  the start, so the facts it already had are not swept by surprise; `memcue dream -prepare -all` reviews them. When a
+  passed since the last one and some fact is fresh or lacks ordinary search queries. The first check on a machine
+  only marks the start, so the facts it already had are not swept by surprise; `memcue dream -prepare -all` reviews them. When a
   dream is due, `session-start` (Claude Code) and `session-card` (Hermes, DSH) start `memcue dream -run -background`
   in its own session and return at once: one pass, on the endpoint when `MEMCUE_API_URL` is set and on `claude -p`
   otherwise. The start is stamped in `dream.started`, so a dream that fails is tried again an interval later, not at
@@ -1079,17 +1095,17 @@ Who runs it:
   (#401); started by hand without `MEMCUE_API_URL` it refuses, so a long run never starts on `claude -p` by
   surprise. `-background` is the run a session start starts: one pass, on `claude -p` without an endpoint.
 - **Calls at once.** A pass of `dream -run` takes the work of up to `-j` packets (default 4) and sends it as calls at
-  once: the fresh facts with the groups, the facts to expand, the facts to translate and the global facts to check the
+  once: the fresh facts with the groups, the facts to expand and the global facts to check the
   scope of each go in their own calls of one packet's bounds. Their answers are applied as one, and one failed call
   fails the pass. Most of a call is the model writing its answer, so a pass of a base far behind does the work of four
   packets in about a third of the time of one; a pass with little work makes one or two calls. `dream.log` records the
   calls, the time of the packet, the calls and the apply, and the tokens of each pass (#471,
   [docs/research/dream-time-2026-10.md](docs/research/dream-time-2026-10.md)). Under `calls` it keeps a line per
   call (#643): its task (`review` for the fresh facts and the groups, the merge sweep's counted under `swept`,
-  `expand`, `translate`, `scope`), the work it was given, how many changes the model proposed, its tokens, its time
+  `expand`, `scope`), the work it was given, how many changes the model proposed, its tokens, its time
   and, on `claude -p`, its cost. An endpoint reports tokens only, so a call there has no `cost_usd`.
 
-A packet holds up to 40 fresh facts, 30 groups, 50 facts to expand, 40 to translate, and 30 global facts to check the
+A packet holds up to 40 fresh facts, 30 groups, 50 facts to expand, and 30 global facts to check the
 scope of. The fresh facts it leaves out are not counted
 as seen, so the next packet takes them, and the session start still says facts wait.
 
@@ -1105,11 +1121,6 @@ What the answer may do:
   the parts of a split. An older fact without queries is never fresh again, so each packet also offers the newest of
   them: a base upgraded from 0.4 fills over a few dreams. On the gold set of 180 prompts the queries added
   7–9 prompts that got a useful fact ([docs/research/one-model-2026-10.md](docs/research/one-model-2026-10.md)).
-- **Translate** a fact that has no translation among its queries: the whole text in the other language, Russian or
-  English, kept as the query that starts with `= ` (#395). The dream gives it to every fact without one, the newest
-  first, so a base is translated over a few dozen dreams without a command of its own (#396). A fact another part of the packet may
-  change — fresh, without queries, or in a group — waits for a later packet, and a fact changed since the packet is
-  refused, since its translation would describe the old text.
 - **Move a global fact to its project** (#607): a fact stored `global` reaches a search from every repository, so
   it must hold in every repository and on every host. The packet gives the global
   facts a few dozen at a time, in the order of their ids after the cursor in `dream.scope`, with the projects of the
@@ -1221,8 +1232,9 @@ by default because it keeps the text of the queries.
 `tokens` (`input`, of which `cached` came from the prompt cache, and `output`) times the provider's price; memcue
 keeps no price table, since prices change and differ by account (#258).
 
-The prompts of `migrate` and the dream (`internal/extract/*.md`) are written in Russian; a fact keeps the language of
-its note.
+The prompts of `migrate` and the dream (`internal/extract/*.md`) are written in Russian. Migration preserves the
+language of its notes; necessary dream splits and corrections request English content while preserving literals.
+A dream must not correct a fact solely to change its language.
 
 ## Cost
 
@@ -1231,13 +1243,13 @@ short call only when `MEMCUE_API_URL` is set. Before #494 an extraction of every
 on Opus, about $5 per million characters of transcript, and a review followed it; both are gone.
 
 A dream the session's model runs costs no call of its own: it is part of the session. A background dream (#569) is
-one `dream -run` pass at most once per `MEMCUE_DREAM_EVERY`, and only while some fact is fresh or owed a translation;
-a pass takes the work of up to four packets (`-j 4`). On Opus through `claude -p`, a background pass over a copy of
+one `dream -run` pass at most once per `MEMCUE_DREAM_EVERY`, and only while some fact is fresh or lacks ordinary
+search queries; a pass takes the work of up to four packets (`-j 4`). On Opus through `claude -p`, a background pass over a copy of
 the author's Mac base with 141 fresh facts made six calls and cost $2.58; the passes of a whole-base run cost $0.22–1.97
 ([dream-run-2026-10](docs/research/dream-run-2026-10.md)), and a pass with little fresh work less. One packet is about 20,000–36,000
 characters on the author's two bases, instructions included; a dream with no fresh fact and nothing to expand prints
-one line. While facts are owed a translation, its 40 facts add about 10,000 characters (64,583 against 54,000 on a
-copy of the author's base with 2,831 fresh facts waiting).
+one line. These historical measurements included translation work; they do not predict the cost of a run under the
+current policy.
 
 ## Results
 

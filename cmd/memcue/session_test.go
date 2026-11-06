@@ -235,15 +235,18 @@ func TestSessionStartWarnsWhileAutoMemoryIsOn(t *testing.T) {
 	}
 }
 
-// The note is the one measured in #647 word for word (#656): no card arrives, and the agent searches the user's rules
-// and decisions at the start of a task. A change to it is a change to what was measured.
-func TestSessionNoteIsTheMeasuredNoCardNote(t *testing.T) {
+// #669 changes the language policy in the note measured in #647. The other instructions stay word for word;
+// the new policy has its own delivered-text test and has not been measured for agent compliance or recall.
+func TestSessionNotePreservesOtherMeasured647Instructions(t *testing.T) {
 	measured, err := os.ReadFile(filepath.Join("..", "..", "docs", "research", "scripts", "card606e2e", "note-rule-647.txt"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if sessionNote != strings.TrimSpace(string(measured)) {
-		t.Error("the session note differs from the note measured in #647")
+	oldLines := strings.Split(strings.TrimSpace(string(measured)), "\n")
+	newLines := strings.Split(sessionNote, "\n")
+	// The introductory line stays; the new English fact rule and changed search-language line come next.
+	if newLines[0] != oldLines[0] || strings.Join(newLines[3:], "\n") != strings.Join(oldLines[2:], "\n") {
+		t.Error("instructions beyond the English language policy differ from #647")
 	}
 }
 
@@ -301,5 +304,27 @@ func TestSessionStartCarriesNoCard(t *testing.T) {
 	}
 	if _, err := os.Stat(filepath.Join(state, "card.log")); !os.IsNotExist(err) {
 		t.Errorf("card.log written: %v", err)
+	}
+}
+
+// This checks the delivered instruction contract, not model compliance or recall.
+func TestSessionStartEnglishFirstInstructions(t *testing.T) {
+	env(t)
+	var out bytes.Buffer
+	if err := runSessionStartPart(strings.NewReader(`{"session_id":"english-policy"}`), &out, 0); err != nil {
+		t.Fatal(err)
+	}
+	var got struct {
+		HookSpecificOutput struct{ AdditionalContext string }
+	}
+	if err := json.Unmarshal(out.Bytes(), &got); err != nil {
+		t.Fatal(err)
+	}
+	for _, phrase := range []string{"new and corrected facts in English", "regardless of the chat language",
+		"first search query in English", "Russian or another legacy language",
+		"identifiers, commands, paths, versions, exact values and verbatim quotes", "user's reply language"} {
+		if !strings.Contains(got.HookSpecificOutput.AdditionalContext, phrase) {
+			t.Errorf("missing %q", phrase)
+		}
 	}
 }

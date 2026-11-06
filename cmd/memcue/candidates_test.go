@@ -90,8 +90,8 @@ func TestDreamReadsExpiredFactsWhateverTheirReview(t *testing.T) {
 				t.Errorf("%s: the dream lacks %s:\n%s", when, id, out.String())
 			}
 		}
-		if n, err := owedTranslations(); err != nil || n != len(all) {
-			t.Errorf("%s: owed translations %d %v, want %d", when, n, err, len(all))
+		if n, err := pendingExpansions(); err != nil || n != len(all) {
+			t.Errorf("%s: pending expansions %d %v, want %d", when, n, err, len(all))
 		}
 	}
 	read("before a correction")

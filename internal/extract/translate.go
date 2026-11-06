@@ -1,7 +1,6 @@
 package extract
 
 import (
-	_ "embed"
 	"strings"
 )
 
@@ -47,8 +46,3 @@ type Translated struct {
 	ID          string `json:"id"`
 	Translation string `json:"translation"`
 }
-
-// translatePrompt is task 4 of a dream packet (#396): the session's model translates the facts owed a translation.
-//
-//go:embed translate_prompt.md
-var translatePrompt string
