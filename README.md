@@ -3,6 +3,8 @@
 Long-term memory for Claude Code. memcue keeps a base of short, self-contained facts in SQLite, with a text history git can sync, and works
 through hooks:
 
+Codex CLI users: see the [local pull-mode integration](plugins/codex/README.md) for setup, hook review, skills and verification limits.
+
 - **At session start, and again after a compaction or `/clear`** it tells the agent when to search memcue: when the
   answer or the next step may depend on what an earlier session knew, and not when the message and the files hold
   everything. No card of rules comes with it (#656): the agent searches your rules and decisions itself, with

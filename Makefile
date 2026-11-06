@@ -1,12 +1,12 @@
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
 GOLANGCI_VERSION ?= v2.13.0
 
-.PHONY: build test test-plugins lint bench
+.PHONY: build test test-plugins test-codex lint bench
 
 build:
 	go build -trimpath -ldflags "-X main.version=$(VERSION)" -o bin/memcue ./cmd/memcue
 
-test: build
+test: build test-codex
 	go test -race ./...
 	MEMCUE_BIN=$(CURDIR)/bin/memcue python3 -I plugins/hermes/memcue/tests/test_provider.py
 	python3 -I plugins/test_cross_harness.py
@@ -35,3 +35,7 @@ lint:
 	fi
 	go vet ./...
 	golangci-lint run ./...
+
+# Synthetic CLI/configuration coverage; requires the built binary, never a live memory base.
+test-codex: build
+	MEMCUE_BIN=$(CURDIR)/bin/memcue python3 -I -m unittest discover -s plugins/codex/tests -p 'test_*.py'

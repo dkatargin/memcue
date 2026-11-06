@@ -1,0 +1,6 @@
+{
+  "name": "memcue",
+  "description": "Pull-mode long-term memory over the memcue CLI",
+  "skills": "./skills/",
+  "hooks": "./hooks/hooks.json"
+}
