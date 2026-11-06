@@ -6,6 +6,11 @@ fails the run.
 """
 
 import ast
+import json
+import os
+import subprocess
+import sys
+import tempfile
 import re
 import unittest
 from pathlib import Path
@@ -118,6 +123,38 @@ class NoCardTest(unittest.TestCase):
                 self.assertIn("Before you start a task, and again when it turns to another system", text)
                 self.assertIn("Skip it when the user's message and the repository's files hold everything", text)
                 self.assertNotIn("session card", text)
+
+class CodexDeliveryTest(unittest.TestCase):
+    def test_codex_delivers_pull_policy_without_other_hosts_history_or_card(self):
+        """Exercise the installed entry point, not just an unused policy string."""
+        with tempfile.TemporaryDirectory(prefix="codex-contract-") as tmp:
+            home = Path(tmp)
+            binary = home / "memcue"
+            binary.write_text("#!/bin/sh\nexit 0\n")
+            binary.chmod(0o700)
+            config = home / "memcue.json"
+            config.write_text(json.dumps({"binary":str(binary), "facts":str(home/"facts"),
+                                          "state_dir":str(home/"state"), "host":"synthetic-host"}))
+            env = {k:v for k,v in os.environ.items() if not k.startswith(("MEMCUE_", "CLAUDE_"))}
+            env.update(HOME=tmp, CODEX_HOME=str(home/"codex"))
+            payload = {"hook_event_name":"SessionStart", "source":"startup", "cwd":tmp,
+                       "session_id":"synthetic-session", "model":"synthetic-model",
+                       "permission_mode":"default", "transcript_path":None}
+            result = subprocess.run([sys.executable, "-I", str(PLUGINS/"codex/scripts/memcue.py"),
+                                     "--config", str(config), "hook"], input=json.dumps(payload),
+                                    text=True, capture_output=True, env=env, timeout=20)
+            self.assertEqual(result.returncode,0,result.stderr)
+            delivered = json.loads(result.stdout)
+            self.assertNotIn("systemMessage",delivered)
+            self.assertEqual(delivered["hookSpecificOutput"]["hookEventName"],"SessionStart")
+            text = delivered["hookSpecificOutput"]["additionalContext"]
+            for term in ("No card of rules", "Before you start a task", "another system", "-kind rule,decision",
+                         "-in global", "-in shelf:research", "what the repository shows", "Search first", "English",
+                         "legacy-language", "corrected fact content", "verbatim quotations", "user's requested language"):
+                self.assertIn(term,text)
+            for forbidden in ("memcue sessions", "session_search", "built-in memory", "claude -p"):
+                self.assertNotIn(forbidden,text)
+
 
 if __name__ == "__main__":
     unittest.main()
