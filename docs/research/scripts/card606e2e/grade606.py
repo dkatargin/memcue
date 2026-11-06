@@ -132,21 +132,36 @@ def cmd_report(data):
     print("arm      runs score  2s  0s wrong asks past turns tools  cost$  sec searched searches/run errors card")
     for arm, r in rows.items():
         s = r["score"]
+        if not s:
+            continue
         print(f"{arm:8s} {len(s):4d} {st.mean(s):.2f} {s.count(2):3d} {s.count(0):3d} {r['wrong']:5d} {r['asks']:4d}"
               f" {r['past']:4d} {st.mean(r['turns']):5.1f} {st.mean(r['tools']):5.1f} {sum(r['cost']):6.2f}"
               f" {st.median(r['sec']):4.0f} {sum(x > 0 for x in r['searches']):8d} {st.mean(r['searches']):12.1f}"
               f" {r['errors']:6d} {st.mean(r['card']):.0f} facts, runs without a card {r['card'].count(0)}")
-    diffs, lost, won = [], [], []
-    for pid, d in sorted(per.items()):
-        if "current" in d and CAND in d:
-            x = st.mean(d[CAND]) - st.mean(d["current"])
-            diffs.append(x)
-            (won if x > 0 else lost if x < 0 else []).append((pid, x))
-    lo, hi = boot(diffs)
-    print(f"\n{CAND} vs current by prompt (mean of the reps): {len(won)} / {len(diffs) - len(won) - len(lost)} / "
-          f"{len(lost)}; mean diff {st.mean(diffs):+.2f}, 95% bootstrap [{lo:+.2f}, {hi:+.2f}]")
-    print(f"prompts {CAND} lost: {[(pid, round(x, 2)) for pid, x in lost]}")
-    print(f"prompts {CAND} won:  {[(pid, round(x, 2)) for pid, x in won]}")
+    # E2E_PAIRS lists a-b pairs, each read as a − b by prompt (#636: current-none,note-none,note-current); a prompt's
+    # group (#636: memory, ordinary) splits each pair, and a run without groups reports all prompts only.
+    pairs_ab = [tuple(x.split("-")) for x in os.environ.get("E2E_PAIRS", f"{CAND}-current").split(",")]
+    group = {p["id"]: p.get("group", "all") for p in ps}
+    for g in sorted(set(group.values())):
+        means = {arm: st.mean(s for pid, d in per.items() if group[pid] == g for s in d.get(arm, []))
+                 for arm in ARMS if any(group[pid] == g and arm in d for pid, d in per.items())}
+        print(f"score by arm, {g}: " + ", ".join(f"{arm} {m:.2f}" for arm, m in means.items()))
+    for a, b in pairs_ab:
+        for g in sorted(set(group.values())):
+            diffs, lost, won = [], [], []
+            for pid, d in sorted(per.items()):
+                if a in d and b in d and group[pid] == g:
+                    x = st.mean(d[a]) - st.mean(d[b])
+                    diffs.append(x)
+                    (won if x > 0 else lost if x < 0 else []).append((pid, x))
+            if not diffs:
+                continue
+            lo, hi = boot(diffs)
+            print(f"\n{a} vs {b}, {g} ({len(diffs)} prompts, mean of the reps): {len(won)} / "
+                  f"{len(diffs) - len(won) - len(lost)} / {len(lost)}; mean diff {st.mean(diffs):+.2f}, "
+                  f"95% bootstrap [{lo:+.2f}, {hi:+.2f}]")
+            print(f"prompts {a} lost: {[(pid, round(x, 2)) for pid, x in lost]}")
+            print(f"prompts {a} won:  {[(pid, round(x, 2)) for pid, x in won]}")
     print("\nrep-to-rep spread (prompts where the two reps of one arm differ):")
     for arm in ARMS:
         n = sum(1 for d in per.values() if len(d.get(arm, [])) == 2 and d[arm][0] != d[arm][1])

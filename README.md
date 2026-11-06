@@ -1252,6 +1252,11 @@ Measured while building memcue; details and method in [docs/evaluation.md](docs/
   a card whose repository part stays whole and whose global part keeps only behaviour rules (43 facts instead of 60)
   scored 1.23 of 2 against 1.26; −0.03 per prompt, 95% interval [−0.14, +0.08], within the noise of one repetition
   ([docs/research/card-global-select-623-2026-11.md](docs/research/card-global-select-623-2026-11.md)).
+- **Memory against no memory (#636):** on the 40 prompts of #606, each run twice and graded blind, memcue 0.28.0
+  scored 1.21 of 2 against 0.97 without memcue; +0.23 per prompt, 95% interval [+0.07, +0.39]. The global behaviour
+  rules alone, as plain text, scored 1.00; on 10 prompts that need no memory, memcue did no measurable harm (1.62
+  against 1.60). A session with memcue cost 13% more
+  ([docs/research/memory-baseline-636-2026-11.md](docs/research/memory-baseline-636-2026-11.md)).
 - **Recall on 100 unseen real prompts (the injection before #361):** 33 % of injected facts useful and 38 % noise, against 4 % useful and 87 %
   noise for the holographic memory plugin's prefetch on a comparable set. Useful facts reached 12 of the 41 prompts
   that needed memory: lexical search misses prompts that share no rare words with the fact.

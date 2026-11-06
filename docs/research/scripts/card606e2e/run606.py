@@ -53,11 +53,14 @@ def install_bin(data):
     # (Killed: 9), and the first full run lost its memory in 22 of 160 sessions that way.
     for src, name in ((os.path.join(data, "memcue-606"), "memcue-bin"), (os.path.join(data, "keep.txt"), "keep")):
         dst = os.path.join(BIN, name)
-        if not os.path.exists(dst):
+        if not os.path.exists(dst) and os.path.exists(src):  # #636 has no keep list
             shutil.copy2(src, dst + ".tmp")
             os.replace(dst + ".tmp", dst)
 # The second arm is the card with MEMCUE_CARD_KEEP=keep.txt: trim in #606, select in #623 (E2E_ARMS=current,select).
+# #636 (E2E_ARMS=current,none,note): none runs without the memcue plugin and on an empty base; note is none plus the
+# global facts labelled behaviour as of the prompt, given once at session start as plain text.
 ARMS = tuple(os.environ.get("E2E_ARMS", "current,trim").split(","))
+BARE = ("none", "note")
 
 
 def sh(*cmd, **kw):
@@ -93,6 +96,26 @@ def snapshot(data, p):
     return d
 
 
+def note_facts(snap):
+    """The active global facts whose last version as of the prompt the dream labelled behaviour (#625)."""
+    out = []
+    for sub in sorted(os.listdir(snap)):
+        for name in sorted(os.listdir(os.path.join(snap, sub))):
+            lines = [json.loads(l) for l in open(os.path.join(snap, sub, name)) if l.strip()]
+            f = max(lines, key=lambda x: x["version"])
+            if f.get("status") == "active" and (f.get("scope") or "").lower() == "global" \
+                    and f.get("channel") == "behaviour":
+                out.append(f)
+    return sorted(out, key=lambda f: f["created"])
+
+
+def note_text(snap):
+    """The note arm's text: the behaviour facts as a plain list, no memcue around them."""
+    facts = note_facts(snap)
+    return "The user's standing rules and decisions from earlier sessions:\n" + "".join(
+        f"- {f['content']}\n" for f in facts)
+
+
 def default_branch(root):
     head = subprocess.run(["git", "-C", root, "symbolic-ref", "-q", "refs/remotes/origin/HEAD"], capture_output=True,
                           text=True).stdout.strip()
@@ -110,8 +133,10 @@ def clone(p, dst):
     prompt's commit and of the default branch's last commit before it. A clone of the whole repository (--shared, or
     with its refs cut back) still carried the later objects, and an agent read today's commits out of them."""
     root = p["root"]
-    rel = os.path.relpath(os.path.realpath(p["cwd"]), os.path.realpath(sh("git", "-C", p["cwd"], "rev-parse",
-                                                                          "--show-toplevel")))
+    # A linked worktree removed since the prompt (#636 met one): the repository's root stands in for it, and its
+    # branches still hold the worktree's commits.
+    rel = "." if not os.path.isdir(p["cwd"]) else os.path.relpath(
+        os.path.realpath(p["cwd"]), os.path.realpath(sh("git", "-C", p["cwd"], "rev-parse", "--show-toplevel")))
     commit = sh("git", "-C", root, "rev-list", "-1", f"--before={p['time']}", "--all")
     default = default_branch(root)
     tip = sh("git", "-C", root, "rev-list", "-1", f"--before={p['time']}", default) or commit
@@ -142,18 +167,26 @@ def setup(data, p, arm, work):
     os.makedirs(work)
     cwd, commit = clone(p, work)
     base = os.path.join(work, "facts")
-    shutil.copytree(snapshot(data, p), base)
+    if arm in BARE:
+        os.makedirs(base)  # the user's own hooks still run and find nothing
+    else:
+        shutil.copytree(snapshot(data, p), base)
     state = os.path.join(work, "state")
     install_bin(data)
     binary = os.path.join(BIN, "memcue-bin")
     senv = {"MEMCUE_FACTS": base, "MEMCUE_STATE_DIR": state, "MEMCUE_BIN": binary, "MEMCUE_REAL": binary,
             "MEMCUE_DREAM_BACKGROUND": "0", "MEMCUE_AUTO_INSTALL": "0",
             "PATH": SHIM_SEARCH + ":" + SHIM + ":" + os.environ["PATH"]}
-    if arm != "current":
+    if arm not in ("current",) + BARE:
         senv["MEMCUE_CARD_KEEP"] = os.path.join(BIN, "keep")
     env = {k: v for k, v in os.environ.items() if not k.startswith(("MEMCUE_", "CLAUDECODE"))}
     env.update(senv)
-    settings = {"autoMemoryEnabled": False, "enabledPlugins": {"memcue@memcue": True}, "env": senv}
+    settings = {"autoMemoryEnabled": False, "enabledPlugins": {"memcue@memcue": arm not in BARE}, "env": senv}
+    if arm == "note":
+        nfile = os.path.join(work, "rules.md")
+        with open(nfile, "w") as f:
+            f.write(note_text(snapshot(data, p)))
+        settings["hooks"] = {"SessionStart": [{"hooks": [{"type": "command", "command": f"cat {nfile}"}]}]}
     sfile = os.path.join(work, "settings.json")
     json.dump(settings, open(sfile, "w"))
     return cwd, commit, env, sfile, state
