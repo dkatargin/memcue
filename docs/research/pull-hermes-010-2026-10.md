@@ -179,3 +179,13 @@ The defect of item 2 survives the correction, and it is the reason #383 stays op
 keeps word-only stems for the facts it already had, `numbersMissing` only notices an index with *no* numeric terms at
 all, and a version-only prompt on such a fact returns nothing. The audit scripts that produced the wrong count are
 fixed in the same pass, because the mistake was theirs and not the base's.
+
+## Repair verified after release
+
+The [#382 closure](https://github.com/juev/memcue/issues/382#issuecomment-6396459089) confirms **383 live facts /
+383 index rows / 0 missing / 0 stale**. The subsequent
+[#383 completion comment](https://github.com/juev/memcue/issues/383#issuecomment-6396608935) reports the released
+**0.11.0 linux/amd64** asset on a pre-fix copied base: **383/383** facts/index rows, **60** number-term rows and
+**2** live facts still missing their term. A normal search repaired it to **62** number-term rows / **0** missing.
+Thus the original 19/72 count, the corrected 4/47 audit and the later lexer-aware two-row repair are different
+stages, not interchangeable denominators. The fix added automatic partial-index repair and `reindex` diagnostics.

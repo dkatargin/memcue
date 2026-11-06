@@ -46,6 +46,13 @@ and was stopped: a measurement of one task should not be a whole-base run.
 
 ## Promotions
 
+The earlier [PR #351](https://github.com/juev/memcue/pull/351), for
+[#346](https://github.com/juev/memcue/issues/346), supplied the original motivation: **15 of 21** retired duplicates
+crossed projects in **15** logged dreams. On a copied archived Claude Code base with the new project keys,
+**41 of 472** groups held facts of several projects; a model dry run over those groups cost **$2.99** and retired
+**1** cross-project duplicate. It did not establish that the survivor held everywhere. The nine later promotions
+audited by #607 below showed why that inference was reversed.
+
 `dream.log` of the author's Mac records nine promotions since #346. The take-back on the copy:
 
 | | facts |
@@ -104,3 +111,20 @@ base gets the same check from its background dream, 30 facts a packet in the ord
   of the global facts.
 - Hermes and DSH keep their own `dream.log`; their promotions are taken back on their first dream after the update,
   which this measurement did not run.
+
+## Later one-off rescoping, 3 November
+
+[#626](https://github.com/juev/memcue/issues/626) identified **21** distinct card facts labelled repository-specific
+in the #623 study, **17** still active and global: **10** about memcue, **2** each about three anonymous repositories,
+and **1** about server configuration; **14 user / 3 agent**. The
+[completion comment](https://github.com/juev/memcue/issues/626#issuecomment-6602709408) records **13 of 17 moved**
+after a copied-base dry run: **10 memcue, 2 work-repository, 1 server-configuration**. IDs, kind, source and creation
+time were preserved. **4** stayed global: **2** whose repository had no session to receive them and **2** spanning
+several repositories/workflows. They were not behaviour rules and the channel filter of #625 would remove them from
+the card without moving them.
+
+The moved memcue facts reached that repository's card/search and not another repository's card/default search;
+project search found the other moved facts too. This was a data-placement check, not answer-quality grading.
+The installed binary was **0.26.1**, so no dream had yet run #607's scope check there. Its absence explained the
+remaining facts; no new code fix was needed. This later move is distinct from the **34** earlier moves reported
+across #607/#617. The later removal of the card in #656 did not undo these scope decisions.

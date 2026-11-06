@@ -99,6 +99,14 @@ reusing the prompt session ids made the `off` arm return the *next* facts, so it
 
 ## Default-on pass, 2026-10-25 (#376)
 
+The [issue's earlier exploratory probe](https://github.com/juev/memcue/issues/376) reported **1/30 → 8/30**
+top-five facts carrying a requested version on six queries, with **14/14** ordinary prompt answers unchanged.
+The merged-branch check below used six version queries and **ten** ordinary queries and reported **10/30**;
+these are recorded stages, not two estimates to average. The original
+[#328 body](https://github.com/juev/memcue/issues/328) also has an internal transcription conflict: its table says
+**25/26** ordinary fact sets identical, but a later sentence says **24/26**. The table/report's 25/26 is retained;
+the repeated-arm comparator was **23/26**, so neither wording establishes an exact no-change guarantee.
+
 The mode shipped opt-in because the measurement above only proved it did no harm; the default it left behind costs
 silently on every host without a wrapper, since a fresh install and the plugin path keep dropping numbers. Flipping
 the default was checked on a copy of the live base (380 indexed rows, schema 5) before the change was merged:
@@ -114,3 +122,16 @@ the default was checked on a copy of the live base (380 indexed rows, schema 5) 
 
 `MEMCUE_NUMBER_TERMS=0` (or `false`, `off`, `no`) keeps the word-only index, and a base opened with it is not
 rebuilt.
+
+## Later index-open and lexer observations
+
+[#390](https://github.com/juev/memcue/issues/390) measured **20** runs per arm on **2,863 live facts / 963 with a
+number** at 0.11.1: p50 search **57.0 ms** on 0.8.0, **89.5 ms** on 0.11.1, **58.4 ms** with number terms disabled.
+It attributed about **31 ms** per open to the repeated check; the earlier small-base #388 check cost **6.5 ms** on
+**383 facts**. [PR #393](https://github.com/juev/memcue/pull/393) moved to stamps, and the broader open profile is
+[open-cost](open-cost-2026-10.md).
+
+[#391](https://github.com/juev/memcue/issues/391) found **13/15** version-only queries returned their fact; the
+**2** misses were a container-image tag after `:` and a version path component after `/`. Both were found by
+topic-plus-version queries. The boundary change in [PR #394](https://github.com/juev/memcue/pull/394) addressed
+these lexer cases; it was not an independent semantic-quality benchmark.

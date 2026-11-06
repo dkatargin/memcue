@@ -131,8 +131,12 @@ does buy is a lighter download.
   (−18.9%) against 14,794,912, and no `<ReflectMethod>` left in the build.
 - A separate hook binary without an HTTP client: −7.1 MB for the hook, at the price of two binaries in the plugin.
   It only makes sense after #331.
-- A CI budget for the stripped linux/amd64 binary. It should be set after the first decision: 12.5 MB with the
-  template gone, 15 MB as things are.
+- **Not taken:** a CI size budget. The [closing decision on #325](https://github.com/juev/memcue/issues/325#issuecomment-6382086739)
+  left regressions to separate issues. The final stripped linux/amd64 binary was **12,001,440 B** against the
+  issue-start **15,134,880 B**, **−20.7%**, including the local-reader removal. This differs from the template-only
+  comparison above, whose baseline is 14,794,912 B. The
+  [post-#324 baseline](https://github.com/juev/memcue/issues/325#issuecomment-6381628182) was measured with Go 1.27.0,
+  cross-compiled from darwin/arm64 using `CGO_ENABLED=0 -trimpath -ldflags "-s -w"`.
 
 ## Reproducing
 

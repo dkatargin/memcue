@@ -97,3 +97,18 @@ What the run supports, and what it does not:
 - The judge sees the query, not the session, so it grades whether a list answers the query, not whether the session
   went better.
 - Fact texts, queries, grades and the patch stay out of the repository.
+
+## Subsequent decisions
+
+[#665](https://github.com/juev/memcue/issues/665) selected a **24h** default instead of **1h**, shipped in
+[#667](https://github.com/juev/memcue/issues/667). The ablation did not establish the safety of removing an individual
+task over longer periods. [#648's closure](https://github.com/juev/memcue/issues/648#issuecomment-6687589958) deferred
+a new source/freshness experiment: in the **61** jointly judged queries, each judge pass flagged a harmful fact in
+at most **1** result list per arm. No pointer-versus-full-fact comparison was run there.
+
+[#669](https://github.com/juev/memcue/issues/669) subsequently chose English-first integration instructions and
+disabled new dream translation, while preserving stored content/history and existing indexed translations.
+The [completion comment](https://github.com/juev/memcue/issues/669#issuecomment-6691693270) records implementation
+in PR #671 and explicitly limits its evidence to review and regression/CI checks. It did not measure model
+compliance, recall-quality gains or translation-only ablation. This product decision superseded the earlier
+translation-maintenance policy; it must not be attributed to this combined expand-and-translate experiment alone.

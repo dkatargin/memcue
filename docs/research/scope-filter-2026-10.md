@@ -6,7 +6,41 @@ projects.** Since #331 recall works without a judge. The place of a fact (`scope
 one repository got the facts of every other repository. The question was how much of that is noise, and what
 removing it costs.
 
-## What the place may act on
+## Earlier Hermes experiment behind #327
+
+Before the local-only replay below, [#327](https://github.com/juev/memcue/issues/327) measured **168 live Hermes
+prompts**, **113** blind-labelled prompts / **322 U/R/N pairs**, with Jev on a copied base. It refilled top two from
+the above-threshold pool and repeated the baseline for jitter. This was a different reader and experiment from #345.
+
+| Arm | Prompts with a useful fact, of 113 | Useful / related / noise |
+|---|---:|---|
+| No filter | 66 | 87 / 68 / 20 |
+| No filter, repeated | 65 | 86 / 70 / 21 |
+| Hard filter from cwd | 50 | 64 / 47 / 13 |
+| Hard filter from paths touched | 60 | 79 / 58 / 13 |
+| Path-derived filter, retaining every service fact | 65 | 87 / 63 / 13 |
+
+The source describes the two hard-filter rows as losing **16 / 6** and gaining **2 / 2** prompts; the useful-prompt
+totals above are preserved as recorded rather than reconstructed from those descriptions. On **73 memory-needing
+prompts**, noise was **7% → 4%** with **80 useful facts** unchanged. The filter dropped **48 of 506** eligible facts.
+The **357**-fact base was **253 host / 61 repo / 22 service / 15 global / 6 empty**. All **168/168** prompts had cwd
+outside a repository; all **54** live recall-log rows had an empty tier. Project derivation resolved **41 of 68**
+sessions, with **1** ambiguous. Naive worktree-path parsing lost **13** useful prompts, versus **6** after resolving
+the common repository. Five service facts and one other-host fact were sole useful answers on individual prompts.
+
+Limits: only the first four eligible facts of the 113 prompts were labelled, one judge, and labels from a
+23 October base were replayed on a 24 October base. The issue's local `REPORT.md`, base and prompts are unavailable
+here. Its later ranking/anchor designs were hypotheses, not results of this run.
+
+The [archived Claude Code composition check](https://github.com/juev/memcue/issues/327#issuecomment-6377819215)
+used **2,776 facts / 28 repositories**: **1,762 repo / 828 global / 139 host / 43 service** (four other facts are not
+in those four families). The largest repository (**561 facts**) kept **1,571/2,776 (57%)**, the second (**458**)
+kept **1,468 (53%)**, and the remaining **26**, median **20 facts**, kept **38–41%**. The largest two held
+**1,019 of 1,762** repo facts. This estimated pool size, not answer quality. The local traffic was inadequate:
+**67 transcripts**, about **28** longer-than-45-character prompts, mostly delegation. The later Mac-derived
+Claude Code replay below supplied a separate population.
+
+## What the place may act on in the later replay
 
 Only `repo:` and `dir:` scopes, and only in a session that has a repository key. A fact about a host or a service
 holds from any repository: a server is worked on from many repositories. So `global`, `host:*`, `service:*` and

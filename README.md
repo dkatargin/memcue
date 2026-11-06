@@ -1255,7 +1255,9 @@ current policy.
 
 ## Results
 
-Measured while building memcue; details and method in [docs/evaluation.md](docs/evaluation.md).
+Measured while building memcue; details and method in [docs/evaluation.md](docs/evaluation.md). The
+[research index](docs/research/README.md) links the studies and later corrections, with a
+[coverage map of all 323 issues](docs/research/issue-coverage-2026-11.md) through the archived 6 November snapshot.
 
 - **The agent searching itself, end to end (#361):** on 40 real prompts, each run twice and graded blind, the agent
   that searched memcue itself scored 1.08 of 2, against 0.89 with facts injected with the prompt and 0.76 with no

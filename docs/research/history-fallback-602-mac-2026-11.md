@@ -19,6 +19,14 @@ In short:
 
 ## What was measured
 
+### Earlier feasibility observation
+
+The [#602 body](https://github.com/juev/memcue/issues/602) reports a **2 November** Mac survey: **1,480 transcripts /
+2.4 GB**, with a plain `rg` scan taking **0.1–1.2 s**; oldest transcript **1 October**, retention about **30 days**
+with no explicit `cleanupPeriodDays`. Its earlier log count was **6,731 searches / 579 empty (8%)**, including
+automatic program-hook queries. This is distinct from the 7,015-search snapshot and filtered 50-query sample below;
+neither the raw empty share nor the grep timing is the parser's answer yield or measured invocation latency.
+
 ### Queries
 
 - **Source**: `search.log` on the Mac, 7,015 searches from 2026-10-25 to 2026-11-03, 657 of them empty. The log has no
@@ -74,3 +82,43 @@ answer was not measured.
 - One labeller (Opus) and one pass.
 - Transcripts older than about 30 days are gone; a fallback over history reaches back a month unless
   `cleanupPeriodDays` is raised.
+
+## Implementation check and matching follow-up
+
+[PR #631](https://github.com/juev/memcue/pull/631), for [#621](https://github.com/juev/memcue/issues/621), compared
+the command's passages with this study's parser windows, including query times and excluded sessions:
+**50 queries, 50 identical window lists in the same order, 0 differences**. On the author's laptop its parallel
+reader searched **2.5 GB in about 1.3 s**, versus **7 s** one file at a time; repeat count was not reported.
+This verifies window parity, not improved answers or a live agent's choice to invoke the fallback.
+
+The later [#644 count](https://github.com/juev/memcue/issues/644#issuecomment-6681914723), **6 November**, inspected
+all **151 labelled text windows from the 50-query sample**, including unattributed queries, using the word rule
+of `history.Terms`. This differs from
+the **50 windows of 14 certain agent queries** in the headline precision figure. It did not rerun retrieval.
+
+| Label | Some query term matched a whole word | Terms matched only within longer words |
+|---|---:|---:|
+| Answer (9) | 9 | 0 |
+| Related (23) | 17 | 6 |
+| Noise (119) | 53 | 66 |
+
+The **66** noise windows with only within-word matches included **32** with a match inside a word rather than
+at its start (**24** with no other match kind), **33** at the start of a longer word, **9** before an underscore,
+dot or hyphen, and **1** Russian inflection with an ending of up to four letters. Categories overlap. The related
+counts were **2** middle matches (**1** exclusive), **4** word-start matches and **2** identifier-boundary matches.
+
+Exact boundaries could remove up to **66 noise / 6 related** windows; a word-start boundary could remove the
+**24 noise / 1 related** windows matching only in the middle, with **0 answer windows** removed from this sample.
+These are estimates on returned windows. Freed places could be filled by different windows, so neither table proves
+a retrieval-quality improvement. The planned current-versus-word-start rerun was not performed in the snapshot.
+The [maintainer closed #644](https://github.com/juev/memcue/issues/644#issuecomment-6687588869) with the current
+matcher retained; reconsideration was left possible if fallback noise became material.
+
+## DSH history: feasibility only
+
+The [#630 comment](https://github.com/juev/memcue/issues/630#issuecomment-6687575312), **6 November**, surveyed
+**97 DSH sessions / 69 MB**, **37** in journal v3 and **60** in v4; **13** journal files had been written since
+30 October, newest on 5 November. Journals are zstd-compressed JSON lines, with one directory per project and session.
+The recorded v4 envelope has `seq`, `time`, `type`, `data`, following a session header. No private journal text is
+included here. This was a format/volume survey, not a measured DSH answer yield or an implemented reader.
+The choice between a zstd dependency and an external command was deferred; #630 remained open at the archive cutoff.
