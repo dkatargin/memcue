@@ -1,4 +1,6 @@
-# Content-only storage upgrade (#678; unreleased)
+# Content-only storage upgrade (v0.31.0; #678)
+
+Release status: prepared for v0.31.0; publication, installation and live-base migration remain separate operator steps.
 
 This change removes `keywords` and `queries` (including full translations) from current SQLite facts, JSONL versions,
 Go models, write APIs and tool schemas. Only literal `content` is indexed. It does not change the language of stored
@@ -114,7 +116,7 @@ schema change reconstructs discarded information. Coordinated rollout remains re
 The rejected pre-release schema-9 prototype used version-dependent digests. Its projected data has already discarded
 the auxiliary inputs needed to establish corrected correspondence. Restore the original legacy SQLite/JSONL/cache
 backup and upgrade that copy with the corrected source; do not mix prototype and corrected caches or attempt an
-in-place digest rewrite. Schema9 remains unreleased, and no schema number protects JSONL from old consumers.
+in-place digest rewrite. The corrected schema 9 is included in v0.31.0; no schema number protects JSONL from old consumers.
 
 An earlier rejected candidate may also have persisted incompatible mixed-empty occurrence identities or merged an
 invented version. Start again from the original complete legacy backup for a clean isolated upgrade; the corrected
