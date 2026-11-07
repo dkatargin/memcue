@@ -605,3 +605,30 @@ func TestNamesRepo(t *testing.T) {
 		}
 	}
 }
+
+// Explicit problem evidence breaks only exact relevance/place ties, even at N=1.
+func TestSearchObservedRecurrenceTieOnly(t *testing.T) {
+	s := emptyBase(t)
+	old, err := s.AddWith("Orchard build synthetic workaround.", "_global 2026-01-01", "", store.Meta{Scope: "global"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = s.AddWith("Orchard build synthetic workaround.", "_global 2026-02-01", "", store.Meta{Scope: "global"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	q := Query{Text: "orchard build", N: 1, MinScore: MinScore, In: []string{"all"}, Recurrence: map[string]int{old.ID: 1000}}
+	got, err := Search(s, q)
+	if err != nil || len(got) != 1 || got[0].ID != old.ID {
+		t.Fatalf("observed tie winner missing: %+v %v", got, err)
+	}
+	local, err := s.AddWith("Orchard build synthetic workaround.", "synthetic.invalid/orchard 2026-01-01", "", store.Meta{Scope: "repo:synthetic.invalid/orchard"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	q.Project = []string{"synthetic.invalid/orchard"}
+	got, err = Search(s, q)
+	if err != nil || len(got) != 1 || got[0].ID != local.ID {
+		t.Fatalf("recurrence bought place priority: %+v %v", got, err)
+	}
+}

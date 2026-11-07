@@ -12,6 +12,8 @@ import (
 	"strings"
 )
 
+const preCommandNote = "Before the first relevant command or action-family/cwd change, resolve the actual target working directory and run `memcue pre-command -cwd \"<absolute cwd>\" -session \"<stable task ID>\" -action \"<family>\" -- \"<English action/system words>\"`. Read whole facts and validate applicability, then repeat the identical request with -ack RECEIPT. Never acknowledge failed transport; retry without -ack. Execute only when blocked is false. Do not repeat for every shell command. Keep session across repository switches and compaction; change -epoch after compaction to re-read applicable facts. Budget: 4096 UTF-8 bytes per response and 16384 per task, including 2048 reserved for this instruction; metadata/hints count. Never put private arguments in query or action."
+
 // sessionNote replaces the built-in memory instructions: it tells the agent where its memory is, to search it before
 // answering from earlier sessions (#361) and, when it decides it may help, during work and before diagnosing a
 // surprise (#522), and how to write to it.
@@ -52,7 +54,7 @@ func runSessionStartPart(in io.Reader, out io.Writer, part int) error {
 		return nil
 	}
 	startDream()
-	context := sessionNote
+	context := sessionNote + "\n- " + preCommandNote
 	for _, hint := range []string{autoMemoryHint(), dreamHint(), upkeepHint(h.CWD)} {
 		if hint != "" {
 			context += "\n\n" + hint

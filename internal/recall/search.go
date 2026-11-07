@@ -35,11 +35,15 @@ const messageTerms = 2
 // Query is what the agent asks Search for (#409): the words, how many facts and how close to the best, and where and
 // what to look in. Its zero value is no search; Defaults gives the measured defaults.
 type Query struct {
-	Text     string
-	N        int     // the most facts to return
-	MinScore float64 // leaves out a fact whose BM25 is below this share of the best one; 0 keeps every fact up to N
-	Project  []string
-	Host     string
+	// OriginOnlyUnscoped prevents a matching origin from overriding an explicit scope (pre-command only).
+	OriginOnlyUnscoped bool
+	// Recurrence is explicit observed problem counts, capped by the caller; only exact score/place ties use it.
+	Recurrence map[string]int
+	Text       string
+	N          int     // the most facts to return
+	MinScore   float64 // leaves out a fact whose BM25 is below this share of the best one; 0 keeps every fact up to N
+	Project    []string
+	Host       string
 	// In names where to look: "project" (facts of the session's repository, by any of its keys), "global", "host"
 	// (this machine), "all", "shelf" (every shelf), or a scope such as "repo:KEY", "host:NAME", "service:NAME" or
 	// "shelf:SLUG". Several are a union. Empty is "project", "host" and "global" in a session that works in a
@@ -58,7 +62,7 @@ var Kinds = []string{"rule", "decision", "pitfall", "environment", "event", "pro
 
 // Filter turns q into the store's filter, or says which part of q is wrong.
 func (q Query) Filter() (store.Filter, error) {
-	f := store.Filter{AllTerms: q.AllWords, Kinds: q.Kinds}
+	f := store.Filter{AllTerms: q.AllWords, Kinds: q.Kinds, OriginOnlyUnscoped: q.OriginOnlyUnscoped}
 	for _, k := range q.Kinds {
 		if !slices.Contains(Kinds, k) {
 			return f, fmt.Errorf("unknown kind %q: one of %s", k, strings.Join(Kinds, ", "))
@@ -99,7 +103,11 @@ func (q Query) Filter() (store.Filter, error) {
 			everyShelf = true
 		case in == "project":
 			for _, k := range q.Project {
-				f.Scopes = append(f.Scopes, "repo:"+k)
+				scope := "repo:" + k
+				if q.OriginOnlyUnscoped {
+					scope = tier.Scope(k)
+				}
+				f.Scopes = append(f.Scopes, scope)
 				f.Origins = append(f.Origins, k)
 			}
 			if len(q.Project) == 0 {
@@ -291,6 +299,10 @@ func Search(s *store.Store, q Query) ([]store.Hit, error) {
 		}
 		if pi, pj := place(hits[i].Fact, q.Project, q.Host), place(hits[j].Fact, q.Project, q.Host); pi != pj {
 			return pi < pj
+		}
+
+		if ri, rj := min(3, max(0, q.Recurrence[hits[i].ID])), min(3, max(0, q.Recurrence[hits[j].ID])); ri != rj {
+			return ri > rj
 		}
 		return newer(hits[i].Fact, hits[j].Fact)
 	})
