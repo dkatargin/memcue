@@ -187,12 +187,12 @@ func TestDreamWithNothingToMergeIsRecorded(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, c := range []string{"Postgres демо-базы слушает порт 5432 на db1.", "Gradle в demo-app требует JAVA_HOME=/opt/jdk-21."} {
-		f, err := s.AddWith(c, nil, "x 2026-10-19", "", store.Meta{})
+		f, err := s.AddWith(c, "x 2026-10-19", "", store.Meta{})
 		if err != nil {
 			t.Fatal(err)
 		}
 		// queries and a translation: nothing is owed to the dream either (#396)
-		if _, err := s.SetQueries(f.ID, f.Version, []string{"query", extract.TranslationPrefix + "translation"}); err != nil {
+		if _, err := s.Relabel(f.ID, f.Version, f.Kind, f.Scope, f.Expires); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -239,7 +239,7 @@ func TestDreamSweepGroupDryRunAndChangedGroup(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := s.Correct(b, "Workflow nightly-sync.yml подписывает bot на репозитории example/nightly-sync.", nil); err != nil {
+	if _, err := s.Correct(b, "Workflow nightly-sync.yml подписывает bot на репозитории example/nightly-sync."); err != nil {
 		t.Fatal(err)
 	}
 	_ = s.Close()
@@ -262,7 +262,7 @@ func TestDreamSweepGroupDryRunAndChangedGroup(t *testing.T) {
 func tokenBase(t *testing.T, s *store.Store) (short, long, password, data store.Fact) {
 	t.Helper()
 	add := func(c string, k ...string) store.Fact {
-		f, err := s.AddWith(c, k, "x 2026-10-19", "", store.Meta{})
+		f, err := s.AddWith(c, "x 2026-10-19", "", store.Meta{})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -295,7 +295,7 @@ func TestDreamGroupsARestatement(t *testing.T) {
 	}
 	p := dreamNeighbours
 	p.Seen = map[string]bool{long.ID: true}
-	hits, err := recall.Recall(s, long.Content+" "+strings.Join(long.Keywords, " "), p)
+	hits, err := recall.Recall(s, long.Content, p)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -502,6 +502,23 @@ class Metrics(unittest.TestCase):
                              "misleading_lost": ["q1"], "changed": ["q1", "q2"]})
 
 
+class ContentOnly(Isolated):
+    def test_legacy_fixture_keywords_are_not_passed_to_current_writer(self):
+        calls = []
+        original = stand.run_proc
+        def capture(argv, *args, **kwargs):
+            calls.append(argv)
+            return original(argv, *args, **kwargs)
+        with mock.patch.object(stand, "run_proc", side_effect=capture):
+            code, _, err = self.stand("--cases", str(self.write_case(CASE)), "--out", str(self.tmp / "out"),
+                                      "--binary", str(self.fake()))
+        self.assertEqual(code, 0, err)
+        adds = [argv for argv in calls if len(argv) > 1 and argv[1] == "add"]
+        self.assertEqual(len(adds), len(CASE["facts"]))
+        self.assertFalse(any(arg.startswith("-keywords=") for argv in adds for arg in argv),
+                         "legacy fixture keywords still reach the current write API")
+
+
 @unittest.skipUnless(os.environ.get("MEMCUE_BIN"), "MEMCUE_BIN is not set")
 class RealBinary(Isolated):
     def test_synthetic_run_is_reproducible_on_fresh_bases(self):

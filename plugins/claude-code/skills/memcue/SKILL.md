@@ -40,7 +40,7 @@ your own guesses nothing confirmed.
 
 When a command fails and you fix or work around it, store the cause and the fix as a pitfall before you finish if a later session in a fresh checkout would hit it again — even when the cause is in the repository's own files; what the repository shows is its documents, not a failure you found by running it.
 
-Store it with `memcue add -kind pitfall -source tool -keywords "<words>" -- "<cause and fix>"`.
+Store it with `memcue add -kind pitfall -source tool -- "<cause and fix>"`.
 
 ## Remember
 
@@ -49,13 +49,12 @@ one.
 
 ```bash
 memcue search -in all "<words of the fact>"
-memcue add -kind rule -scope global -source user -keywords "word1, word2, синоним, english word" -- "<fact>"
+memcue add -kind rule -scope global -source user -- "<fact>"
 ```
 
 - One statement in one to three sentences; a rule goes with its reason.
 - Self-contained: name the system, host, repository, path. No "it", "this project", "above".
 - Exact values byte for byte: paths, commands with flags, versions, ports.
-- Keywords: 3–8 words someone would ask with, including synonyms. Legacy-language keywords can help find older facts; dreams do not add translations.
 - The origin is the repository of the working directory and today's date; pass `-origin` only to name another.
 
 ## When search finds nothing
@@ -74,7 +73,7 @@ looks at this repository, this host and the global facts and leaves out facts bo
 
 ```bash
 memcue search -in all "<words of the fact>"
-memcue correct ID "<corrected fact>"   # new version; keywords stay unless -keywords is given
+memcue correct ID "<corrected fact>"   # new version
 memcue retire ID                       # no longer recalled; the history keeps it
 memcue reopen ID                       # undo a retire made by mistake
 ```
@@ -90,7 +89,7 @@ limitation of a named system), goes on the research shelf, which ordinary search
 
 ```bash
 memcue search -in shelf:research "<words of the finding>"
-memcue add -shelf research -source tool -keywords "word1, word2, синоним" -- "<finding>. Source: <document, version or date>."
+memcue add -shelf research -source tool -- "<finding>. Source: <document, version or date>."
 ```
 
 - Store what your conclusion rests on and its limits, not every detail of the page.

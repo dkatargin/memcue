@@ -52,7 +52,7 @@ const MIN_BINARY = '0.4.0'
 /** The oldest binary with `search -cwd` and `-session` (#361); an older one searches without them (#368). */
 const SCOPED_SEARCH = '0.8.0'
 const CJK = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uac00-\ud7af\uf900-\ufaff]/u
-const CJK_HINT = 'Legacy facts include Russian and English: search first in English; if English misses, retry in Russian or another legacy language.'
+const CJK_HINT = 'Facts use English by default; legacy facts may use other languages: search first in English; if English misses, retry in Russian or another legacy language.'
 const SEARCH_CONTROLS = '0.14.0' // search -in, -kind, -since, -expired, -all-words (#409)
 const ADD_SOURCES = ['user', 'user_confirmed', 'tool', 'agent'] // who said a fact memcue_add stores
 
@@ -501,7 +501,6 @@ export function apply(ctx, config) {
 		description: 'Store one short, self-contained fact in long-term memory (memcue), at once, when you learn it: nothing is extracted from the session later. Store the user\'s rules and corrections (with the reason), the user\'s decisions the code does not show, pitfalls found by an error or a check, and hosts, services and pointers outside the repository. Search first and correct a stored fact instead of adding a second copy.',
 		parameters: {
 			text: { type: 'string', required: true, description: 'Write new and corrected facts in English regardless of the chat language. Preserve identifiers, commands, paths, versions, exact values and verbatim quotes. Keep the user\'s reply language unchanged.' },
-			keywords: { type: 'string', description: 'Comma-separated words someone would ask with, synonyms and both languages included.' },
 			origin: { type: 'string', description: 'Where the fact was learnt. Defaults to the repository of the session workspace and today.' },
 			expires: { type: 'string', description: 'Optional last day the fact is worth recalling, YYYY-MM-DD (for a one-off reminder).' },
 			kind: { type: 'string', description: 'Optional: rule, decision, pitfall, environment, procedure (steps the user asked to remember) or event (what happened that the next days need; expires after a week unless expires is given).' },
@@ -511,6 +510,10 @@ export function apply(ctx, config) {
 		},
 		output: factResult,
 		async execute(args, exec) {
+            if (['keywords', 'queries', 'translation'].some(key => Object.hasOwn(args, key))) {
+                return { stored: false, message: 'memcue: auxiliary fields are no longer supported; store content only' }
+            }
+
 			const text = String(args.text ?? '').trim()
 			if (!text) return { stored: false, message: 'memcue: text is required' }
 			const kind = String(args.kind ?? '').trim()
@@ -518,7 +521,6 @@ export function apply(ctx, config) {
 			if (!ADD_SOURCES.includes(source)) return { stored: false, message: `memcue: source must be one of: ${ADD_SOURCES.join(', ')}` }
 			const flags = ['add', '-source', source, '-cwd', sessionCwd(exec)]
 			if (args.origin) flags.push('-origin', String(args.origin))
-			if (args.keywords) flags.push('-keywords', String(args.keywords))
 			if (args.expires) flags.push('-expires', String(args.expires))
 			if (args.kind) flags.push('-kind', String(args.kind))
 			if (args.scope) flags.push('-scope', String(args.scope))
@@ -537,16 +539,18 @@ export function apply(ctx, config) {
 		parameters: {
 			id: { type: 'string', required: true, description: 'Fact id from memcue_search.' },
 			text: { type: 'string', required: true, description: 'Write new and corrected facts in English regardless of the chat language. Preserve identifiers, commands, paths, versions, exact values and verbatim quotes. Keep the user\'s reply language unchanged.' },
-			keywords: { type: 'string', description: 'Comma-separated keywords; omit to keep the current ones.' },
 			expires: { type: 'string', description: 'Optional new last day the fact is worth recalling, YYYY-MM-DD.' },
 		},
 		output: factResult,
 		async execute(args) {
+            if (['keywords', 'queries', 'translation'].some(key => Object.hasOwn(args, key))) {
+                return { stored: false, message: 'memcue: auxiliary fields are no longer supported; store content only' }
+            }
+
 			const id = String(args.id ?? '').trim()
 			const text = String(args.text ?? '').trim()
 			if (!id || !text) return { stored: false, message: 'memcue: id and text are required' }
 			const flags = ['correct']
-			if (args.keywords) flags.push('-keywords', String(args.keywords))
 			if (args.expires) flags.push('-expires', String(args.expires))
 			flags.push('--', id, text)
 			const { code, out, err } = await runMemcue(settings, flags, { timeoutMs: 15_000 })

@@ -54,7 +54,7 @@ func TestUpgradeFromSchema5(t *testing.T) {
 	cand := Meta{Kind: "environment", Scope: "host:db1", Source: "tool", Evidence: "ss -ltn", Review: Candidate}
 	rule := Meta{Kind: "rule", Scope: "global", Source: "user", Review: Candidate}
 	row := func(id string, v int, content, status, expires string, m Meta) Fact {
-		return Fact{ID: id, Version: v, Content: content, Keywords: []string{"zebra"}, Origin: "hermes 2026-10-20",
+		return Fact{ID: id, Version: v, Content: content, Origin: "hermes 2026-10-20",
 			Author: "old", Status: status, Expires: expires, Meta: m}
 	}
 	const (
@@ -183,7 +183,7 @@ func TestCleanInstallFindsAFactAtOnce(t *testing.T) {
 	if err := s.db.QueryRow(`PRAGMA user_version`).Scan(&version); err != nil || version != schemaVersion {
 		t.Fatalf("schema %d (%v)", version, err)
 	}
-	f, err := s.AddWith("Порт webforge на builder 3000.", []string{"webforge"}, "x 2026-10-27", "", Meta{Kind: "environment",
+	f, err := s.AddWith("Порт webforge на builder 3000.", "x 2026-10-27", "", Meta{Kind: "environment",
 		Source: "agent"})
 	if err != nil {
 		t.Fatal(err)

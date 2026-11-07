@@ -105,6 +105,22 @@ class ProviderTest(unittest.TestCase):
         self.p = memcue_provider.MemcueMemoryProvider({"binary": BIN})
         self.p.initialize("s1", hermes_home=self.home, agent_context="primary")
 
+    def test_content_only_write_contract(self):
+        schemas = {s["name"]: s for s in self.p.get_tool_schemas()}
+        for name in ("memcue_add", "memcue_correct"):
+            for field in ("keywords", "queries", "translation"):
+                self.assertNotIn(field, schemas[name]["parameters"]["properties"])
+        added = json.loads(self.p.handle_tool_call("memcue_add", {"content": "Cobalt observatory."}))
+        self.assertIn("result", added)
+        fact_id = added["result"].strip()
+        for name, args in (("memcue_add", {"content": "Unwanted."}),
+                           ("memcue_correct", {"id": fact_id, "content": "Unwanted."})):
+            for field in ("keywords", "queries", "translation"):
+                with self.subTest(tool=name, field=field):
+                    result = json.loads(self.p.handle_tool_call(name, dict(args, **{field: "saffron"})))
+                    self.assertIn("error", result)
+        self.assertIn("Cobalt observatory.", "\n".join(self.facts()))
+
     def facts(self):
         return self.memcue("facts")
 
@@ -523,8 +539,7 @@ class ProviderTest(unittest.TestCase):
 
     def test_tools_add_search_correct_retire(self):
         added = json.loads(self.p.handle_tool_call("memcue_add", {
-            "content": "Сервер server1: Caddy-private перечитывает Caddyfile только после пересоздания контейнера.",
-            "keywords": "caddy, reload"}))
+            "content": "Сервер server1: Caddy-private перечитывает Caddyfile только после пересоздания контейнера."}))
         fact_id = added["result"].split()[0]
         found = json.loads(self.p.handle_tool_call("memcue_search", {"query": "caddy пересоздание"}))
         self.assertEqual([f["id"] for f in found["facts"]], [fact_id])
@@ -548,7 +563,7 @@ class ProviderTest(unittest.TestCase):
         ids = []
         for content in ("Workflow nightly-sync.yml в example/nightly-sync каждую ночь подписывает bot на все репозитории.",
                         "Репозиторий example/nightly-sync каждую ночь запускает nightly-sync.yml, он подписывает bot на все репозитории."):
-            added = json.loads(self.p.handle_tool_call("memcue_add", {"content": content, "keywords": "nightly-sync, workflow"}))
+            added = json.loads(self.p.handle_tool_call("memcue_add", {"content": content}))
             ids.append(added["result"].split()[0])
         packet = json.loads(self.p.handle_tool_call("memcue_dream_prepare", {"since": "all"}))["result"]
         self.assertIn("memcue dream -apply", packet)
@@ -675,7 +690,7 @@ class ProviderTest(unittest.TestCase):
     def test_add_passes_shelf(self):
         """memcue_add puts a fact on the shelf: no search reads it but one that names the shelf (#433)."""
         added = json.loads(self.p.handle_tool_call("memcue_add", {
-            "content": "Example API разрешает 60 запросов в минуту на ключ.", "keywords": "example, лимит",
+            "content": "Example API разрешает 60 запросов в минуту на ключ.",
             "kind": "environment", "shelf": "research"}))
         fact_id = added["result"].split()[0]
         line = next(l for l in self.memcue("dump", self.p._facts) if l.startswith(fact_id))
@@ -695,8 +710,7 @@ class ProviderTest(unittest.TestCase):
 
     def test_search_returns_facts_with_ids(self):
         added = json.loads(self.p.handle_tool_call("memcue_add", {
-            "content": "Сервер server1: Caddy перечитывает Caddyfile после пересоздания контейнера.",
-            "keywords": "caddy"}))
+            "content": "Сервер server1: Caddy перечитывает Caddyfile после пересоздания контейнера."}))
         fact_id = added["result"].split()[0]
         found = json.loads(self.p.handle_tool_call("memcue_search", {"query": "caddy пересоздание"}))
         self.assertEqual(len(found["facts"]), 1)
@@ -706,8 +720,7 @@ class ProviderTest(unittest.TestCase):
     def test_search_takes_a_limit(self):
         for i in range(3):
             json.loads(self.p.handle_tool_call("memcue_add", {
-                "content": f"Сервер server{i}: Caddy перечитывает Caddyfile после пересоздания контейнера.",
-                "keywords": "caddy"}))
+                "content": f"Сервер server{i}: Caddy перечитывает Caddyfile после пересоздания контейнера."}))
         found = json.loads(self.p.handle_tool_call("memcue_search", {"query": "caddy пересоздание", "limit": "2"}))
         self.assertEqual(len(found["facts"]), 2)
         self.assertIn("error", json.loads(self.p.handle_tool_call("memcue_search", {"query": "caddy", "limit": "x"})))
@@ -716,8 +729,7 @@ class ProviderTest(unittest.TestCase):
         """0 is refused like a negative limit, not read as the default (#477); an empty or false value is absent."""
         for i in range(6):
             json.loads(self.p.handle_tool_call("memcue_add", {
-                "content": f"Сервер server{i}: Caddy перечитывает Caddyfile после пересоздания контейнера.",
-                "keywords": "caddy"}))
+                "content": f"Сервер server{i}: Caddy перечитывает Caddyfile после пересоздания контейнера."}))
         for limit in (0, "0", -3, "-3"):
             with self.subTest(limit=limit):
                 found = json.loads(self.p.handle_tool_call("memcue_search", {"query": "caddy", "limit": limit}))
@@ -732,12 +744,12 @@ class ProviderTest(unittest.TestCase):
     def test_search_passes_the_controls(self):
         """in, kind, words and expired reach memcue search (#409); a wrong value comes back as an error."""
         rule = json.loads(self.p.handle_tool_call("memcue_add", {
-            "content": "Caddy на server1 перечитывает Caddyfile после пересоздания.", "keywords": "caddy",
+            "content": "Caddy на server1 перечитывает Caddyfile после пересоздания.",
             "kind": "rule", "scope": "global"}))["result"].split()[0]
         json.loads(self.p.handle_tool_call("memcue_add", {
             # A scope of its own: without one the fact takes the working directory's project, or global outside a
             # repository (#442), and the -in global check below would depend on where the suite runs.
-            "content": "Caddy на server2 падает без конфига.", "keywords": "caddy", "kind": "pitfall",
+            "content": "Caddy на server2 падает без конфига.",  "kind": "pitfall",
             "scope": "host:server2"}))
         def ids(**kw):
             found = json.loads(self.p.handle_tool_call("memcue_search", dict(query="caddy server1", **kw)))
@@ -753,7 +765,7 @@ class ProviderTest(unittest.TestCase):
     def test_search_takes_the_whole_base_in_a_repository(self):
         """memcue searches only the workspace's repository by default; a Hermes chat is not about one (#409)."""
         other = self.memcue("add", "-origin", "example.com/them/lib 2026-10-25", "-scope", "repo:example.com/them/lib",
-                            "-keywords", "caddy", "Caddy на server3 держит конфиг в /etc/caddy.")[0].split()[0]
+                            "Caddy на server3 держит конфиг в /etc/caddy.")[0].split()[0]
         # A repository of its own, not the checkout the test may run in: an installed plugin lies in none (#526). Git
         # config outside it is off, so an insteadOf of the host cannot rewrite its remote; setUp restores the environment.
         os.environ.update(GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_SYSTEM=os.devnull, GIT_CONFIG_NOSYSTEM="1")
@@ -768,7 +780,7 @@ class ProviderTest(unittest.TestCase):
         self.assertEqual(narrow["facts"], [])
         # The workspace is a project to memcue: the narrow search finds a fact of this repository.
         own = self.memcue("add", "-origin", "example.com/us/app 2026-10-27", "-scope", "repo:example.com/us/app",
-                          "-keywords", "nginx", "Nginx на server3 слушает порт 8443.")[0].split()[0]
+                          "Nginx на server3 слушает порт 8443.")[0].split()[0]
         mine = json.loads(self.p.handle_tool_call("memcue_search", {"query": "nginx server3", "in": "project"}))
         self.assertEqual([f["id"] for f in mine["facts"]], [own])
 
@@ -782,23 +794,21 @@ class ProviderTest(unittest.TestCase):
     def test_search_hints_on_cjk(self):
         """A Chinese query gets the hint to search in the facts' languages, found or not; a Russian one does not (#410)."""
         json.loads(self.p.handle_tool_call("memcue_add", {
-            "content": "Caddy на server1 перечитывает Caddyfile после пересоздания.", "keywords": "caddy"}))
+            "content": "Caddy на server1 перечитывает Caddyfile после пересоздания."}))
         found = json.loads(self.p.handle_tool_call("memcue_search", {"query": "如何重启 caddy"}))
         self.assertEqual(len(found["facts"]), 1)
-        self.assertIn("Russian and English", found["hint"])
-        self.assertEqual(found["hint"].count("Russian and English"), 1)  # the binary's hint and the plugin's are one
+        self.assertIn("English by default; legacy facts may use other languages", found["hint"])
+        self.assertEqual(found["hint"].count("English by default; legacy facts may use other languages"), 1)  # the binary's hint and the plugin's are one
         self.assertIn("hint", json.loads(self.p.handle_tool_call("memcue_search", {"query": "如何重启"})))
         self.assertNotIn("hint", json.loads(self.p.handle_tool_call("memcue_search", {"query": "caddy пересоздание"})))
 
     def test_search_hints_when_the_floor_holds_facts_back(self):
         """A single fact may be all the score floor allows: the answer says so and names the lever (#407)."""
         strong = json.loads(self.p.handle_tool_call("memcue_add", {
-            "content": "Сервер server1: Caddy перечитывает Caddyfile после пересоздания контейнера.",
-            "keywords": "caddy"}))["result"].split()[0]
+            "content": "Сервер server1: Caddy перечитывает Caddyfile после пересоздания контейнера."}))["result"].split()[0]
         for i in range(4):
             json.loads(self.p.handle_tool_call("memcue_add", {
-                "content": f"Заметка {i} о Caddy: сертификаты обновляются через ACME на стенде.",
-                "keywords": "caddy"}))
+                "content": f"Заметка {i} о Caddy: сертификаты обновляются через ACME на стенде."}))
         query = "caddy пересоздание контейнера server1"
         found = json.loads(self.p.handle_tool_call("memcue_search", {"query": query}))
         self.assertEqual([f["id"] for f in found["facts"]], [strong])
@@ -881,7 +891,7 @@ class ProviderTest(unittest.TestCase):
         for content, keywords in (("Quarrel queue library keeps jobs in Postgres, MIT license.", "quarrel,queue,postgres"),
                                   ("Quarrel queue library needs Postgres 14 or newer.", "quarrel,queue,postgres"),
                                   ("Quarrel: the project was archived by its author in 2025.", "quarrel")):
-            json.loads(self.p.handle_tool_call("memcue_add", {"content": content, "keywords": keywords,
+            json.loads(self.p.handle_tool_call("memcue_add", {"content": content,
                                                               "shelf": "research"}))
         found = json.loads(self.p.handle_tool_call("memcue_search", {"query": "quarrel queue postgres",
                                                                      "in": "shelf:research"}))
@@ -926,8 +936,7 @@ class ProviderTest(unittest.TestCase):
         """Five facts by default and a config key overrides it (#372): ten were noise on a live base."""
         for i in range(7):
             json.loads(self.p.handle_tool_call("memcue_add", {
-                "content": f"Сервер server{i}: Caddy перечитывает Caddyfile после пересоздания контейнера.",
-                "keywords": "caddy"}))
+                "content": f"Сервер server{i}: Caddy перечитывает Caddyfile после пересоздания контейнера."}))
         found = json.loads(self.p.handle_tool_call("memcue_search", {"query": "caddy пересоздание"}))
         self.assertEqual(len(found["facts"]), memcue_provider._SEARCH_FACTS)
         self.assertEqual(memcue_provider._SEARCH_FACTS, 5)
@@ -941,23 +950,22 @@ class ProviderTest(unittest.TestCase):
         self.assertEqual(memcue_provider.MemcueMemoryProvider({"binary": BIN, "search_facts": "many"})._search_facts, 5)
         self.assertEqual(memcue_provider.MemcueMemoryProvider({"binary": BIN, "search_facts": "99"})._search_facts, 50)
 
-    def test_correct_sets_keywords_and_expiry(self):
+    def test_correct_sets_content_and_expiry(self):
         added = json.loads(self.p.handle_tool_call("memcue_add", {
-            "content": "Сервер server1: Caddy перечитывает Caddyfile после пересоздания контейнера.",
-            "keywords": "caddy"}))
+            "content": "Сервер server1: Caddy перечитывает Caddyfile после пересоздания контейнера."}))
         fact_id = added["result"].split()[0]
         until = (datetime.date.today() + datetime.timedelta(days=3)).isoformat()
         corrected = json.loads(self.p.handle_tool_call("memcue_correct", {
             "id": fact_id, "content": "Сервер server1: Caddy перечитывает Caddyfile после пересоздания контейнера, "
-                                      "теперь с новым ключом.", "keywords": "caddy, пересоздание", "expires": until}))
+                                      "теперь с новым ключом.",  "expires": until}))
         self.assertIn("v2", corrected["result"])
         line = next(l for l in self.memcue("facts") if l.startswith(fact_id))
         self.assertIn(f"expires={until}", line)
-        self.assertIn("пересоздание", line)
+        self.assertIn("пересоздания контейнера, теперь с новым ключом.", line)
 
     def test_add_with_expiry_keeps_the_expiry(self):
         json.loads(self.p.handle_tool_call("memcue_add", {
-            "content": "Напоминание: 21 октября проверить dream в memcue.", "keywords": "dream",
+            "content": "Напоминание: 21 октября проверить dream в memcue.",
             "expires": "2026-10-21"}))
         self.assertIn("expires=2026-10-21", self.facts()[0])
 

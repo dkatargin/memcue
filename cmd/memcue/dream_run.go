@@ -17,7 +17,7 @@ import (
 	"github.com/juev/memcue/internal/store"
 )
 
-// dreamRunTimeout bounds one model call of a dream. Packets have bounded fresh facts, expansions and groups.
+// dreamRunTimeout bounds one model call of a dream. Packets have bounded fresh facts, scopes and groups.
 const dreamRunTimeout = 10 * time.Minute
 
 // dreamAllPasses bounds dream -run -all: a base of 2,800 facts behind on everything takes about 70 passes. A base
@@ -31,18 +31,17 @@ var dreamRunFn = func(packet string) (extract.DreamReply, error) {
 	return extract.DreamAnswer(ctx, packet)
 }
 
-// dreamAllStalls bounds repeated unanswered split or expansion work in dream -run -all.
+// dreamAllStalls bounds repeated unanswered split or scope work in dream -run -all.
 const dreamAllStalls = 3
 
 // runDreamOnce is memcue dream -run. A plain run (#401) is the dream started by hand or by a job, without a session
 // model to hand the packet to: it asks what the session start of Claude
-// Code asks before it says a dream is due, whether MEMCUE_DREAM_EVERY has passed and some fact is fresh or lacks search
-// queries, and with nothing due makes no call. It needs MEMCUE_API_URL, so a long run never starts by surprise.
+// Code asks before it says a dream is due, whether MEMCUE_DREAM_EVERY has passed and some fact is fresh, and with nothing due makes no call. It needs MEMCUE_API_URL, so a long run never starts by surprise.
 // The background run a session start starts (#569) is that plain run, on claude -p without MEMCUE_API_URL: the
 // session start checked that one of them is there. It leaves quietly when another dream holds the lock.
 //
 // With all (#405) it finishes the base: no interval, packets one after another while a packet has facts to split,
-// expand or check the scope of, or some fact still lacks search queries. The merge sweep walks the base in a circle and never
+// or check the scope of. The merge sweep walks the base in a circle and never
 // runs out of groups, so it does not keep the loop going. It runs on the endpoint when MEMCUE_API_URL is set and on
 // claude -p otherwise, and stops on the first failed pass, after dreamAllStalls passes that change nothing, or after
 // dreamAllPasses.
@@ -55,11 +54,11 @@ func runDreamOnce(out io.Writer, all, background bool, packets int) error {
 		return err
 	}
 	if !all {
-		fresh, pending, _, err := dreamDue(dir, dreamEveryFromEnv(dreamEvery))
+		fresh, _, err := dreamDue(dir, dreamEveryFromEnv(dreamEvery))
 		if err != nil {
 			return err
 		}
-		if fresh == 0 && pending == 0 {
+		if fresh == 0 {
 			_, err := fmt.Fprintln(out, "dream: nothing due")
 			return err
 		}
@@ -89,56 +88,31 @@ func runDreamOnce(out io.Writer, all, background bool, packets int) error {
 			_, err := fmt.Fprintf(out, "dream -all: done after %d passes\n", pass)
 			return err
 		}
-		pending, err := pendingExpansions()
-		if err != nil {
-			return err
-		}
 		// A pass that checked the scope of global facts moved its cursor, even when it moved no fact (#607).
-		if rec.Expanded+len(rec.Splits)+len(rec.Actions)+rec.ScopeChecked == 0 {
+		if len(rec.Splits)+len(rec.Actions)+rec.ScopeChecked == 0 {
 			stalls++
 		} else {
 			stalls = 0
 		}
 		switch {
-		case work == 0 && pending == 0:
+		case work == 0:
 			_, err := fmt.Fprintf(out, "dream -all: done after %d passes\n", pass)
 			return err
 		case stalls >= dreamAllStalls:
-			_, err := fmt.Fprintf(out, "dream -all: stopped after %d passes that changed nothing; %d facts still "+
-				"need search queries\n", stalls, pending)
+			_, err := fmt.Fprintf(out, "dream -all: stopped after %d passes that changed nothing; maintenance work remains\n", stalls)
 			return err
 		}
 	}
 	return fmt.Errorf("dream -all: stopped after %d passes with work left; run it again", dreamAllPasses)
 }
 
-// pendingExpansions counts active facts without ordinary search queries, including after corrections.
-func pendingExpansions() (int, error) {
-	s, err := openBase()
-	if err != nil {
-		return 0, err
-	}
-	defer func() { _ = s.Close() }()
-	active, err := s.Active()
-	if err != nil {
-		return 0, err
-	}
-	n := 0
-	for _, f := range active {
-		if len(extract.SearchQueries(f.Queries)) == 0 {
-			n++
-		}
-	}
-	return n, nil
-}
-
 // dreamPass is one dream under the caller's lock: the default packet, since the last dream with the facts it saw, or
 // every active fact on a machine with no dream yet; then the model's answer, applied under the -apply checks, and a
-// line in dream.log either way. It returns that line and how many facts the packet gave to split, expand or
+// line in dream.log either way. It returns that line and how many facts the packet gave to split or
 // check the scope of; a record without a packet means there was nothing for the dream.
 //
 // The work of up to packets packets is cut into calls the model answers at once (#471): each packet's fresh facts and
-// groups, each packet's facts to expand, and each packet's global facts to check the scope of. Most of a call's time is the model
+// groups and each packet's global facts to check the scope of. Most of a call's time is the model
 // writing its answer, so three calls of a third of it each take about a third of the time. Their answers are joined
 // and applied as one.
 func dreamPass(dir string, packets int, out io.Writer) (dreamRecord, int, error) {
@@ -172,7 +146,7 @@ func dreamPass(dir string, packets int, out io.Writer) (dreamRecord, int, error)
 	if err := json.Unmarshal(b, &p); err != nil {
 		return rec, 0, fmt.Errorf("%s: %w", packetFile, err)
 	}
-	work := len(p.Split) + len(p.Expand) + len(p.Scope)
+	work := len(p.Split) + len(p.Scope)
 	calls, err := w.calls()
 	if err != nil {
 		return rec, work, err
@@ -216,28 +190,28 @@ func ms(d time.Duration) int64 { return d.Milliseconds() }
 
 // dreamWork is the work prepare gathered for the model, kept apart so dream -run can cut it into calls.
 type dreamWork struct {
-	id            string
-	split, expand []store.Fact
-	groups        [][]store.Fact
-	fresh         map[string]bool // the facts of the groups the dream reviews as new
-	scope         []store.Fact    // the global facts to check the scope of (#607)
-	projects      []string        // the projects they may move to
+	id       string
+	split    []store.Fact
+	groups   [][]store.Fact
+	fresh    map[string]bool // the facts of the groups the dream reviews as new
+	scope    []store.Fact    // the global facts to check the scope of (#607)
+	projects []string        // the projects they may move to
 }
 
 // calls cuts the work into packets of the usual bounds, one task kind a call: fresh facts with groups, which need the
-// model's judgement and their neighbours, then the facts to expand and the global facts to
+// model's judgement and their neighbours, then the global facts to
 // check the scope of (#607). Every call is a whole packet with
 // its instructions and the other data sections empty, so the model reads it as it reads one packet.
 func (w dreamWork) calls() ([]dreamCall, error) {
 	var out []dreamCall
-	add := func(task string, split, expand, scope []store.Fact, groups [][]store.Fact) error {
+	add := func(task string, split, scope []store.Fact, groups [][]store.Fact) error {
 		projects := w.projects
 		if len(scope) == 0 {
 			projects = nil
 		}
-		text, err := renderPacket(w.id, split, expand, scope, projects, groups, w.fresh)
+		text, err := renderPacket(w.id, split, scope, projects, groups, w.fresh)
 		c := dreamCall{text: text, rec: dreamCallRecord{Task: task, Split: len(split), Groups: len(groups),
-			Facts: len(expand) + len(scope)}}
+			Facts: len(scope)}}
 		for _, g := range groups {
 			if !slices.ContainsFunc(g, func(f store.Fact) bool { return w.fresh[f.ID] }) {
 				c.rec.Swept++
@@ -248,18 +222,13 @@ func (w dreamWork) calls() ([]dreamCall, error) {
 	}
 	for i := 0; i < len(w.split) || i/packetFresh*packetGroups < len(w.groups); i += packetFresh {
 		k := i / packetFresh * packetGroups
-		if err := add(taskReview, w.split[min(i, len(w.split)):min(i+packetFresh, len(w.split))], nil, nil,
+		if err := add(taskReview, w.split[min(i, len(w.split)):min(i+packetFresh, len(w.split))], nil,
 			w.groups[min(k, len(w.groups)):min(k+packetGroups, len(w.groups))]); err != nil {
 			return nil, err
 		}
 	}
-	for c := range slices.Chunk(w.expand, packetExpand) {
-		if err := add(taskExpand, nil, c, nil, nil); err != nil {
-			return nil, err
-		}
-	}
 	for c := range slices.Chunk(w.scope, packetScope) {
-		if err := add(taskScope, nil, nil, c, nil); err != nil {
+		if err := add(taskScope, nil, c, nil); err != nil {
 			return nil, err
 		}
 	}
@@ -270,7 +239,6 @@ func (w dreamWork) calls() ([]dreamCall, error) {
 // groups to merge, the fresh ones and the merge sweep's, so its cost is not told apart further.
 const (
 	taskReview = "review"
-	taskExpand = "expand"
 	taskScope  = "scope"
 )
 
@@ -289,8 +257,8 @@ type dreamCallRecord struct {
 	Split    int            `json:"split,omitempty"`  // fresh facts given to split
 	Groups   int            `json:"groups,omitempty"` // groups given to merge
 	Swept    int            `json:"swept,omitempty"`  // of them, the merge sweep's: groups with no fresh fact
-	Facts    int            `json:"facts,omitempty"`  // facts given to expand or check the scope of
-	Proposed int            `json:"proposed"`         // splits, queries, actions or scopes the model returned
+	Facts    int            `json:"facts,omitempty"`  // facts given to check the scope of
+	Proposed int            `json:"proposed"`         // splits, actions or scopes the model returned
 	Tokens   extract.Tokens `json:"tokens"`
 	CostUSD  float64        `json:"cost_usd,omitempty"`
 	Model    int64          `json:"model_ms"` // the call as memcue waited for it
@@ -327,8 +295,8 @@ func askAll(calls []dreamCall) (extract.DreamReply, []dreamCallRecord, error) {
 			recs[i].Error = errs[i].Error()
 			continue
 		}
-		var a dreamAnswer
-		if err := json.Unmarshal(rp.Answer, &a); err != nil {
+		a, err := decodeDreamAnswer(rp.Answer)
+		if err != nil {
 			errs[i] = fmt.Errorf("answer: %w", err)
 			recs[i].Error = errs[i].Error()
 			continue

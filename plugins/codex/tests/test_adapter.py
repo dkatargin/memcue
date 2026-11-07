@@ -81,7 +81,7 @@ elif sys.argv[1]=='search':print(json.dumps({'facts':[],'hints':['No facts; try 
                      (ROOT/'skills/memcue-dream/SKILL.md').read_text()):
             with self.subTest(text=text[:60]):
                 self.assertIn('Never correct a fact solely to change its language.',text)
-                self.assertIn('Existing facts and indexed translations remain as stored.',text)
+                self.assertIn('Existing fact content remains as stored.',text)
 
     def test_later_shell_calls_use_same_config_without_hook_environment(self):
         r = self.run_adapter('hook',data=self.payload())

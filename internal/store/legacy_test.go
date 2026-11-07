@@ -47,7 +47,7 @@ func TestLegacyProvisionalIsLive(t *testing.T) {
 	if got := activeIDs(); !slices.Equal(got, []string{liveID, expiredID}) {
 		t.Errorf("active %v, want the live and the expired provisional fact", got)
 	}
-	f, err := s.Correct(liveID, "Provisional kilo rule, corrected.", nil)
+	f, err := s.Correct(liveID, "Provisional kilo rule, corrected.")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -58,7 +58,7 @@ func TestLegacyProvisionalIsLive(t *testing.T) {
 		t.Errorf("stored %+v", got)
 	}
 	never := ""
-	if f, err = s.CorrectExpiring(liveID, "Provisional kilo rule, kept.", nil, &never); err != nil {
+	if f, err = s.CorrectExpiring(liveID, "Provisional kilo rule, kept.", &never); err != nil {
 		t.Fatal(err)
 	}
 	if f.Review != "" || f.Expires != "" {
@@ -70,7 +70,7 @@ func TestLegacyProvisionalIsLive(t *testing.T) {
 	if _, ok := ids(t, s, "kilo kept")[liveID]; !ok {
 		t.Error("a provisional fact made permanent is not found")
 	}
-	if _, err := s.Correct(retiredID, "Provisional mike rule, back.", nil); err == nil {
+	if _, err := s.Correct(retiredID, "Provisional mike rule, back."); err == nil {
 		t.Error("a retired provisional fact was corrected")
 	}
 }
@@ -100,7 +100,7 @@ func TestMergeOfARetireAndACorrectionKeepsTheCorrection(t *testing.T) {
 			t.Run(meta.name+"/"+order.name, func(t *testing.T) {
 				b := filepath.Join(t.TempDir(), "facts.db")
 				v1 := Fact{ID: "01JMERGERETIRE000000000001", Version: 1, Content: "Retire zulu on db1.",
-					Keywords: []string{"zulu"}, Origin: "x 2026-10-19", Author: "mac", Created: t0, Meta: meta.meta}
+					Origin: "x 2026-10-19", Author: "mac", Created: t0, Meta: meta.meta}
 				s0 := openAt(t, b, "mac", t0)
 				legacyRows(t, s0, v1)
 				if err := s0.Rebuild(); err != nil {
@@ -114,7 +114,7 @@ func TestMergeOfARetireAndACorrectionKeepsTheCorrection(t *testing.T) {
 				}
 				_ = r.Close()
 				c := openAt(t, correcting, "builder", t0.Add(order.correct))
-				if _, err := c.Correct(v1.ID, "Retire zulu on db1, corrected apart.", nil); err != nil {
+				if _, err := c.Correct(v1.ID, "Retire zulu on db1, corrected apart."); err != nil {
 					t.Fatal(err)
 				}
 				_ = c.Close()
@@ -182,7 +182,7 @@ func TestMergeReplayKeepsALaterReopen(t *testing.T) {
 	b, f := base(t)
 	corrected := clone(t, b)
 	c := openAt(t, corrected, "builder", t0.Add(time.Minute))
-	if _, err := c.Correct(f.ID, f.Content, []string{"hermes", "deepseek-pro"}); err != nil {
+	if _, err := c.Correct(f.ID, f.Content); err != nil {
 		t.Fatal(err)
 	}
 	_ = c.Close()
@@ -227,7 +227,7 @@ func TestMergeOfAReopenAndACorrectionKeepsTheLatest(t *testing.T) {
 	}
 	_ = r.Close()
 	c := openAt(t, corrected, "builder", t0.Add(time.Hour))
-	if _, err := c.Correct(f.ID, "Hermes работает на deepseek-pro", nil); err != nil {
+	if _, err := c.Correct(f.ID, "Hermes работает на deepseek-pro"); err != nil {
 		t.Fatal(err)
 	}
 	_ = c.Close()
@@ -254,7 +254,7 @@ func olderRebuild(t *testing.T, s *Store) {
 			t.Fatal(err)
 		}
 	}
-	rows, err := s.db.Query(`SELECT f.id, f.content, f.keywords, f.queries FROM facts f
+	rows, err := s.db.Query(`SELECT f.id, f.content FROM facts f
 		WHERE f.version = (SELECT max(version) FROM facts WHERE id = f.id) AND f.status = 'active'
 			AND f.review <> 'candidate'`)
 	if err != nil {
@@ -263,11 +263,11 @@ func olderRebuild(t *testing.T, s *Store) {
 	type row struct{ id, text string }
 	var live []row
 	for rows.Next() {
-		var id, content, keywords, queries string
-		if err := rows.Scan(&id, &content, &keywords, &queries); err != nil {
+		var id, content string
+		if err := rows.Scan(&id, &content); err != nil {
 			t.Fatal(err)
 		}
-		live = append(live, row{id, content + "\n" + keywords + "\n" + queries})
+		live = append(live, row{id, content})
 	}
 	_ = rows.Close()
 	for _, r := range live {

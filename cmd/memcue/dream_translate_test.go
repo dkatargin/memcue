@@ -41,18 +41,16 @@ func translateBase(t *testing.T) (first, second, done string) {
 	}
 	defer func() { _ = s.Close() }()
 	add := func(c string, q ...string) string {
-		f, err := s.AddWith(c, nil, "x 2026-10-19", "", store.Meta{})
+		f, err := s.AddWith(c, "x 2026-10-19", "", store.Meta{})
 		if err != nil {
 			t.Fatal(err)
 		}
-		if _, err := s.SetQueries(f.ID, f.Version, q); err != nil {
-			t.Fatal(err)
-		}
+
 		time.Sleep(2 * time.Millisecond) // a ULID orders by millisecond only
 		return f.ID
 	}
 	first = add("Postgres демо-базы слушает порт 5432 на db1.", "база данных")
 	second = add("Gradle в demo-app требует JAVA_HOME=/opt/jdk-21.", "сборка")
-	done = add("Caddy проксирует vault.example.org.", "прокси", extract.TranslationPrefix+"Caddy proxies vault.example.org.")
+	done = add("Caddy проксирует vault.example.org.", "прокси", "Caddy proxies vault.example.org.")
 	return
 }

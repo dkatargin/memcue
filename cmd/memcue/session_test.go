@@ -60,7 +60,7 @@ func TestSessionStartTellsWhereMemoryIs(t *testing.T) {
 	for _, want := range []string{
 		"`-source user` for the user's words",
 		"a fact without `-source` is stored as yours (`agent`)",
-		"`memcue add -kind pitfall -source tool -keywords",
+		"`memcue add -kind pitfall -source tool --",
 	} {
 		if !strings.Contains(ctx, want) {
 			t.Errorf("note lacks %q", want)
@@ -75,7 +75,7 @@ func TestSessionNoteCarriesTheMeasuredShelfText(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if want := strings.TrimSpace(string(b)); !strings.Contains(sessionNote, want) {
+	if want := strings.ReplaceAll(strings.TrimSpace(string(b)), ` -keywords "<words>"`, ""); !strings.Contains(sessionNote, want) {
 		t.Errorf("the session note lacks the measured shelf text:\n%s", want)
 	}
 }
@@ -87,7 +87,7 @@ func TestSessionNoteCarriesTheMeasuredPitfallLine(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := strings.TrimSpace(string(b))
+	want := strings.ReplaceAll(strings.TrimSpace(string(b)), ` -keywords "<words>"`, "")
 	at := strings.Index(sessionNote, want)
 	if at < 0 {
 		t.Fatalf("the session note lacks the measured pitfall line:\n%s", want)
@@ -105,7 +105,7 @@ func TestSessionNoteCarriesThePreferenceLine(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := "- " + strings.TrimSpace(string(b))
+	want := "- " + strings.ReplaceAll(strings.TrimSpace(string(b)), ` -keywords "<words>"`, "")
 	if !strings.HasSuffix(sessionNote, "\n"+want) {
 		t.Fatalf("the session note does not end with the preference line:\n%s", want)
 	}
@@ -242,7 +242,7 @@ func TestSessionNotePreservesOtherMeasured647Instructions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	oldLines := strings.Split(strings.TrimSpace(string(measured)), "\n")
+	oldLines := strings.Split(strings.ReplaceAll(strings.TrimSpace(string(measured)), ` -keywords "<words>"`, ""), "\n")
 	newLines := strings.Split(sessionNote, "\n")
 	// The introductory line stays; the new English fact rule and changed search-language line come next.
 	if newLines[0] != oldLines[0] || strings.Join(newLines[3:], "\n") != strings.Join(oldLines[2:], "\n") {
@@ -259,7 +259,7 @@ func TestSessionStartCarriesNoCard(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	rule, err := s.AddWith("Правило: отвечать по-русски.", nil, "test 2026-10-20", "",
+	rule, err := s.AddWith("Правило: отвечать по-русски.", "test 2026-10-20", "",
 		store.Meta{Kind: "rule", Scope: "global", Source: "user"})
 	if err != nil {
 		t.Fatal(err)

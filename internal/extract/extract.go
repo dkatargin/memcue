@@ -1,5 +1,5 @@
-// Package extract holds memcue's model calls: a memory note turned into atomic facts for migrate, the search queries
-// of a stored fact, and the dream run by hand. They go through `claude -p` with structured output, or through an
+// Package extract holds memcue's model calls: a memory note turned into atomic facts for migrate
+// and the dream run by hand. They go through `claude -p` with structured output, or through an
 // OpenAI-compatible endpoint when one is configured (API). Hooks are switched off for the `claude -p` call, so the
 // model sees no stored memory and cannot copy facts from it. No session is read: the agent writes its facts itself
 // (#494).
@@ -23,16 +23,11 @@ import (
 // Fact is one fact the model extracted. A session's facts also say what they are and what they rest on; a note's
 // facts leave those empty.
 type Fact struct {
-	Content  string   `json:"content"`
-	Keywords []string `json:"keywords"`
-	Kind     string   `json:"kind,omitempty"`     // rule, decision, pitfall, environment, or another word the policy drops
-	Scope    string   `json:"scope,omitempty"`    // global, host:<name>, repo (the session's project), service:<name>
-	Source   string   `json:"source,omitempty"`   // user, user_confirmed, tool, agent
-	Evidence string   `json:"evidence,omitempty"` // the words of the record the fact rests on, verbatim
-	Queries  []string `json:"queries,omitempty"`  // how a user would ask about the fact; recall searches them
-	// Translation is the fact in the other language, Russian or English; decode moves it into Queries under
-	// TranslationPrefix, so the store needs no field of its own (#395).
-	Translation string `json:"translation,omitempty"`
+	Content  string `json:"content"`
+	Kind     string `json:"kind,omitempty"`     // rule, decision, pitfall, environment, or another word the policy drops
+	Scope    string `json:"scope,omitempty"`    // global, host:<name>, repo (the session's project), service:<name>
+	Source   string `json:"source,omitempty"`   // user, user_confirmed, tool, agent
+	Evidence string `json:"evidence,omitempty"` // the words of the record the fact rests on, verbatim
 }
 
 // Result is the model's answer.
@@ -48,10 +43,7 @@ type Result struct {
 //go:embed note_prompt.md
 var notePrompt string
 
-const schema = `{"type":"object","additionalProperties":false,"required":["facts","dropped"],"properties":{
-"facts":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["content","keywords"],
-"properties":{"content":{"type":"string"},"keywords":{"type":"array","items":{"type":"string"}}}}},
-"dropped":{"type":"string"},"outdated":{"type":"array","items":{"type":"integer"}}}}`
+const schema = `{"type":"object","additionalProperties":false,"required":["facts","dropped"],"properties":{"facts":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["content"],"properties":{"content":{"type":"string"}}}},"dropped":{"type":"string"},"outdated":{"type":"array","items":{"type":"integer"}}}}`
 
 var errEmpty = errors.New("model returned neither facts nor a reason")
 
@@ -60,7 +52,7 @@ var Model = "claude-opus-5-5"
 
 // NotePromptVersion is the version of note_prompt.md. It is 0 for the prompt that produced the migrated base;
 // bump it whenever the prompt changes, so migrate -all can tell a note that predates the change.
-const NotePromptVersion = 0
+const NotePromptVersion = 1
 
 // Note extracts the facts of a memory note. name is the note's path, for the model's orientation only.
 func Note(ctx context.Context, name, content string) (Result, error) {
@@ -220,8 +212,6 @@ func decode(rp reply) (Result, error) {
 	r.CostUSD, r.Tokens = rp.cost, rp.tokens
 	for i := range r.Facts {
 		r.Facts[i].Content = strings.TrimSpace(r.Facts[i].Content)
-		r.Facts[i].Queries = WithTranslation(CleanQueries(r.Facts[i].Queries), r.Facts[i].Translation)
-		r.Facts[i].Translation = ""
 	}
 	if len(r.Facts) == 0 && r.Dropped == "" {
 		return r, errEmpty

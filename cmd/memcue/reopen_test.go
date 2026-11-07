@@ -10,7 +10,7 @@ import (
 func TestReopenBringsARetiredFactBackToRecall(t *testing.T) {
 	env(t)
 	var out bytes.Buffer
-	if err := runAdd([]string{"-keywords", "gradle, jdk", "-origin", "lists 2026-10-09", "-scope", "repo:lists",
+	if err := runAdd([]string{"-origin", "lists 2026-10-09", "-scope", "repo:lists",
 		"-source", "user", "--", "Gradle вне make требует JAVA_HOME=/opt/homebrew/opt/openjdk@21."}, &out); err != nil {
 		t.Fatal(err)
 	}

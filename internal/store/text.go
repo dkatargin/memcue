@@ -20,23 +20,22 @@ import (
 // textLine is one version of a fact as a line of its file. The field order is the order of the line, so every
 // machine writes the same bytes for the same version.
 type textLine struct {
-	ID            string   `json:"id"`
-	Version       int      `json:"version"`
-	Created       string   `json:"created"`
-	Status        string   `json:"status"`
-	Author        string   `json:"author,omitempty"`
-	Content       string   `json:"content"`
-	Keywords      []string `json:"keywords,omitempty"`
-	Origin        string   `json:"origin,omitempty"`
-	Expires       string   `json:"expires,omitempty"`
-	Kind          string   `json:"kind,omitempty"`
-	Scope         string   `json:"scope,omitempty"`
-	Source        string   `json:"source,omitempty"`
-	Evidence      string   `json:"evidence,omitempty"`
-	Review        string   `json:"review,omitempty"`
-	PromptVersion int      `json:"prompt_version,omitempty"`
-	Queries       []string `json:"queries,omitempty"`
-	Channel       string   `json:"channel,omitempty"`
+	ID            string `json:"id"`
+	Version       int    `json:"version"`
+	Created       string `json:"created"`
+	Status        string `json:"status"`
+	Author        string `json:"author,omitempty"`
+	Content       string `json:"content"`
+	Origin        string `json:"origin,omitempty"`
+	Expires       string `json:"expires,omitempty"`
+	Kind          string `json:"kind,omitempty"`
+	Scope         string `json:"scope,omitempty"`
+	Source        string `json:"source,omitempty"`
+	Evidence      string `json:"evidence,omitempty"`
+	Review        string `json:"review,omitempty"`
+	PromptVersion int    `json:"prompt_version,omitempty"`
+	Channel       string `json:"channel,omitempty"`
+	WriteID       string `json:"write_id,omitempty"`
 }
 
 // FactPath is the file of the fact id in the text history at dir.
@@ -44,13 +43,12 @@ func FactPath(dir, id string) string {
 	return filepath.Join(dir, id[len(id)-1:], id+".jsonl")
 }
 
-// encodeLine writes f as one line, the newline included. Keywords and queries go through the same join and split as
-// a row of the base, so a version reads back from the text exactly as from the base.
+// encodeLine writes the current content-only representation, including preserved metadata, as one JSON line.
 func encodeLine(f Fact) ([]byte, error) {
 	l := textLine{ID: f.ID, Version: f.Version, Created: f.Created.UTC().Format(time.RFC3339Nano), Status: f.Status,
-		Author: f.Author, Content: f.Content, Keywords: asStored(f.Keywords), Origin: f.Origin, Expires: f.Expires,
+		Author: f.Author, Content: f.Content, Origin: f.Origin, Expires: f.Expires,
 		Kind: f.Kind, Scope: f.Scope, Source: f.Source, Evidence: f.Evidence, Review: f.Review,
-		PromptVersion: f.PromptVersion, Queries: asStored(f.Queries), Channel: f.Channel}
+		PromptVersion: f.PromptVersion, Channel: f.Channel, WriteID: f.WriteID}
 	var b bytes.Buffer
 	enc := json.NewEncoder(&b)
 	enc.SetEscapeHTML(false)
@@ -60,41 +58,83 @@ func encodeLine(f Fact) ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-// asStored is a list as a row of the base reads it back.
-func asStored(list []string) []string {
-	if len(list) == 0 {
-		return nil
-	}
-	joined := strings.Join(list, ", ")
-	if joined == "" {
-		return nil
-	}
-	return strings.Split(joined, ", ")
+// decodedVersion separates a supplied operational identity from the canonical
+// legacy class. Temporary fingerprints must not participate in version equality.
+type decodedVersion struct {
+	fact   Fact
+	base   string
+	legacy bool
 }
 
-func decodeLine(b []byte) (Fact, error) {
-	var l textLine
+func decodeLine(b []byte) (decodedVersion, error) {
+	var l struct {
+		textLine
+		Keywords json.RawMessage `json:"keywords"`
+		Queries  json.RawMessage `json:"queries"`
+	}
 	if err := json.Unmarshal(b, &l); err != nil {
-		return Fact{}, err
+		return decodedVersion{}, err
 	}
 	if l.ID == "" || l.Version < 1 || (l.Status != Active && l.Status != Retired) {
-		return Fact{}, fmt.Errorf("not a fact version: %.80s", b)
+		return decodedVersion{}, fmt.Errorf("not a fact version: %.80s", b)
 	}
 	created, err := time.Parse(time.RFC3339Nano, l.Created)
 	if err != nil {
-		return Fact{}, fmt.Errorf("created %q: %w", l.Created, err)
+		return decodedVersion{}, fmt.Errorf("created %q: %w", l.Created, err)
 	}
-	return Fact{ID: l.ID, Version: l.Version, Content: l.Content, Keywords: l.Keywords, Origin: l.Origin,
-		Created: created.UTC(), Status: l.Status, Author: l.Author, Expires: l.Expires, Queries: l.Queries,
+	f := Fact{ID: l.ID, Version: l.Version, Content: l.Content, Origin: l.Origin,
+		Created: created.UTC(), Status: l.Status, Author: l.Author, Expires: l.Expires,
 		Meta: Meta{Kind: l.Kind, Scope: l.Scope, Source: l.Source, Evidence: l.Evidence, Review: l.Review,
-			PromptVersion: l.PromptVersion, Channel: l.Channel}}, nil
+			PromptVersion: l.PromptVersion, Channel: l.Channel}, WriteID: l.WriteID}
+	auxValue := func(raw json.RawMessage) (string, error) {
+		if len(raw) == 0 {
+			return "", nil
+		}
+		var list []string
+		if err := json.Unmarshal(raw, &list); err == nil {
+			return strings.Join(list, ", "), nil
+		}
+		var scalar string
+		err := json.Unmarshal(raw, &scalar)
+		return scalar, err
+	}
+	kw, err := auxValue(l.Keywords)
+	if err != nil {
+		return decodedVersion{}, err
+	}
+	qu, err := auxValue(l.Queries)
+	if err != nil {
+		return decodedVersion{}, err
+	}
+	plain := f
+	plain.WriteID = ""
+	base := projectedWriteID(plain, kw, qu)
+	if f.WriteID != "" {
+		storedBase, _, _ := strings.Cut(f.WriteID, ".")
+		// Empty obsolete fields are redundant on a current row. Nonempty
+		// fields must agree with its supplied identity, never replace it.
+		if (kw != "" || qu != "") && base != storedBase {
+			return decodedVersion{}, fmt.Errorf("fact %s has legacy fields inconsistent with write_id", f.ID)
+		}
+		base = storedBase
+	}
+	return decodedVersion{fact: f, base: base, legacy: l.Keywords != nil || l.Queries != nil}, nil
 }
 
-// ParseFacts reads the versions of one fact file, in version order. A line repeated as it is counts once: two
-// processes may append the same version, and a hand-made union of two sides repeats the common ones. Two different
-// lines with one version number, or lines of another fact, are an error: the file needs a merge.
+func equivalentVersion(a, b decodedVersion) bool {
+	af, bf := a.fact, b.fact
+	if af.WriteID != "" && bf.WriteID != "" && af.WriteID != bf.WriteID {
+		return false
+	}
+	af.WriteID, bf.WriteID = "", ""
+	return a.base == b.base && same(af, bf)
+}
+
+// ParseFacts reads one complete fact history. Canonically equivalent retries at
+// the same version count once; different records at that version require a merge.
+// Deduplication precedes occurrence counting, so retries cannot invent writes.
 func ParseFacts(data []byte) ([]Fact, error) {
-	var out []Fact
+	var out []decodedVersion
 	sc := bufio.NewScanner(bytes.NewReader(data))
 	sc.Buffer(make([]byte, 0, 64*1024), 16*1024*1024)
 	for n := 1; sc.Scan(); n++ {
@@ -102,30 +142,57 @@ func ParseFacts(data []byte) ([]Fact, error) {
 		if len(line) == 0 {
 			continue
 		}
-		f, err := decodeLine(line)
+		row, err := decodeLine(line)
 		if err != nil {
 			return nil, fmt.Errorf("line %d: %w", n, err)
 		}
-		if len(out) > 0 && f.ID != out[0].ID {
-			return nil, fmt.Errorf("line %d: fact %s in the file of %s", n, f.ID, out[0].ID)
+		if len(out) > 0 && row.fact.ID != out[0].fact.ID {
+			return nil, fmt.Errorf("line %d: fact %s in the file of %s", n, row.fact.ID, out[0].fact.ID)
 		}
-		out = append(out, f)
+		out = append(out, row)
 	}
 	if err := sc.Err(); err != nil {
 		return nil, err
 	}
-	sort.SliceStable(out, func(i, j int) bool { return out[i].Version < out[j].Version })
+	sort.SliceStable(out, func(i, j int) bool { return out[i].fact.Version < out[j].fact.Version })
 	kept := out[:0]
-	for _, f := range out {
-		if n := len(kept); n > 0 && kept[n-1].Version == f.Version {
-			if !same(kept[n-1], f) {
-				return nil, fmt.Errorf("fact %s has two different versions %d", f.ID, f.Version)
+	for _, row := range out {
+		if n := len(kept); n > 0 && kept[n-1].fact.Version == row.fact.Version {
+			previous := &kept[n-1]
+			if !equivalentVersion(*previous, row) {
+				return nil, fmt.Errorf("fact %s has two different versions %d", row.fact.ID, row.fact.Version)
 			}
+			if previous.fact.WriteID == "" {
+				previous.fact.WriteID = row.fact.WriteID
+			}
+			previous.legacy = previous.legacy || row.legacy
 			continue
 		}
-		kept = append(kept, f)
+		kept = append(kept, row)
 	}
-	return kept, nil
+	// The same canonical classes govern both retry equality and full-history
+	// ranks. Stored identities contribute occurrences but are never renumbered.
+	keys := make([]string, len(kept))
+	legacyClasses := map[string]bool{}
+	for i, row := range kept {
+		plain := row.fact
+		plain.WriteID = ""
+		empty := projectedWriteID(plain, "", "")
+		plain.WriteID = row.base
+		keys[i] = legacyOccurrenceKey(plain)
+		legacyClasses[keys[i]] = legacyClasses[keys[i]] || row.legacy || row.fact.WriteID != "" && row.base == empty
+	}
+	counts := map[string]int{}
+	var facts []Fact
+	for i, row := range kept {
+		counts[keys[i]]++
+		f := row.fact
+		if f.WriteID == "" && legacyClasses[keys[i]] {
+			f.WriteID = legacyOccurrenceID(row.base, counts[keys[i]])
+		}
+		facts = append(facts, f)
+	}
+	return facts, nil
 }
 
 // ReadFactFile reads the history of one fact; a missing file is a fact with no versions.

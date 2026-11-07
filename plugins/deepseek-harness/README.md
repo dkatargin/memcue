@@ -20,7 +20,7 @@ fact base:
 - **A system-prompt section** says the memory is memcue, when to search and write it and which tools fix it.
 - **Four tools**: `memcue_search` (facts by words, with their ids; an optional `limit`), `memcue_add` (one new fact;
   with `shelf`, a finding read from outside sources that only a search naming the shelf returns, #545),
-  `memcue_correct` (a new version of a stored fact, with optional `keywords` and `expires`) and `memcue_retire` (stop
+  `memcue_correct` (a new version of a stored fact, with optional `expires`) and `memcue_retire` (stop
   finding a fact; the history keeps it). `memcue_search` runs `memcue search` with the session's working directory
   and id, so facts of this host and of the session's repository win ties and `MEMCUE_SEARCH_LOG=1` can name the
   session.
@@ -32,7 +32,7 @@ The delivered prompt and tool schemas request new and corrected fact content in 
 They preserve identifiers, commands, paths, versions, exact values and verbatim quotes and leave the user's reply
 language unchanged. English misses may be retried in Russian or another legacy language. The binary and built-in
 memory mirror keep accepting non-English input unchanged. Dreams do not translate facts or create translation debt;
-existing indexed translations remain searchable, and saved translation answers are ignored.
+auxiliary fields are removed during upgrade, and old auxiliary answers are refused.
 
 ## Candidates
 
@@ -99,11 +99,7 @@ Node refuses to strip TypeScript types, so a `.ts` entry cannot be loaded from a
 
 ## Model of `add`
 
-`memcue add` asks a model for a fact's search queries in one short call when `MEMCUE_API_URL` is set; without it the
-dream fills them later. `model`, `apiUrl` and `apiKey` set that call: the plugin forwards them to every memcue child
-process as `MEMCUE_MODEL`, `MEMCUE_API_URL` and `MEMCUE_API_KEY`, and a configured value wins over the ambient one.
-Left out, nothing is called. `apiKey` is a secret in a configuration file: keep that file out of version control, or
-keep `MEMCUE_API_KEY` in the environment that launches dsh instead.
+`memcue add` and `memcue correct` store content immediately without model calls, even with an endpoint configured.
 
 The same settings carry the dream (#569). When a dream is due, the `session-card` call starts one `memcue dream -run`
 pass in the background, on `apiUrl` when it is set and on `claude -p` when dsh sees `claude` on `PATH`; with neither,
@@ -119,7 +115,7 @@ A configured field wins over the environment.
   leading `~/` is expanded; a relative path is rejected at load, so the value cannot name a different file for each
   host.
 - `searchLimit` — default for `memcue_search` (default `5`).
-- `model` — model of the search queries `add` asks for; forwarded as `MEMCUE_MODEL` (default: memcue's own).
+- `model` — model of migration and dream maintenance; forwarded as `MEMCUE_MODEL` (default: memcue's own).
 - `apiUrl` — OpenAI-compatible base URL; forwarded as `MEMCUE_API_URL` (default: unset, so `add` calls no model).
 - `apiKey` — key for `apiUrl`; forwarded as `MEMCUE_API_KEY` (default: unset, so the ambient value or no key is used).
 

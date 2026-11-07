@@ -154,9 +154,8 @@ MEMCUE_FACTS/state/host and credentials. That opt-in path is outside this adapte
 [#669](https://github.com/juev/memcue/issues/669) landed in [#671](https://github.com/juev/memcue/pull/671).
 Shared instructions now use English for initial queries and new/corrected fact content, preserving exact text and
 legacy-language fallback. Native dream packets and maintenance hints no longer request translations or count
-translation-only debt. Existing facts and indexed translations remain as stored and searchable. Never correct a fact
-solely to change its language. Query expansion may use legacy-language synonyms; do not generate full-fact
-translations or `= ` queries. Follow the tasks and schema printed by the installed binary.
+translation-only debt. Existing fact content remains as stored. Auxiliary fields are removed during upgrade. Never correct a fact
+solely to change its language. No query expansion or translation task remains. Follow the tasks and schema printed by the installed binary.
 
 ## Update and remove
 

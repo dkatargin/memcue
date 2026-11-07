@@ -3,13 +3,13 @@ package store
 import "testing"
 
 // tiedTails are what two machines held of one fact on 2026-10-29: both had v1 without a source; the Mac's dream wrote
-// queries and 0.25.0 relabelled that, while loffe relabelled v1 itself. Every version after v1 keeps the creation time
+// channel and 0.25.0 relabelled that, while loffe relabelled v1 itself. Every version after v1 keeps the creation time
 // and the author of v1, so creation time, author and content tie (#582).
 func tiedTails() (common Fact, mac, loffe []Fact) {
 	common = Fact{ID: "01JMERGEORDER0000000000001", Version: 1, Content: "Headscale не раздаёт Control D",
 		Created: t0, Status: Active, Author: "denis", Meta: Meta{Kind: "environment"}}
 	queried := common
-	queried.Version, queried.Queries = 2, []string{"днс", "= Headscale does not push Control D"}
+	queried.Version, queried.Channel = 2, "observed DNS settings"
 	macLabel := queried
 	macLabel.Version, macLabel.Source = 3, "agent"
 	loffeLabel := common
@@ -18,7 +18,7 @@ func tiedTails() (common Fact, mac, loffe []Fact) {
 }
 
 // Versions that tie on creation time, author and content merge in one order on every side, the fullest last: the
-// current version keeps both the queries and the source.
+// current version keeps both the channel and the source.
 func TestTiedVersionsMergeInOneOrder(t *testing.T) {
 	_, mac, loffe := tiedTails()
 	onMac, onLoffe := MergeHistories(mac, loffe), MergeHistories(loffe, mac)
@@ -26,8 +26,8 @@ func TestTiedVersionsMergeInOneOrder(t *testing.T) {
 		t.Fatalf("the sides disagree:\n%+v\n%+v", onMac.Versions, onLoffe.Versions)
 	}
 	cur := onMac.Versions[len(onMac.Versions)-1]
-	if cur.Source != "agent" || len(cur.Queries) != 2 || len(onMac.Versions) != 4 {
-		t.Errorf("current %+v of %d versions, want the relabelled version with queries of 4", cur, len(onMac.Versions))
+	if cur.Source != "agent" || cur.Channel != "observed DNS settings" || len(onMac.Versions) != 4 {
+		t.Errorf("current %+v of %d versions, want the relabelled version with channel of 4", cur, len(onMac.Versions))
 	}
 	if h := MergeHistories(onMac.Versions, onLoffe.Versions); h.Changed() {
 		t.Errorf("merging the result again changes it: %+v", h)

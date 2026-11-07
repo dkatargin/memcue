@@ -88,7 +88,25 @@ func (h MergedHistory) Changed() bool { return h.Added > 0 || h.Reordered }
 
 // MergeHistories merges the versions of one fact as this side (ours) and the other side (theirs) hold them, each in
 // version order: the rule of Merge, for the base and for the text history alike.
-func MergeHistories(ours, theirs []Fact) MergedHistory {
+func MergeHistories(ours, theirs []Fact) (h MergedHistory) {
+	// Old JSONL omitted empty auxiliary lists. Match such a row to the
+	// identity established by SQLite before projection, then persist that
+	// identity so later renumbering cannot break repeated merges.
+	var identified bool
+	ours, identified = inheritWriteIdentities(ours, theirs)
+	theirs, _ = inheritWriteIdentities(theirs, ours)
+	defer func() {
+		if identified {
+			h.Reordered = true
+			h.Common = 0 // persist identities even in an otherwise unchanged prefix
+		}
+	}()
+
+	// Importing an existing history is not a divergence: preserve its recorded
+	// sequence, including label writes that share content and timestamps.
+	if len(ours) == 0 {
+		return MergedHistory{Versions: append([]Fact(nil), theirs...), Added: len(theirs)}
+	}
 	common := 0
 	for common < len(ours) && common < len(theirs) && same(ours[common], theirs[common]) {
 		common++
@@ -102,7 +120,7 @@ func MergeHistories(ours, theirs []Fact) MergedHistory {
 			tTail = append(tTail, f)
 		}
 	}
-	h := MergedHistory{Versions: ours, Common: common, Added: len(tTail), Diverged: len(oTail) > 0 && len(tTail) > 0}
+	h = MergedHistory{Versions: ours, Common: common, Added: len(tTail), Diverged: len(oTail) > 0 && len(tTail) > 0}
 	if len(theirs) == common {
 		return h
 	}
@@ -127,10 +145,9 @@ func MergeHistories(ours, theirs []Fact) MergedHistory {
 }
 
 // mergedBefore orders the versions after the common ones, the same on every side: by creation time, author and
-// content, and between versions that agree on all three, as a label written later (queries, a relabelled source)
+// content, and between versions that agree on all three, as a label written later (a relabelled source)
 // keeps the creation time of the version it labels, the fuller version last, so the current one keeps every label
-// either side wrote: a version without a source before one with it, then fewer queries before more, then a version
-// without a channel before one with it (#625), then by the written line, so no two writes tie.
+// either side wrote: a version without a source before one with it, then a version without a channel before one with it (#625), then by the written line, so no two writes tie.
 func mergedBefore(a, b Fact) bool {
 	if !a.Created.Equal(b.Created) {
 		return a.Created.Before(b.Created)
@@ -143,9 +160,6 @@ func mergedBefore(a, b Fact) bool {
 	}
 	if (a.Source == "") != (b.Source == "") {
 		return a.Source == ""
-	}
-	if len(a.Queries) != len(b.Queries) {
-		return len(a.Queries) < len(b.Queries)
 	}
 	if (a.Channel == "") != (b.Channel == "") {
 		return a.Channel == ""
@@ -176,7 +190,7 @@ func replaceTail(tx *sql.Tx, id string, h MergedHistory) error {
 // with a retirement, the active versions before it that no side holds before it were never seen by its writer: a side
 // that holds one before the retirement merged it and retired the fact afterwards. They go last when one of them
 // corrects the text, that is changes it from the version before it on its side to something else than the retired
-// text; a change of keywords or labels only, or a reopen, leaves the retirement current. The test looks at the versions
+// text; a change of labels only, or a reopen, leaves the retirement current. The test looks at the versions
 // themselves, not at which side ends how, so a side that merges an earlier merge's result gets that result again (#549).
 func correctionLast(tail []Fact, base string, a, b []Fact) []Fact {
 	if len(tail) == 0 || tail[len(tail)-1].Status != Retired {
@@ -233,9 +247,9 @@ func byID(rows []Fact) map[string][]Fact {
 }
 
 func same(a, b Fact) bool {
-	return a.Content == b.Content && strings.Join(a.Keywords, ", ") == strings.Join(b.Keywords, ", ") &&
+	return a.WriteID == b.WriteID && a.Content == b.Content &&
 		a.Origin == b.Origin && a.Created.Equal(b.Created) && a.Status == b.Status && a.Author == b.Author &&
-		a.Expires == b.Expires && a.Meta == b.Meta && strings.Join(a.Queries, ", ") == strings.Join(b.Queries, ", ")
+		a.Expires == b.Expires && a.Meta == b.Meta
 }
 
 // Dump writes every version of every fact, one per line, for git diff.
@@ -257,14 +271,51 @@ func (s *Store) Dump(w io.Writer) error {
 		if f.PromptVersion != 0 {
 			created += " prompt=" + strconv.Itoa(f.PromptVersion)
 		}
-		if len(f.Queries) > 0 {
-			created += " queries=[" + strings.Join(f.Queries, ", ") + "]"
-		}
-		if _, err := fmt.Fprintf(w, "%s v%d %s %s %s [%s] %s\n", f.ID, f.Version, f.Status,
-			created, f.Origin, strings.Join(f.Keywords, ", "),
+
+		if _, err := fmt.Fprintf(w, "%s v%d %s %s %s %s\n", f.ID, f.Version, f.Status,
+			created, f.Origin,
 			strings.Join(strings.Fields(f.Content), " ")); err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+func inheritWriteIdentities(rows, peer []Fact) ([]Fact, bool) {
+	var out []Fact
+	counts := map[string]int{}
+	for i, f := range rows {
+		plain := f
+		plain.WriteID = ""
+		plain.WriteID = projectedWriteID(plain, "", "")
+		key := legacyOccurrenceKey(plain)
+		if f.WriteID != "" {
+			fingerprint, _, _ := strings.Cut(f.WriteID, ".")
+			if fingerprint != plain.WriteID {
+				continue
+			}
+		}
+		counts[key]++
+		if f.WriteID != "" {
+			continue
+		}
+		digest := legacyOccurrenceID(plain.WriteID, counts[key])
+		for _, g := range peer {
+			if g.WriteID != digest {
+				continue
+			}
+			f.WriteID = digest
+			if same(f, g) {
+				if out == nil {
+					out = append([]Fact(nil), rows...)
+				}
+				out[i] = f
+				break
+			}
+		}
+	}
+	if out == nil {
+		return rows, false
+	}
+	return out, true
 }

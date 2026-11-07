@@ -43,45 +43,26 @@ func TestDreamApplyRefusesAnotherPacket(t *testing.T) {
 func TestDreamApplyKeepsToThePacket(t *testing.T) {
 	env(t)
 	old, a, b, other := dreamBase(t)
-	s, _ := store.Open(factsPath())
-	if _, err := s.SetQueries(other, 1, []string{"уже есть"}); err != nil {
-		t.Fatal(err)
-	}
-	_ = s.Close()
 	fakeDream(t, func(string) []extract.Action {
 		return []extract.Action{{Op: "retire", ID: old, By: a, Kind: "outdated", Reason: "not in a group"},
 			{Op: "retire", ID: a, By: b, Kind: "duplicate", Reason: "dup"}}
 	})
-	fakeExpandOf(t, map[string][]string{other: {"новый запрос"}, old: {"порт постгреса"}})
 	if err := dreamModel([]string{"-all"}, &bytes.Buffer{}); err != nil {
 		t.Fatal(err)
 	}
-	if f := storedFact(t, old); f.Status != store.Active || len(f.Queries) != 1 {
+	if f := storedFact(t, old); f.Status != store.Active {
 		t.Errorf("old %+v", f)
 	}
 	if f := storedFact(t, a); f.Status != store.Retired {
 		t.Errorf("the action of the group was not applied: %+v", f)
 	}
-	if f := storedFact(t, other); len(f.Queries) != 1 || f.Queries[0] != "уже есть" {
+	if f := storedFact(t, other); f.Version != 1 {
 		t.Errorf("queries of a fact the packet did not ask about were written: %+v", f)
 	}
 }
 
 // fakeExpandOf answers expansion with the queries of each id it knows, whatever the packet asked.
-func fakeExpandOf(t *testing.T, queries map[string][]string) {
-	t.Helper()
-	old := expandFn
-	expandFn = func(string) (extract.ExpandResult, error) {
-		var r extract.ExpandResult
-		for id, q := range queries {
-			r.Facts = append(r.Facts, extract.Expansion{ID: id, Queries: q})
-		}
-		return r, nil
-	}
-	t.Cleanup(func() { expandFn = old })
-}
 
-// The fresh facts a packet leaves out are not counted as seen: the next packet takes them.
 func TestDreamPacketBoundsLeaveTheRestForTheNext(t *testing.T) {
 	dir := env(t)
 	state := filepath.Join(dir, "state", "memcue")

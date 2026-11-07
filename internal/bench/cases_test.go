@@ -309,10 +309,10 @@ var cases = []benchCase{
 	{
 		id: "json-shape", stratum: rule,
 		note: "README: `search -json` carries each fact's `scope`; searchFact in cmd/memcue/facts.go is the contract: " +
-			"id, content and created always, keywords, origin, scope and expires when set, nothing else.",
+			"id, content and created always, origin, scope and expires when set, nothing else.",
 		setup: func(t *testing.T, w *world) {
 			w.add(t, "full", queueFact, addOpts{cwd: w.repo(t, "widget").dir, scope: "repo", kind: "environment",
-				keywords: "очередь, redis", expires: "2099-12-31"})
+				expires: "2099-12-31"})
 			w.add(t, "bare", "Очередь acme-jobs живёт в Redis.", addOpts{})
 		},
 		action: inRepo("widget", "очередь acme-jobs redis", searchOpts{in: "all"}),
@@ -322,8 +322,7 @@ var cases = []benchCase{
 					continue
 				}
 				r := w.repo(t, "widget")
-				if h.Scope != "repo:"+r.key || !strings.HasPrefix(h.Origin, r.key+" ") || h.Expires != "2099-12-31" ||
-					len(h.Keywords) != 2 {
+				if h.Scope != "repo:"+r.key || !strings.HasPrefix(h.Origin, r.key+" ") || h.Expires != "2099-12-31" {
 					t.Errorf("full fact %+v", h)
 				}
 			}

@@ -131,7 +131,7 @@ func runMigrate(args []string, out io.Writer) error {
 		var kept []extract.Fact
 		var rejected []string
 		for _, f := range res.r.Facts {
-			if hasSecret(f.Content, f.Keywords) || policy.Secret(f.Evidence) {
+			if hasSecret(f.Content) || policy.Secret(f.Evidence) {
 				rejected = append(rejected, "looks like a secret: content omitted")
 				continue
 			}
@@ -139,7 +139,7 @@ func runMigrate(args []string, out io.Writer) error {
 		}
 		if s != nil {
 			for _, f := range kept {
-				sf, err := s.AddWith(f.Content, f.Keywords, origin, "", store.Meta{PromptVersion: extract.NotePromptVersion})
+				sf, err := s.AddWith(f.Content, origin, "", store.Meta{PromptVersion: extract.NotePromptVersion})
 				if err != nil {
 					return fmt.Errorf("%s: %w", res.ref(), err)
 				}
@@ -373,13 +373,13 @@ func runImport(args []string, out io.Writer) error {
 				return fmt.Errorf("%s: %w", path, err)
 			}
 			for _, fact := range rec.Facts {
-				if hasSecret(fact.Content, fact.Keywords) || policy.Secret(fact.Evidence) {
+				if hasSecret(fact.Content) || policy.Secret(fact.Evidence) {
 					skipped++
 					continue
 				}
 				meta := store.Meta{Kind: fact.Kind, Scope: fact.Scope, Source: fact.Source, Evidence: fact.Evidence,
 					PromptVersion: rec.PromptVersion}
-				if _, err := s.AddWith(fact.Content, fact.Keywords, rec.Origin, "", meta); err != nil {
+				if _, err := s.AddWith(fact.Content, rec.Origin, "", meta); err != nil {
 					_ = f.Close()
 					return fmt.Errorf("%s: %w", rec.Note, err)
 				}

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -16,7 +15,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/juev/memcue/internal/extract"
 	"github.com/juev/memcue/internal/policy"
 	"github.com/juev/memcue/internal/recall"
 	"github.com/juev/memcue/internal/store"
@@ -59,7 +57,7 @@ func expandHome(p string) string {
 	return p
 }
 
-func splitKeywords(s string) []string {
+func splitList(s string) []string {
 	var out []string
 	for _, k := range strings.Split(s, ",") {
 		if k = strings.TrimSpace(k); k != "" {
@@ -107,11 +105,9 @@ func validKindScope(kind, scope string) error {
 	return nil
 }
 
-// hasSecret says whether a fact's text or keywords looks like a credential: the agent's, a user request or a
+// hasSecret says whether a fact's text looks like a credential: the agent's, a user request or a
 // migrated note may quote one.
-func hasSecret(content string, keywords []string) bool {
-	return policy.Secret(content) || policy.Secret(strings.Join(keywords, " "))
-}
+func hasSecret(content string) bool { return policy.Secret(content) }
 
 func withStore(fn func(*store.Store) error) error {
 	s, err := openBase()
@@ -123,8 +119,10 @@ func withStore(fn func(*store.Store) error) error {
 }
 
 func runAdd(args []string, out io.Writer) error {
+	if err := refuseAuxiliaryFlags(args); err != nil {
+		return err
+	}
 	fs := flag.NewFlagSet("add", flag.ContinueOnError)
-	keywords := fs.String("keywords", "", "comma-separated words someone would ask with")
 	origin := fs.String("origin", "", "where it was learnt: repository and date (default: those of -cwd or the working directory, empty outside a repository)")
 	cwd := fs.String("cwd", "", "working directory for the default origin (default: the process working directory; an empty value is no project)")
 	expires := fs.String("expires", "", "last day the fact is worth recalling, YYYY-MM-DD (default: never)")
@@ -153,7 +151,7 @@ func runAdd(args []string, out io.Writer) error {
 	if err := validKindScope(*kind, *scope); err != nil {
 		return err
 	}
-	content, keywordsList := strings.Join(fs.Args(), " "), splitKeywords(*keywords)
+	content := strings.Join(fs.Args(), " ")
 	// The agent writes its own facts (#494): what it saw (tool) or concluded (agent) is live at once and meets no other
 	// check, so the state rule runs here (#475). A fact in the user's words keeps them, and a shelf fact says what an
 	// outside source states about another system, not the state of the user's machines (#565).
@@ -162,7 +160,7 @@ func runAdd(args []string, out io.Writer) error {
 			return fmt.Errorf("add: the fact records installation state (%s), which a command reads; %s", part, stateWaysOut)
 		}
 	}
-	if !*force && hasSecret(content, keywordsList) {
+	if !*force && hasSecret(content) {
 		return errors.New("add: the fact looks like a secret; use a password manager, or pass -force to store it anyway")
 	}
 	if *origin == "" && !emptyFlag(fs, "cwd") {
@@ -175,60 +173,17 @@ func runAdd(args []string, out io.Writer) error {
 	}
 	m := store.Meta{Kind: *kind, Scope: defaultScope(*scope, *origin), Source: *source}
 	return withStore(func(s *store.Store) error {
-		f, err := s.AddWith(content, keywordsList, *origin, eventExpires(*kind, *expires), m)
+		f, err := s.AddWith(content, *origin, eventExpires(*kind, *expires), m)
 		if err != nil {
 			return err
-		}
-		if extract.API.URL != "" {
-			f = expandStored(s, f)
 		}
 		_, err = fmt.Fprintln(out, f.ID)
 		return err
 	})
 }
 
-// expandOneTimeout bounds one expansion call of add and correct. The fact is stored before the call, so the command has
-// to finish inside the plugins' own timeouts for it (DSH 10 s, Hermes 15 s): a plugin that kills a slow add reports the
-// fact as not stored, and the model writes it again. One fact without reasoning takes 1-2 s.
-const expandOneTimeout = 5 * time.Second
+var sources = map[string]bool{"user": true, "user_confirmed": true, "tool": true, "agent": true, "note": true, "memory": true}
 
-// expandOneFn is the expansion call of add and correct, replaced in tests.
-var expandOneFn = func(input string) (extract.ExpandResult, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), expandOneTimeout)
-	defer cancel()
-	return extract.ExpandFacts(ctx, input)
-}
-
-// expandStored gives a fact add or correct just stored its search queries, so it is found by the words a user asks with
-// from the first prompt (#288, #297), and returns the fact as it stands afterwards. Only with an API endpoint:
-// claude -p takes seconds to start. Any failure leaves the fact without queries for the dream to expand; the fact is
-// stored either way.
-func expandStored(s *store.Store, f store.Fact) store.Fact {
-	input, err := renderSplitInput([]store.Fact{f})
-	if err != nil {
-		return f
-	}
-	r, err := expandOneFn(input)
-	if err != nil {
-		return f
-	}
-	for _, e := range r.Facts {
-		if e.ID == f.ID && len(e.Queries) > 0 {
-			nf, err := s.SetQueries(f.ID, f.Version, e.Queries)
-			if err != nil {
-				return f
-			}
-			return nf
-		}
-	}
-	return f
-}
-
-var sources = map[string]bool{"user": true, "user_confirmed": true, "tool": true, "agent": true, "note": true,
-	"memory": true}
-
-// errNoApproval answers the commands of the approval workflow, removed with it (#514): a script or a habit that still
-// calls them learns why instead of reading the usage.
 func errNoApproval(cmd string) error {
 	return fmt.Errorf("%s is removed (#514): every fact is indexed at the write and nothing waits for approval; "+
 		"a candidate an older memcue left is live too, and memcue retire ID takes a fact out", cmd)
@@ -347,8 +302,10 @@ func eventExpires(kind, expires string) string {
 }
 
 func runCorrect(args []string, out io.Writer) error {
+	if err := refuseAuxiliaryFlags(args); err != nil {
+		return err
+	}
 	fs := flag.NewFlagSet("correct", flag.ContinueOnError)
-	keywords := fs.String("keywords", "", "comma-separated; empty keeps the current ones")
 	expires := fs.String("expires", "", "new last day the fact is worth recalling, YYYY-MM-DD; empty keeps the current one")
 	noExpires := fs.Bool("no-expires", false, "drop the expiry: the fact is recalled from now on without end")
 	force := fs.Bool("force", false, "store it even when it looks like a secret")
@@ -362,22 +319,14 @@ func runCorrect(args []string, out io.Writer) error {
 		rest = append([]string{rest[0]}, rest[2:]...)
 	}
 	if len(rest) < 2 {
-		return errors.New("usage: memcue correct [-keywords K] [-expires YYYY-MM-DD|-no-expires] [-force] ID [--] TEXT")
+		return errors.New("usage: memcue correct [-expires YYYY-MM-DD|-no-expires] [-force] ID [--] TEXT")
 	}
 	if *noExpires && *expires != "" {
 		return errors.New("correct: -expires and -no-expires cannot be combined")
 	}
 	content := strings.Join(rest[1:], " ")
 	return withStore(func(s *store.Store) error {
-		kw := splitKeywords(*keywords)
-		if kw == nil {
-			cur, err := s.Get(fs.Arg(0))
-			if err != nil {
-				return err
-			}
-			kw = cur.Keywords
-		}
-		if !*force && hasSecret(content, kw) {
+		if !*force && hasSecret(content) {
 			return errors.New("correct: the fact looks like a secret; use a password manager, or pass -force to store it anyway")
 		}
 		var exp *string
@@ -388,14 +337,9 @@ func runCorrect(args []string, out io.Writer) error {
 			empty := ""
 			exp = &empty
 		}
-		f, err := s.CorrectExpiring(fs.Arg(0), content, kw, exp)
+		f, err := s.CorrectExpiring(fs.Arg(0), content, exp)
 		if err != nil {
 			return err
-		}
-		// The text changed, so the queries have to be asked for again: the words the fact was found by no longer
-		// describe it (#297).
-		if extract.API.URL != "" {
-			f = expandStored(s, f)
 		}
 		_, err = fmt.Fprintf(out, "%s v%d\n", f.ID, f.Version)
 		return err
@@ -449,8 +393,8 @@ func runFacts(out io.Writer) error {
 			if f.Expires != "" {
 				expires = " expires=" + f.Expires
 			}
-			if _, err := fmt.Fprintf(out, "%s v%d %s [%s]%s %s\n", f.ID, f.Version, f.Origin,
-				strings.Join(f.Keywords, ", "), expires, strings.Join(strings.Fields(f.Content), " ")); err != nil {
+			if _, err := fmt.Fprintf(out, "%s v%d %s%s %s\n", f.ID, f.Version, f.Origin,
+				expires, strings.Join(strings.Fields(f.Content), " ")); err != nil {
 				return err
 			}
 		}
@@ -593,7 +537,7 @@ func runSearch(args []string, out io.Writer) error {
 		return errors.New("search: -n must be >= 1")
 	}
 	q := recall.Query{Text: strings.Join(words, " "), N: *n, MinScore: *minScore,
-		Project: tier.Keys(*cwd, claudeDir()), Host: currentHost(), In: splitKeywords(*in), Kinds: splitKeywords(*kind), Since: *since,
+		Project: tier.Keys(*cwd, claudeDir()), Host: currentHost(), In: splitList(*in), Kinds: splitList(*kind), Since: *since,
 		Expired: *expired, AllWords: *allWords}
 	f, err := q.Filter()
 	if err != nil {
@@ -692,9 +636,9 @@ func shelfHint(s *store.Store, q recall.Query) (string, error) {
 	return fmt.Sprintf("%d %s: -in %s", len(hits), verb, strings.Join(names, ",")), nil
 }
 
-// cjkHint follows the answer to a query in Chinese, Japanese or Korean: the facts are in Russian and English, and a
+// cjkHint follows a Chinese, Japanese or Korean query: English is the default for new facts, and a
 // question translated into either finds its fact 54-60 times in 60, against 0-50 asked as it is (#410).
-const cjkHint = "Legacy facts include Russian and English: search first in English; if English misses, retry in Russian or another legacy language."
+const cjkHint = "Facts use English by default; legacy facts may use other languages: search first in English; if English misses, retry in Russian or another legacy language."
 
 // searchRecord is one line of search.log: a query the agent wrote and the facts it got, the record the read side is
 // judged by since the agent searches itself (#361).
@@ -731,13 +675,12 @@ func logSearch(session, cwd, query string, hits []store.Hit, took time.Duration)
 
 // searchFact is one fact as search -json prints it: what a caller needs to show, correct or retire it.
 type searchFact struct {
-	ID       string   `json:"id"`
-	Content  string   `json:"content"`
-	Keywords []string `json:"keywords,omitempty"`
-	Origin   string   `json:"origin,omitempty"`
-	Scope    string   `json:"scope,omitempty"`
-	Created  string   `json:"created"`
-	Expires  string   `json:"expires,omitempty"`
+	ID      string `json:"id"`
+	Content string `json:"content"`
+	Origin  string `json:"origin,omitempty"`
+	Scope   string `json:"scope,omitempty"`
+	Created string `json:"created"`
+	Expires string `json:"expires,omitempty"`
 }
 
 // searchAnswer is what search -json prints: the facts, and the lines the plain answer prints after them (#453).
@@ -749,7 +692,7 @@ type searchAnswer struct {
 func searchJSON(hits []store.Hit) []searchFact {
 	out := make([]searchFact, 0, len(hits))
 	for _, h := range hits {
-		out = append(out, searchFact{ID: h.ID, Content: h.Content, Keywords: h.Keywords, Origin: h.Origin, Scope: h.Scope,
+		out = append(out, searchFact{ID: h.ID, Content: h.Content, Origin: h.Origin, Scope: h.Scope,
 			Created: h.Created.UTC().Format(time.RFC3339), Expires: h.Expires})
 	}
 	return out
@@ -994,4 +937,21 @@ func ensureLine(path, line string) (bool, error) {
 
 func shellQuote(s string) string {
 	return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'"
+}
+
+// Scan past positional arguments too: Go's flag parser stops at the first one,
+// and an old caller's auxiliary flag must never become stored fact content.
+// An explicit -- starts literal content, where these words remain valid data.
+func refuseAuxiliaryFlags(args []string) error {
+	for _, arg := range args {
+		if arg == "--" {
+			break
+		}
+		name, _, _ := strings.Cut(arg, "=")
+		switch name {
+		case "-keywords", "--keywords", "-queries", "--queries", "-translation", "--translation":
+			return fmt.Errorf("%s is no longer supported: store and search content only", name)
+		}
+	}
+	return nil
 }

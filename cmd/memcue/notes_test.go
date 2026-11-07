@@ -34,7 +34,7 @@ func addFacts(t *testing.T, facts ...store.FactInput) []string {
 	defer func() { _ = s.Close() }()
 	ids := make([]string, len(facts))
 	for i, in := range facts {
-		f, err := s.AddWith(in.Content, in.Keywords, in.Origin, in.Expires, in.Meta)
+		f, err := s.AddWith(in.Content, in.Origin, in.Expires, in.Meta)
 		if err != nil {
 			t.Fatal(err)
 		}

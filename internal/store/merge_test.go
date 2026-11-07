@@ -41,7 +41,7 @@ func base(t *testing.T) (string, Fact) {
 	t.Helper()
 	p := filepath.Join(t.TempDir(), "facts.db")
 	s := openAt(t, p, "mac", t0)
-	f, err := s.Add("Hermes работает на модели deepseek-flash", []string{"hermes"}, "server-migration 2026-10-17")
+	f, err := s.Add("Hermes работает на модели deepseek-flash", "server-migration 2026-10-17")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -62,9 +62,9 @@ func TestMergeUnitesFactsAddedOnBothSides(t *testing.T) {
 	b, _ := base(t)
 	mac, server := clone(t, b), clone(t, b)
 	m := openAt(t, mac, "mac", t0.Add(time.Hour))
-	_, _ = m.Add("Caddy-private монтирует файл, после замены пересоздать контейнер", nil, "server-migration")
+	_, _ = m.Add("Caddy-private монтирует файл, после замены пересоздать контейнер", "server-migration")
 	l := openAt(t, server, "server", t0.Add(2*time.Hour))
-	_, _ = l.Add("Updater держит по два rollback-образа на сервис", nil, "server-migration")
+	_, _ = l.Add("Updater держит по два rollback-образа на сервис", "server-migration")
 	_ = l.Close()
 
 	st, err := m.Merge(server)
@@ -88,7 +88,7 @@ func TestMergeIsTheSameFromBothSides(t *testing.T) {
 	b, f := base(t)
 	mac, server := clone(t, b), clone(t, b)
 	m := openAt(t, mac, "mac", t0.Add(time.Hour))
-	_, _ = m.Correct(f.ID, "Hermes работает на deepseek-flash, fallback Codex", nil)
+	_, _ = m.Correct(f.ID, "Hermes работает на deepseek-flash, fallback Codex")
 	_ = m.Close()
 	l := openAt(t, server, "server", t0.Add(2*time.Hour))
 	_, _ = l.Retire(f.ID)
@@ -162,21 +162,21 @@ func TestMergeOfACorrectionAndARetirement(t *testing.T) {
 	}{
 		{"retired first, corrected later", func(t *testing.T, mac, server, id string) {
 			write(t, server, "server", time.Hour, func(s *Store) error { _, err := s.Retire(id); return err })
-			write(t, mac, "mac", 2*time.Hour, func(s *Store) error { _, err := s.Correct(id, corrected, nil); return err })
+			write(t, mac, "mac", 2*time.Hour, func(s *Store) error { _, err := s.Correct(id, corrected); return err })
 		}, Active, corrected},
 		{"corrected first, retired later", func(t *testing.T, mac, server, id string) {
-			write(t, mac, "mac", time.Hour, func(s *Store) error { _, err := s.Correct(id, corrected, nil); return err })
+			write(t, mac, "mac", time.Hour, func(s *Store) error { _, err := s.Correct(id, corrected); return err })
 			write(t, server, "server", 2*time.Hour, func(s *Store) error { _, err := s.Retire(id); return err })
 		}, Active, corrected},
 		{"keywords changed, retired later", func(t *testing.T, mac, server, id string) {
 			write(t, mac, "mac", time.Hour, func(s *Store) error {
-				_, err := s.Correct(id, "Hermes работает на модели deepseek-flash", []string{"hermes", "flash"})
+				_, err := s.Correct(id, "Hermes работает на модели deepseek-flash")
 				return err
 			})
 			write(t, server, "server", 2*time.Hour, func(s *Store) error { _, err := s.Retire(id); return err })
 		}, Retired, "Hermes работает на модели deepseek-flash"},
 		{"retired after merging the correction", func(t *testing.T, mac, server, id string) {
-			write(t, mac, "mac", time.Hour, func(s *Store) error { _, err := s.Correct(id, corrected, nil); return err })
+			write(t, mac, "mac", time.Hour, func(s *Store) error { _, err := s.Correct(id, corrected); return err })
 			write(t, server, "server", 2*time.Hour, func(s *Store) error {
 				if _, err := s.Merge(mac); err != nil {
 					return err
@@ -189,10 +189,10 @@ func TestMergeOfACorrectionAndARetirement(t *testing.T) {
 		// that merge, so its correction sits at another position but is known to the retiring side.
 		{"retired after merging, the other side stale", func(t *testing.T, mac, server, id string) {
 			write(t, server, "server", time.Hour, func(s *Store) error {
-				_, err := s.Correct(id, "Hermes работает на deepseek-lite", nil)
+				_, err := s.Correct(id, "Hermes работает на deepseek-lite")
 				return err
 			})
-			write(t, mac, "mac", 90*time.Minute, func(s *Store) error { _, err := s.Correct(id, corrected, nil); return err })
+			write(t, mac, "mac", 90*time.Minute, func(s *Store) error { _, err := s.Correct(id, corrected); return err })
 			write(t, server, "server", 3*time.Hour, func(s *Store) error {
 				if _, err := s.Merge(mac); err != nil {
 					return err
@@ -205,21 +205,21 @@ func TestMergeOfACorrectionAndARetirement(t *testing.T) {
 		// Mac's version has another text than the retirement, but it corrects nothing (#549).
 		{"corrected and retired on one side, keywords changed on the other", func(t *testing.T, mac, server, id string) {
 			write(t, server, "server", time.Hour, func(s *Store) error {
-				if _, err := s.Correct(id, corrected, nil); err != nil {
+				if _, err := s.Correct(id, corrected); err != nil {
 					return err
 				}
 				_, err := s.Retire(id)
 				return err
 			})
 			write(t, mac, "mac", 30*time.Minute, func(s *Store) error {
-				_, err := s.Correct(id, "Hermes работает на модели deepseek-flash", []string{"hermes", "flash"})
+				_, err := s.Correct(id, "Hermes работает на модели deepseek-flash")
 				return err
 			})
 		}, Retired, corrected},
 		// The server merged the Mac's correction behind its retirement, so the correction won there; the Mac merges
 		// that result before it pulled it. The correction must win on the Mac too.
 		{"corrected first, retired later, the corrected side merges the result", func(t *testing.T, mac, server, id string) {
-			write(t, mac, "mac", time.Hour, func(s *Store) error { _, err := s.Correct(id, corrected, nil); return err })
+			write(t, mac, "mac", time.Hour, func(s *Store) error { _, err := s.Correct(id, corrected); return err })
 			write(t, server, "server", 2*time.Hour, func(s *Store) error {
 				if _, err := s.Retire(id); err != nil {
 					return err
@@ -228,7 +228,7 @@ func TestMergeOfACorrectionAndARetirement(t *testing.T) {
 				return err
 			})
 			write(t, mac, "mac", 3*time.Hour, func(s *Store) error {
-				_, err := s.AddWith("Ещё один факт с Mac", nil, "x", "", Meta{})
+				_, err := s.AddWith("Ещё один факт с Mac", "x", "", Meta{})
 				return err
 			})
 		}, Active, corrected},
@@ -305,7 +305,7 @@ func TestMergeCarriesMetaAndCandidates(t *testing.T) {
 func TestDumpOneLinePerVersion(t *testing.T) {
 	b, f := base(t)
 	s := openAt(t, b, "mac", t0.Add(time.Minute))
-	_, _ = s.Correct(f.ID, "Hermes:\nмодель deepseek-flash", nil)
+	_, _ = s.Correct(f.ID, "Hermes:\nмодель deepseek-flash")
 	var w bytes.Buffer
 	if err := s.Dump(io.Writer(&w)); err != nil {
 		t.Fatal(err)
@@ -322,8 +322,7 @@ func TestDumpOneLinePerVersion(t *testing.T) {
 func TestMergeOfAnOlderCorrectionAndARetire(t *testing.T) {
 	b := filepath.Join(t.TempDir(), "facts.db")
 	m := Meta{Kind: "environment", Source: "tool", Review: Candidate}
-	v1 := Fact{ID: "01JLEGACYCANDIDATE00000011", Version: 1, Content: "Кандидат про db1.", Keywords: []string{"db1"},
-		Origin: "x", Author: "mac", Created: t0, Meta: m}
+	v1 := Fact{ID: "01JLEGACYCANDIDATE00000011", Version: 1, Content: "Кандидат про db1.", Origin: "x", Author: "mac", Created: t0, Meta: m}
 	olderCopy(t, b, v1)
 	c := clone(t, b)
 	v2 := v1
@@ -355,17 +354,17 @@ func TestMergeOfAStaleSideKeepsOneCopyOfAVersion(t *testing.T) {
 	b, f := base(t)
 	a, bb := clone(t, b), clone(t, b)
 	sa := openAt(t, a, "mac", t0.Add(time.Hour))
-	if _, err := sa.Correct(f.ID, "Hermes работает на deepseek-pro", nil); err != nil {
+	if _, err := sa.Correct(f.ID, "Hermes работает на deepseek-pro"); err != nil {
 		t.Fatal(err)
 	}
 	sb := openAt(t, bb, "server", t0.Add(2*time.Hour))
-	if _, err := sb.Correct(f.ID, "Hermes работает на deepseek-pro, fallback Codex", nil); err != nil {
+	if _, err := sb.Correct(f.ID, "Hermes работает на deepseek-pro, fallback Codex"); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := sa.Merge(bb); err != nil { // A pulls B: B's correction becomes v3 on A
 		t.Fatal(err)
 	}
-	if _, err := sb.Add("Updater держит по два rollback-образа на сервис", nil, "server-migration"); err != nil {
+	if _, err := sb.Add("Updater держит по два rollback-образа на сервис", "server-migration"); err != nil {
 		t.Fatal(err)
 	}
 	st, err := sb.Merge(a) // B, before pulling, writes again and then merges A
@@ -402,7 +401,7 @@ func TestMergeCarriesNoVectors(t *testing.T) {
 	m := openAt(t, macPath, "mac", t0)
 	serverPath := filepath.Join(t.TempDir(), "server.db")
 	server := openAt(t, serverPath, "server", t0.Add(time.Hour))
-	sf, err := server.Add("Факт server про порт 3001.", nil, "y")
+	sf, err := server.Add("Факт server про порт 3001.", "y")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -422,34 +421,7 @@ func TestMergeCarriesNoVectors(t *testing.T) {
 }
 
 // The queries one machine wrote reach the other with the merge, and the merged fact is found by them.
-func TestMergeCarriesQueries(t *testing.T) {
-	b, f := base(t)
-	c := clone(t, b)
-	sc := openAt(t, c, "loffe", t0.Add(time.Minute))
-	if _, err := sc.SetQueries(f.ID, f.Version, []string{"языковая модель гермеса"}); err != nil {
-		t.Fatal(err)
-	}
-	_ = sc.Close()
-	s := openAt(t, b, "mac", t0.Add(2*time.Minute))
-	if _, err := s.Merge(c); err != nil {
-		t.Fatal(err)
-	}
-	got, err := s.Get(f.ID)
-	if err != nil || got.Version != 2 || len(got.Queries) != 1 {
-		t.Errorf("merged %+v %v", got, err)
-	}
-	if !strings.Contains(dump(t, s), "queries=[языковая модель гермеса]") {
-		t.Errorf("dump lacks the queries: %s", dump(t, s))
-	}
-	if len(ids(t, s, "языковая модель")) != 1 {
-		t.Error("the merged queries are not searched")
-	}
-	_ = s.Close()
-}
 
-// Two versions that agree on everything a merge orders by but the channel keep the labelled one last (#625): a
-// machine that labelled a fact and one that relabelled it without the label (an older memcue, which drops it) both
-// keep the creation time, and the current version must keep the label.
 func TestMergeKeepsTheChannelLast(t *testing.T) {
 	base := Fact{ID: "01JCHANNEL0000000000000001", Version: 1, Content: "Commit messages are written in English.",
 		Created: t0, Status: Active, Author: "mac", Meta: Meta{Kind: "rule", Scope: "global", Source: "user"}}

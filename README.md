@@ -271,6 +271,13 @@ included (#453); the Hermes and DSH plugins read both it and the bare array of a
 
 ## Upgrade
 
+### Content-only storage (#678; unreleased)
+
+Schema 9 removes auxiliary fields, preserves legacy write identity and rebuilds search from literal content. Stop every old consumer before opening
+a shared base. This is a compatibility break, not a release or retrieval-equivalence claim. Read the
+[backup, coordinated upgrade and rollback procedure](docs/content-only-upgrade.md). The versioned notes below
+describe historical releases; their auxiliary-field behavior no longer applies to the current implementation.
+
 These notes describe behaviour at each release. See [Use](#use) for the current language and dream policy.
 
 ### 0.30.0: a dream a day, and its calls cost less (#665, #660, #643)
@@ -947,11 +954,11 @@ Identifiers, commands, paths, versions, exact values and verbatim quotes stay un
 language. If English misses, retry with synonyms and Russian or another legacy language. This is an instruction
 policy: the CLI, store and built-in memory mirror still accept non-English content without translating it.
 
-Dream translation is disabled for prepare/apply and automatic/background runs. Missing translations create no
-pending work, due hints or model calls. Old saved packets and answers cannot restart translation work; their
-translation fields are ignored, including full-fact `= ` entries proposed through dream query expansion or correction.
-This policy does not rewrite existing fact content or history. Previously indexed `= ` translations remain searchable;
-ordinary query expansion preserves them. Correcting changed content still clears queries that described the old text.
+Facts store and index only `content`. Auxiliary keywords, search queries and translations are removed on upgrade;
+content in any language and all unrelated metadata/history remain. Add and correct make no inference calls, even
+when an endpoint is configured. Dreams retain splitting, duplicate/outdated review and scope review, without
+expansion or translation work. Obsolete CLI/tool parameters and auxiliary dream answers are refused.
+See [content-only upgrade and rollback](docs/content-only-upgrade.md) before opening an existing base.
 
 [Research #661](docs/research/dream-ablations-661-2026-11.md) removed expansion and translation together. It does not
 isolate the value of translation, or establish recall or cost gains from disabling translation alone. The instruction
@@ -981,7 +988,7 @@ memcue search -kind rule,decision -since 2026-10-01 release  # only rules and de
 memcue search -all-words -expired postgres port  # every word required; facts past their expiry included
 memcue sessions postgres port        # passages of earlier Claude Code sessions that hold the words, newest first, when search finds nothing
 memcue sessions -n 3 -before 2026-10-20 -cwd . -json postgres port  # before a day, one repository's sessions, as JSON
-memcue add -source user -keywords "demo, postgres" -origin "demo 2026-10-19" "The demo database is PostgreSQL 18 on port 55432."
+memcue add -source user -origin "demo 2026-10-19" "The demo database is PostgreSQL 18 on port 55432."
 memcue add -source user -expires 2026-10-21 "Check how the nightly dream ran on 21 October."
 memcue correct -expires 2026-10-28 ID "…"   # -no-expires clears it
 memcue correct ID "The demo database is PostgreSQL 18 on port 55433."
@@ -1001,8 +1008,7 @@ memcue dream -apply answer.json      # check and carry out the model's answer to
 `migrate` and `import` skip such facts and report them without echoing the value, because the base may be synced
 through git.
 
-Search indexes a fact's content, keywords and queries, including legacy `= ` translations, and shows the fact as
-stored. English-first searches may need a legacy-language retry for older facts without matching English terms.
+Search indexes only a fact's literal content and shows the fact as stored. English-first searches may need a legacy-language retry for older facts without matching English terms.
 
 Every host also tells its model to store a failure it found by running something (#566): when a command fails and the
 agent fixes or works around it, the cause and the fix go in as a pitfall if a fresh checkout would hit it again, even
@@ -1063,7 +1069,7 @@ A session writes a fact without reading every neighbour, so two sessions can sto
 one that replaced it. A dream tidies the facts the last dream did not see. memcue starts no model for it: the model of a session does it.
 
 1. `memcue dream -prepare` groups each fresh fact with the stored facts close to it in words and prints one packet:
-   the instructions, the fresh facts to split, the facts without search queries to expand, the global facts to check
+   the instructions, the fresh facts to split and the global facts to check
    the scope of, and the groups to review.
    It keeps the packet in the state directory.
 2. The model answers in one JSON object, with the packet's id.
@@ -1097,32 +1103,24 @@ Who runs it:
   (#401); started by hand without `MEMCUE_API_URL` it refuses, so a long run never starts on `claude -p` by
   surprise. `-background` is the run a session start starts: one pass, on `claude -p` without an endpoint.
 - **Calls at once.** A pass of `dream -run` takes the work of up to `-j` packets (default 4) and sends it as calls at
-  once: the fresh facts with the groups, the facts to expand and the global facts to check the
+  once: the fresh facts with the groups and the global facts to check the
   scope of each go in their own calls of one packet's bounds. Their answers are applied as one, and one failed call
   fails the pass. Most of a call is the model writing its answer, so a pass of a base far behind does the work of four
   packets in about a third of the time of one; a pass with little work makes one or two calls. `dream.log` records the
   calls, the time of the packet, the calls and the apply, and the tokens of each pass (#471,
   [docs/research/dream-time-2026-10.md](docs/research/dream-time-2026-10.md)). Under `calls` it keeps a line per
   call (#643): its task (`review` for the fresh facts and the groups, the merge sweep's counted under `swept`,
-  `expand`, `scope`), the work it was given, how many changes the model proposed, its tokens, its time
+  `scope`), the work it was given, how many changes the model proposed, its tokens, its time
   and, on `claude -p`, its cost. An endpoint reports tokens only, so a call there has no `cost_usd`.
 
-A packet holds up to 40 fresh facts, 30 groups, 50 facts to expand, and 30 global facts to check the
+A packet holds up to 40 fresh facts, 30 groups and 30 global facts to check the
 scope of. The fresh facts it leaves out are not counted
 as seen, so the next packet takes them, and the session start still says facts wait.
 
 What the answer may do:
 
 - **Split** a compound fact: one part of it can go stale while another stays true. The fact is retired and its parts
-  take its place, approved, with its origin, scope, kind, source and expiry (not its keywords, which were chosen for
-  the whole text).
-- **Expand** a fact without **search queries**: 6–10 short phrases a user would name the task with, the general name
-  of what the fact is about, and how the problem or question sounds. The index searches them next to the fact's words
-  and keywords. `add` and `correct` ask for them in one call when `MEMCUE_API_URL` is set, so the dream fills the
-  facts written without an endpoint, every fact the agent writes on such a machine among them, those of `import`, and
-  the parts of a split. An older fact without queries is never fresh again, so each packet also offers the newest of
-  them: a base upgraded from 0.4 fills over a few dreams. On the gold set of 180 prompts the queries added
-  7–9 prompts that got a useful fact ([docs/research/one-model-2026-10.md](docs/research/one-model-2026-10.md)).
+  take its place, approved, with its origin, scope, kind, source and expiry.
 - **Move a global fact to its project** (#607): a fact stored `global` reaches a search from every repository, so
   it must hold in every repository and on every host. The packet gives the global
   facts a few dozen at a time, in the order of their ids after the cursor in `dream.scope`, with the projects of the
@@ -1139,9 +1137,7 @@ What the answer may do:
   `duplicate` or `outdated`. Of two duplicates the one with the smaller id stays, whatever the model prefers, so
   machines dreaming over one shared base keep the same copy and never retire both. Every group keeps at least one
   fact; a retired fact stays in the history.
-- **Correct** a fact of a group with text built only from the facts of the group. A correction drops the queries of
-  the old text. With `queries` in the action the new ones are written at once; without them the next packet asks for
-  them.
+- **Correct** a fact of a group with text built only from the facts of the group. Only the replacement content is written; it triggers no expansion or translation call.
 
 A duplicate learnt in another project than the fact that stays is kept (#607): a fact that holds in two repositories
 is two facts, one in each, and no fact becomes global because two projects learnt it. memcue decides this from the
@@ -1190,7 +1186,7 @@ judge (#357); its measurements are in [docs/research/dream-triage-2026-10.md](do
 
 ## Configuration
 
-memcue calls one model, the main chat model, for `migrate`, for the search queries `add` asks for and for
+memcue calls one model, the main chat model, for `migrate` and for
 `dream -run`; search calls none, and a dream is otherwise done by the model of a session ([Dream](#dream)). The judge and
 embeddings roles of [docs/models.md](docs/models.md) are removed (#250, #357). The table is the contract this release
 uses.
@@ -1199,7 +1195,7 @@ uses.
 |---|---|---|
 | `MEMCUE_FACTS` | the fact base; a leading `~/` or `$HOME/` is expanded, and the DSH and Hermes adapters require the result to be absolute | `$CLAUDE_CONFIG_DIR/memory/facts` when that directory exists (a text history, see [Moving to the text history](#moving-to-the-text-history)), else `$CLAUDE_CONFIG_DIR/memory/facts.db`; `~/.claude` without `CLAUDE_CONFIG_DIR` |
 | `MEMCUE_STATE_DIR` | state directory for logs, locks and the dream schedule; a non-default base gets a per-base subdirectory under `$XDG_STATE_HOME/memcue` | unset |
-| `MEMCUE_MODEL` | model of `migrate`, the queries of `add` and `dream -run` | `claude-opus-5-5` |
+| `MEMCUE_MODEL` | model of `migrate` and `dream -run` | `claude-opus-5-5` |
 | `MEMCUE_API_URL` | OpenAI-compatible endpoint for the main model instead of `claude -p`, e.g. `https://api.deepseek.com`; set `MEMCUE_MODEL` with it | unset |
 | `MEMCUE_API_KEY` | key for that endpoint | unset |
 | `MEMCUE_CLAUDE_TOKEN_FILE` | file of a Claude Code OAuth token from `claude setup-token`; every `claude -p` call of memcue runs with it as `CLAUDE_CODE_OAUTH_TOKEN`, for a machine whose own login expires. A leading `~/` is the home directory, so the value can sit in the `env` block of a `settings.json` shared between machines; a missing file leaves `claude -p` on its own login, and a file without a token is an error | unset |
@@ -1234,22 +1230,19 @@ by default because it keeps the text of the queries.
 `tokens` (`input`, of which `cached` came from the prompt cache, and `output`) times the provider's price; memcue
 keeps no price table, since prices change and differ by account (#258).
 
-The prompts of `migrate` and the dream (`internal/extract/*.md`) are written in Russian. Migration preserves the
-language of its notes; necessary dream splits and corrections request English content while preserving literals.
+The prompts of `migrate` and the dream (`internal/extract/*.md`) are written in Russian. New facts extracted from notes and necessary dream splits and corrections request English content while preserving literals. Existing content is never rewritten just to change its language.
 A dream must not correct a fact solely to change its language.
 
 ## Cost
 
-Writing a fact costs no model call: the agent writes it as part of its work, and `add` asks for search queries in one
-short call only when `MEMCUE_API_URL` is set. Before #494 an extraction of every session cost $0.18–1.33 per session
+Writing or correcting a fact costs no model call, including when `MEMCUE_API_URL` is set. Before #494 an extraction of every session cost $0.18–1.33 per session
 on Opus, about $5 per million characters of transcript, and a review followed it; both are gone.
 
 A dream the session's model runs costs no call of its own: it is part of the session. A background dream (#569) is
-one `dream -run` pass at most once per `MEMCUE_DREAM_EVERY`, and only while some fact is fresh or lacks ordinary
-search queries; a pass takes the work of up to four packets (`-j 4`). On Opus through `claude -p`, a background pass over a copy of
+one `dream -run` pass at most once per `MEMCUE_DREAM_EVERY`, and only while some fact is fresh; a pass takes the work of up to four packets (`-j 4`). On Opus through `claude -p`, a background pass over a copy of
 the author's Mac base with 141 fresh facts made six calls and cost $2.58; the passes of a whole-base run cost $0.22–1.97
 ([dream-run-2026-10](docs/research/dream-run-2026-10.md)), and a pass with little fresh work less. One packet is about 20,000–36,000
-characters on the author's two bases, instructions included; a dream with no fresh fact and nothing to expand prints
+characters on the author's two bases, instructions included; a dream with no fresh fact or scope work prints
 one line. These historical measurements included translation work; they do not predict the cost of a run under the
 current policy.
 

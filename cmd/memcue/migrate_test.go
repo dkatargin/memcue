@@ -70,7 +70,7 @@ func TestNotMigratedSkipsNotesInTheBase(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer func() { _ = s.Close() }()
-	if _, err := s.AddWith("факт из заметки a", nil, "lists 2026-10-01 (lists/a.md)", "", store.Meta{}); err != nil {
+	if _, err := s.AddWith("факт из заметки a", "lists 2026-10-01 (lists/a.md)", "", store.Meta{PromptVersion: extract.NotePromptVersion}); err != nil {
 		t.Fatal(err)
 	}
 	got, err := notMigrated(s, []note{{path: "/m/lists/a.md", tier: "lists"}, {path: "/m/lists/b.md", tier: "lists"}}, 0)
@@ -90,7 +90,7 @@ func TestNotMigratedRerunsOlderPrompt(t *testing.T) {
 	}
 	defer func() { _ = s.Close() }()
 	notes := []note{{path: "/m/lists/a.md", tier: "lists"}}
-	if _, err := s.AddWith("факт из заметки a", nil, "lists 2026-10-01 (lists/a.md)", "",
+	if _, err := s.AddWith("факт из заметки a", "lists 2026-10-01 (lists/a.md)", "",
 		store.Meta{PromptVersion: 0}); err != nil {
 		t.Fatal(err)
 	}
@@ -107,7 +107,7 @@ func TestMigrateRecordsPromptVersion(t *testing.T) {
 	notePath := filepath.Join(dir, "claude", "memory", "lists", "a.md")
 	write(t, notePath, "note a\n")
 	noteFn = func(context.Context, string, string) (extract.Result, error) {
-		return extract.Result{Facts: []extract.Fact{{Content: "Факт из заметки a.", Keywords: []string{"a"}}}}, nil
+		return extract.Result{Facts: []extract.Fact{{Content: "Факт из заметки a."}}}, nil
 	}
 	t.Cleanup(func() { noteFn = extract.Note })
 	var out strings.Builder
@@ -154,7 +154,7 @@ func TestNamedNoteIsMigratedAgainButFoundOneIsSkipped(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := s.AddWith("факт из заметки a", nil, "lists 2026-10-01 (lists/a.md)", "", store.Meta{}); err != nil {
+	if _, err := s.AddWith("факт из заметки a", "lists 2026-10-01 (lists/a.md)", "", store.Meta{PromptVersion: extract.NotePromptVersion}); err != nil {
 		t.Fatal(err)
 	}
 	_ = s.Close()
@@ -178,7 +178,7 @@ func TestMigrateAllDeduplicatesNamedNote(t *testing.T) {
 	var calls int
 	noteFn = func(context.Context, string, string) (extract.Result, error) {
 		calls++
-		return extract.Result{Facts: []extract.Fact{{Content: "Факт из заметки a.", Keywords: []string{"a"}}}}, nil
+		return extract.Result{Facts: []extract.Fact{{Content: "Факт из заметки a."}}}, nil
 	}
 	t.Cleanup(func() { noteFn = extract.Note })
 	var out strings.Builder
@@ -218,7 +218,7 @@ func TestMigrateAllDeduplicatesNamedSymlink(t *testing.T) {
 	var calls int
 	noteFn = func(context.Context, string, string) (extract.Result, error) {
 		calls++
-		return extract.Result{Facts: []extract.Fact{{Content: "Факт из заметки a.", Keywords: []string{"a"}}}}, nil
+		return extract.Result{Facts: []extract.Fact{{Content: "Факт из заметки a."}}}, nil
 	}
 	t.Cleanup(func() { noteFn = extract.Note })
 	var out strings.Builder
@@ -258,7 +258,7 @@ func TestMigrateDryRunSaysFactsDoNotGoThroughReview(t *testing.T) {
 	notePath := filepath.Join(dir, "claude", "memory", "lists", "a.md")
 	write(t, notePath, "note a\n")
 	noteFn = func(context.Context, string, string) (extract.Result, error) {
-		return extract.Result{Facts: []extract.Fact{{Content: "Факт из заметки a.", Keywords: []string{"a"}}}}, nil
+		return extract.Result{Facts: []extract.Fact{{Content: "Факт из заметки a."}}}, nil
 	}
 	t.Cleanup(func() { noteFn = extract.Note })
 	var out strings.Builder

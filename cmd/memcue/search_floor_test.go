@@ -11,8 +11,7 @@ import (
 // fact up to -n as before, and a query nothing fits says so instead of printing nothing.
 func TestSearchHandsOverWhatFits(t *testing.T) {
 	env(t)
-	nats := addFactForTest(t, "-origin", "x 2026-10-25", "-keywords", "nats,брокер",
-		"Брокер nats на db1 слушает порт 4222, мониторинг nats на 8222, кластер nats из трёх узлов.")
+	nats := addFactForTest(t, "-origin", "x 2026-10-25", "Брокер nats на db1 слушает порт 4222, мониторинг nats на 8222, кластер nats из трёх узлов.")
 	for _, c := range []string{"Порт postgres на db1 — 5432.", "На db1 стоит node_exporter.", "db1 перезагружали в среду."} {
 		addFactForTest(t, "-origin", "x 2026-10-25", c)
 	}

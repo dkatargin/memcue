@@ -40,12 +40,11 @@ func splitBase(t *testing.T) (compound, path string) {
 		t.Fatal(err)
 	}
 	defer func() { _ = s.Close() }()
-	p, err := s.AddWith("Бинарь memcue на хосте loffe лежит в каталоге /opt/data/bin.", []string{"memcue", "loffe"},
-		"hermes 2026-10-20", "", store.Meta{Kind: "environment", Scope: "host:loffe"})
+	p, err := s.AddWith("Бинарь memcue на хосте loffe лежит в каталоге /opt/data/bin.", "hermes 2026-10-20", "", store.Meta{Kind: "environment", Scope: "host:loffe"})
 	if err != nil {
 		t.Fatal(err)
 	}
-	c, err := s.AddWith(compoundText, []string{"memcue"}, "hermes 2026-10-22", "",
+	c, err := s.AddWith(compoundText, "hermes 2026-10-22", "",
 		store.Meta{Kind: "environment", Scope: "host:loffe", Source: "tool"})
 	if err != nil {
 		t.Fatal(err)

@@ -42,7 +42,7 @@ func dreamBase(t *testing.T) (old, a, b, other string) {
 	}
 	defer func() { _ = s.Close() }()
 	add := func(c string, k ...string) string {
-		f, err := s.AddWith(c, k, "x 2026-10-19", "", store.Meta{})
+		f, err := s.AddWith(c, "x 2026-10-19", "", store.Meta{})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -71,7 +71,7 @@ func TestDreamGroupsCopiesAndRetiresOne(t *testing.T) {
 	if len(*calls) != 1 {
 		t.Fatalf("calls %d", len(*calls))
 	}
-	if !strings.Contains(out.String(), "dream: 0 split, 0 expanded, 1 retired or corrected, 0 moved to a project, 0 refused") {
+	if !strings.Contains(out.String(), "dream: 0 split, 1 retired or corrected, 0 moved to a project, 0 refused") {
 		t.Errorf("summary missing: %q", out.String())
 	}
 	sent := (*calls)[0]
@@ -110,7 +110,7 @@ func TestDreamGroupKeepsAProvisionalNeighbour(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer func() { _ = s.Close() }()
-	approved, err := s.AddWith("Postgres демо-базы слушает порт 5432 на db1.", []string{"postgres", "порт"}, "x 2026-10-19", "", store.Meta{})
+	approved, err := s.AddWith("Postgres демо-базы слушает порт 5432 на db1.", "x 2026-10-19", "", store.Meta{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -148,7 +148,7 @@ func TestDreamListShowsAProvisionalNeighbour(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	approved, err := s.AddWith("Postgres демо-базы слушает порт 5432 на db1.", []string{"postgres", "порт"}, "x 2026-10-19", "", store.Meta{})
+	approved, err := s.AddWith("Postgres демо-базы слушает порт 5432 на db1.", "x 2026-10-19", "", store.Meta{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -200,7 +200,7 @@ func TestDreamCorrectsMergedFact(t *testing.T) {
 	env(t)
 	_, a, b, _ := dreamBase(t)
 	fakeDream(t, func(string) []extract.Action {
-		return []extract.Action{{Op: "correct", ID: b, Content: "слитый текст", Keywords: []string{"nightly-sync"}, Reason: "merge"},
+		return []extract.Action{{Op: "correct", ID: b, Content: "слитый текст", Reason: "merge"},
 			{Op: "retire", ID: a, By: b, Kind: "duplicate", Reason: "merged into " + b}}
 	})
 	if err := dreamModel([]string{"-all"}, &bytes.Buffer{}); err != nil {
@@ -209,23 +209,6 @@ func TestDreamCorrectsMergedFact(t *testing.T) {
 	s, _ := store.Open(factsPath())
 	defer func() { _ = s.Close() }()
 	if f, _ := s.Get(b); f.Content != "слитый текст" || f.Version != 2 || f.Origin != "x 2026-10-19" {
-		t.Errorf("corrected: %+v", f)
-	}
-}
-
-func TestDreamCorrectWithoutKeywordsKeepsThem(t *testing.T) {
-	env(t)
-	_, a, b, _ := dreamBase(t)
-	fakeDream(t, func(string) []extract.Action {
-		return []extract.Action{{Op: "correct", ID: b, Content: "слитый текст", Reason: "merge"},
-			{Op: "retire", ID: a, By: b, Kind: "duplicate", Reason: "merged"}}
-	})
-	if err := dreamModel([]string{"-all"}, &bytes.Buffer{}); err != nil {
-		t.Fatal(err)
-	}
-	s, _ := store.Open(factsPath())
-	defer func() { _ = s.Close() }()
-	if f, _ := s.Get(b); f.Content != "слитый текст" || strings.Join(f.Keywords, ",") != "nightly-sync,github подписка,workflow" {
 		t.Errorf("corrected: %+v", f)
 	}
 }
@@ -307,7 +290,7 @@ func TestDreamDueOnlyAfterTheIntervalWithAFreshFact(t *testing.T) {
 		t.Fatal(err)
 	}
 	dreamBase(t)
-	if n, _, _, err := dreamDue(state, time.Hour); err != nil || n != 0 {
+	if n, _, err := dreamDue(state, time.Hour); err != nil || n != 0 {
 		t.Fatalf("first check: %d %v", n, err)
 	}
 	if _, ok := lastDream(state); !ok {
@@ -317,7 +300,7 @@ func TestDreamDueOnlyAfterTheIntervalWithAFreshFact(t *testing.T) {
 		t.Fatal(err)
 	}
 	// the first check saw the whole base, so a due dream has nothing new
-	if n, _, _, _ := dreamDue(state, time.Hour); n != 0 {
+	if n, _, _ := dreamDue(state, time.Hour); n != 0 {
 		t.Errorf("facts the mark saw are due: %d", n)
 	}
 	addFact(t, "Workflow nightly-sync.yml в example/nightly-sync ночью подписывает bot на все свои репозитории, кроме форков.",
@@ -325,13 +308,13 @@ func TestDreamDueOnlyAfterTheIntervalWithAFreshFact(t *testing.T) {
 	if err := markDream(state, time.Now().Add(-59*time.Minute)); err != nil {
 		t.Fatal(err)
 	}
-	if n, _, _, _ := dreamDue(state, time.Hour); n != 0 {
+	if n, _, _ := dreamDue(state, time.Hour); n != 0 {
 		t.Errorf("due within the hour: %d", n)
 	}
 	if hint := dreamHint(); hint != "" {
 		t.Errorf("hint within the hour: %q", hint)
 	}
-	if n, _, _, _ := dreamDue(state, 30*time.Minute); n != 1 {
+	if n, _, _ := dreamDue(state, 30*time.Minute); n != 1 {
 		t.Errorf("due after a shorter interval: %d", n)
 	}
 	t.Setenv("MEMCUE_DREAM_EVERY", "30m")
@@ -367,7 +350,7 @@ func addFact(t *testing.T, content string, keywords ...string) string {
 		t.Fatal(err)
 	}
 	defer func() { _ = s.Close() }()
-	f, err := s.AddWith(content, keywords, "y 2026-10-20", "", store.Meta{})
+	f, err := s.AddWith(content, "y 2026-10-20", "", store.Meta{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -397,7 +380,7 @@ func TestDreamReviewsFactPulledAfterLastDream(t *testing.T) {
 		t.Fatalf("pulled fact not reviewed with its neighbour: %q", *calls)
 	}
 	if !strings.Contains((*calls)[0], pulled+" (origin: y 2026-10-20; записан 2026-") ||
-		!strings.Contains((*calls)[0], ", новый;") {
+		!strings.Contains((*calls)[0], ", новый)") {
 		t.Errorf("pulled fact not marked new: %q", (*calls)[0])
 	}
 }
@@ -434,7 +417,7 @@ func TestDreamSkipsSeenReviewsNewVersion(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := s.Correct(b, "Workflow nightly-sync.yml в example/nightly-sync каждую ночь подписывает bot на все репозитории, кроме форков.", nil); err != nil {
+	if _, err := s.Correct(b, "Workflow nightly-sync.yml в example/nightly-sync каждую ночь подписывает bot на все репозитории, кроме форков."); err != nil {
 		t.Fatal(err)
 	}
 	_ = s.Close()
@@ -505,7 +488,7 @@ func TestDreamApplyRefusesChangedGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 	s, _ := store.Open(factsPath())
-	if _, err := s.Correct(b, "Workflow nightly-sync.yml подписывает bot на все репозитории, кроме форков и архивных.", nil); err != nil {
+	if _, err := s.Correct(b, "Workflow nightly-sync.yml подписывает bot на все репозитории, кроме форков и архивных."); err != nil {
 		t.Fatal(err)
 	}
 	_ = s.Close()
@@ -542,7 +525,7 @@ func TestDreamRefusesGroupChangedDuringTheModelCall(t *testing.T) {
 			t.Fatal(err)
 		}
 		defer func() { _ = s.Close() }()
-		if _, err := s.Correct(b, edited, nil); err != nil {
+		if _, err := s.Correct(b, edited); err != nil {
 			t.Fatal(err)
 		}
 		return []extract.Action{{Op: "correct", ID: b, Content: "слитый текст", Reason: "merge"},
@@ -637,8 +620,7 @@ func TestDreamApplyPlanWithProvisionalNeighbour(t *testing.T) {
 		t.Fatal(err)
 	}
 	// Learnt in the provisional fact's project: a duplicate of another project stays (#607).
-	approved, err := s.AddWith("Postgres демо-базы слушает порт 5432 на db1.", []string{"postgres", "порт"},
-		"hermes 2026-10-19", "", store.Meta{})
+	approved, err := s.AddWith("Postgres демо-базы слушает порт 5432 на db1.", "hermes 2026-10-19", "", store.Meta{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -682,7 +664,7 @@ func TestSessionCardNamesTheDreamTools(t *testing.T) {
 		t.Fatal(err)
 	}
 	dreamBase(t)
-	if _, _, _, err := dreamDue(state, time.Hour); err != nil { // the first check marks the base
+	if _, _, err := dreamDue(state, time.Hour); err != nil { // the first check marks the base
 		t.Fatal(err)
 	}
 	if err := markDream(state, time.Now().Add(-dreamEvery-time.Minute)); err != nil {

@@ -45,7 +45,7 @@ func ids(t *testing.T, s *Store, q string) map[string]Hit {
 
 func TestAddStoresVersionOneAndIsFound(t *testing.T) {
 	s, _ := open(t)
-	f, err := s.Add("Gradle вне make требует JAVA_HOME=/opt/homebrew/opt/openjdk@21", []string{"gradle", "jdk"}, "lists 2026-10-09")
+	f, err := s.Add("Gradle вне make требует JAVA_HOME=/opt/homebrew/opt/openjdk@21", "lists 2026-10-09")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -53,7 +53,7 @@ func TestAddStoresVersionOneAndIsFound(t *testing.T) {
 		t.Errorf("got %+v", f)
 	}
 	got := ids(t, s, "какой jdk нужен gradle")
-	if h, ok := got[f.ID]; !ok || h.Origin != "lists 2026-10-09" || len(h.Keywords) != 2 {
+	if h, ok := got[f.ID]; !ok || h.Origin != "lists 2026-10-09" {
 		t.Errorf("search: %+v", got)
 	}
 }
@@ -61,8 +61,8 @@ func TestAddStoresVersionOneAndIsFound(t *testing.T) {
 func TestAddBatchStoresEveryFact(t *testing.T) {
 	s, _ := open(t)
 	facts, err := s.AddBatch([]FactInput{
-		{Content: "Первая партия: очередь RabbitMQ на порту 5672.", Keywords: []string{"rabbitmq", "queue"}, Origin: "test"},
-		{Content: "Вторая партия: кеш Redis на порту 6379.", Keywords: []string{"redis", "cache"}, Origin: "test"},
+		{Content: "Первая партия: очередь RabbitMQ на порту 5672.", Origin: "test"},
+		{Content: "Вторая партия: кеш Redis на порту 6379.", Origin: "test"},
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -113,21 +113,10 @@ func TestAddBatchIsAllOrNothing(t *testing.T) {
 	}
 }
 
-func TestKeywordsAreSearchable(t *testing.T) {
-	s, _ := open(t)
-	f, err := s.Add("Путь к JDK задаётся переменной окружения.", []string{"openjdk", "android"}, "")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, ok := ids(t, s, "openjdk android")[f.ID]; !ok {
-		t.Error("not found by keywords")
-	}
-}
-
 func TestCorrectAddsVersionAndSearchSeesOnlyLatest(t *testing.T) {
 	s, _ := open(t)
-	f, _ := s.Add("PDS работает на server1 по адресу pds.example.org", nil, "server-migration 2026-08-01")
-	g, err := s.Correct(f.ID, "PDS остановлен 2026-10-02, данные сохранены", nil)
+	f, _ := s.Add("PDS работает на server1 по адресу pds.example.org", "server-migration 2026-08-01")
+	g, err := s.Correct(f.ID, "PDS остановлен 2026-10-02, данные сохранены")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -148,7 +137,7 @@ func TestCorrectAddsVersionAndSearchSeesOnlyLatest(t *testing.T) {
 
 func TestRetireTakesFactOutOfSearchButKeepsHistory(t *testing.T) {
 	s, _ := open(t)
-	f, _ := s.Add("Vaultwarden обслуживает vault.example.org", nil, "")
+	f, _ := s.Add("Vaultwarden обслуживает vault.example.org", "")
 	if _, err := s.Retire(f.ID); err != nil {
 		t.Fatal(err)
 	}
@@ -163,7 +152,7 @@ func TestRetireTakesFactOutOfSearchButKeepsHistory(t *testing.T) {
 	if err != nil || cur.Status != Retired || cur.Content != f.Content {
 		t.Errorf("get %+v %v", cur, err)
 	}
-	if _, err := s.Correct(f.ID, "Vaultwarden снова работает", nil); !errors.Is(err, ErrRetired) {
+	if _, err := s.Correct(f.ID, "Vaultwarden снова работает"); !errors.Is(err, ErrRetired) {
 		t.Fatalf("correcting a retired fact: %v, want ErrRetired", err)
 	}
 	if len(ids(t, s, "vaultwarden работает")) != 0 {
@@ -173,22 +162,22 @@ func TestRetireTakesFactOutOfSearchButKeepsHistory(t *testing.T) {
 
 func TestUnknownIDIsNotFound(t *testing.T) {
 	s, _ := open(t)
-	if _, err := s.Correct("01ARZ3NDEKTSV4RRFFQ69G5FAV", "x", nil); !errors.Is(err, ErrNotFound) {
+	if _, err := s.Correct("01ARZ3NDEKTSV4RRFFQ69G5FAV", "x"); !errors.Is(err, ErrNotFound) {
 		t.Errorf("got %v", err)
 	}
 }
 
 func TestEmptyFactRejected(t *testing.T) {
 	s, _ := open(t)
-	if _, err := s.Add("  ", nil, ""); err == nil {
+	if _, err := s.Add("  ", ""); err == nil {
 		t.Error("empty fact accepted")
 	}
 }
 
 func TestRebuildRestoresIndexFromRows(t *testing.T) {
 	s, path := open(t)
-	a, _ := s.Add("Caddy-private монтирует файл Caddyfile-private", nil, "")
-	b, _ := s.Add("Публичный Caddy монтирует каталог configs/caddy", nil, "")
+	a, _ := s.Add("Caddy-private монтирует файл Caddyfile-private", "")
+	b, _ := s.Add("Публичный Caddy монтирует каталог configs/caddy", "")
 	_, _ = s.Retire(b.ID)
 	if _, err := s.db.Exec(`DELETE FROM fact_index`); err != nil {
 		t.Fatal(err)
@@ -218,9 +207,9 @@ func TestIDsSortByCreationTime(t *testing.T) {
 	s, _ := open(t)
 	base := time.Date(2026, 10, 19, 12, 0, 0, 0, time.UTC)
 	s.now = func() time.Time { return base }
-	a, _ := s.Add("первый факт про что-то важное", nil, "")
+	a, _ := s.Add("первый факт про что-то важное", "")
 	s.now = func() time.Time { return base.Add(time.Second) }
-	b, _ := s.Add("второй факт про что-то другое", nil, "")
+	b, _ := s.Add("второй факт про что-то другое", "")
 	if a.ID >= b.ID {
 		t.Errorf("%s !< %s", a.ID, b.ID)
 	}
@@ -228,9 +217,9 @@ func TestIDsSortByCreationTime(t *testing.T) {
 
 func TestDocFreqCountsActiveFacts(t *testing.T) {
 	s, _ := open(t)
-	_, _ = s.Add("прокси mihomo на порту 1080", nil, "")
-	b, _ := s.Add("прокси для контейнеров задаётся env", nil, "")
-	_, _ = s.Add("база данных freshgo в sqlite", nil, "")
+	_, _ = s.Add("прокси mihomo на порту 1080", "")
+	b, _ := s.Add("прокси для контейнеров задаётся env", "")
+	_, _ = s.Add("база данных freshgo в sqlite", "")
 	_, _ = s.Retire(b.ID)
 	df, total, err := s.DocFreq(text.Terms("прокси"))
 	if err != nil || total != 2 || df[text.Terms("прокси")[0]] != 1 {
@@ -242,9 +231,9 @@ func TestDocFreqCountsActiveFacts(t *testing.T) {
 // several statements, with the same numbers as one MATCH per term, and an empty prompt still gets the total.
 func TestDocFreqCountsManyTermsAsOneMatchEach(t *testing.T) {
 	s, _ := open(t)
-	_, _ = s.Add("прокси mihomo на порту 1080", nil, "")
-	_, _ = s.Add("прокси для контейнеров задаётся env", nil, "")
-	_, _ = s.Add("база данных freshgo в sqlite", nil, "")
+	_, _ = s.Add("прокси mihomo на порту 1080", "")
+	_, _ = s.Add("прокси для контейнеров задаётся env", "")
+	_, _ = s.Add("база данных freshgo в sqlite", "")
 	terms := text.Terms("прокси контейнеров sqlite mihomo")
 	for i := range 2*docFreqChunk + 150 {
 		terms = append(terms, fmt.Sprintf("term%d", i))
@@ -270,7 +259,7 @@ func TestDocFreqCountsManyTermsAsOneMatchEach(t *testing.T) {
 
 func TestExpiryIsStoredAndKeptByCorrection(t *testing.T) {
 	s, _ := open(t)
-	f, err := s.AddExpiring("Крон memcue-dream-check придёт 21 октября.", []string{"dream"}, "hermes 2026-10-19",
+	f, err := s.AddExpiring("Крон memcue-dream-check придёт 21 октября.", "hermes 2026-10-19",
 		"2026-10-21")
 	if err != nil {
 		t.Fatal(err)
@@ -282,7 +271,7 @@ func TestExpiryIsStoredAndKeptByCorrection(t *testing.T) {
 	if got.Expires != "2026-10-21" {
 		t.Errorf("expiry %q, want 2026-10-21", got.Expires)
 	}
-	kept, err := s.Correct(f.ID, "Крон memcue-dream-check перенесён на 22 октября.", []string{"dream"})
+	kept, err := s.Correct(f.ID, "Крон memcue-dream-check перенесён на 22 октября.")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -290,7 +279,7 @@ func TestExpiryIsStoredAndKeptByCorrection(t *testing.T) {
 		t.Errorf("correction dropped the expiry: %q", kept.Expires)
 	}
 	empty := ""
-	cleared, err := s.CorrectExpiring(f.ID, "Крон memcue-dream-check отменён.", []string{"dream"}, &empty)
+	cleared, err := s.CorrectExpiring(f.ID, "Крон memcue-dream-check отменён.", &empty)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -301,10 +290,10 @@ func TestExpiryIsStoredAndKeptByCorrection(t *testing.T) {
 
 func TestBadExpiryIsRejected(t *testing.T) {
 	s, _ := open(t)
-	if _, err := s.AddExpiring("Срок задан неверно.", nil, "", "21.10.2026"); err == nil {
+	if _, err := s.AddExpiring("Срок задан неверно.", "", "21.10.2026"); err == nil {
 		t.Error("21.10.2026 accepted, want an error: the date must be YYYY-MM-DD")
 	}
-	if _, err := s.AddExpiring("Срок задан неверно.", nil, "", "2026-13-45"); err == nil {
+	if _, err := s.AddExpiring("Срок задан неверно.", "", "2026-13-45"); err == nil {
 		t.Error("impossible date accepted")
 	}
 }
@@ -343,7 +332,7 @@ func TestBaseWithoutExpiresColumnStillOpens(t *testing.T) {
 		t.Fatalf("opening an old base: %v", err)
 	}
 	defer func() { _ = s.Close() }()
-	f, err := s.AddExpiring("Старая база приняла факт со сроком.", nil, "", "2026-11-01")
+	f, err := s.AddExpiring("Старая база приняла факт со сроком.", "", "2026-11-01")
 	if err != nil {
 		t.Fatalf("adding to a migrated base: %v", err)
 	}
@@ -355,7 +344,7 @@ func TestBaseWithoutExpiresColumnStillOpens(t *testing.T) {
 		t.Errorf("expiry %q after migration", got.Expires)
 	}
 	m := Meta{Kind: "pitfall", Scope: "host:db1", Source: "tool", Evidence: "error: x", PromptVersion: 3}
-	f, err = s.AddWith("Старая база приняла факт с типом.", nil, "", "", m)
+	f, err = s.AddWith("Старая база приняла факт с типом.", "", "", m)
 	if err != nil {
 		t.Fatalf("adding meta to a migrated base: %v", err)
 	}
@@ -367,11 +356,11 @@ func TestBaseWithoutExpiresColumnStillOpens(t *testing.T) {
 func TestMetaIsStoredAndKeptByCorrection(t *testing.T) {
 	s, _ := open(t)
 	m := Meta{Kind: "environment", Scope: "host:db1", Source: "tool", Evidence: "port 5432", PromptVersion: 2}
-	f, err := s.AddWith("Postgres на db1 слушает порт 5432.", []string{"postgres"}, "x 2026-10-20", "", m)
+	f, err := s.AddWith("Postgres на db1 слушает порт 5432.", "x 2026-10-20", "", m)
 	if err != nil {
 		t.Fatal(err)
 	}
-	c, err := s.Correct(f.ID, "Postgres на db1 слушает порт 5433.", nil)
+	c, err := s.Correct(f.ID, "Postgres на db1 слушает порт 5433.")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -413,7 +402,7 @@ func TestLegacyCandidateIsLive(t *testing.T) {
 	s, _ := open(t)
 	m := Meta{Kind: "environment", Scope: "host:builder", Source: "tool", Evidence: "ss -ltn", Review: Candidate}
 	f := Fact{ID: "01JLEGACYCANDIDATE00000001", Version: 1, Content: "Кандидат про порт webforge 3000 ждал одобрения.",
-		Keywords: []string{"webforge"}, Origin: "hermes 2026-10-20", Author: "old", Meta: m}
+		Origin: "hermes 2026-10-20", Author: "old", Meta: m}
 	legacyRows(t, s, f)
 	if _, ok := ids(t, s, "порт webforge")[f.ID]; ok {
 		t.Fatal("setup: the legacy row is indexed before a rebuild")
@@ -436,7 +425,7 @@ func TestLegacyCandidateIsLive(t *testing.T) {
 // A fact is searchable from the write: AddWith does not store the Candidate state even when a caller passes it.
 func TestAddNeverStoresACandidate(t *testing.T) {
 	s, _ := open(t)
-	f, err := s.AddWith("Порт webforge на builder 3000.", []string{"webforge"}, "", "", Meta{Kind: "environment", Review: Candidate})
+	f, err := s.AddWith("Порт webforge на builder 3000.", "", "", Meta{Kind: "environment", Review: Candidate})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -455,7 +444,7 @@ func TestCorrectingALegacyCandidateApprovesIt(t *testing.T) {
 	legacyRows(t, s,
 		Fact{ID: "01JLEGACYCANDIDATE00000002", Version: 1, Content: "Кандидат про порт webforge 3000.", Meta: m},
 		Fact{ID: "01JLEGACYCANDIDATE00000002", Version: 2, Content: "Кандидат про порт webforge 3000, уточнён.", Meta: m})
-	c, err := s.Correct("01JLEGACYCANDIDATE00000002", "Порт webforge 3001.", nil)
+	c, err := s.Correct("01JLEGACYCANDIDATE00000002", "Порт webforge 3001.")
 	if err != nil || c.Version != 3 || c.Review != "" || c.Kind != "environment" || c.Scope != "host:builder" ||
 		c.Source != "tool" || c.Evidence != "ss" {
 		t.Fatalf("corrected %+v %v", c, err)
@@ -472,14 +461,14 @@ func TestCorrectingALegacyCandidateApprovesIt(t *testing.T) {
 // Retirement is final: a correction must not revive a fact a vet, a review rejection or a person retired.
 func TestCorrectingARetiredFactIsRefused(t *testing.T) {
 	s, _ := open(t)
-	f, err := s.Add("Факт про порт gitea 3000.", nil, "")
+	f, err := s.Add("Факт про порт gitea 3000.", "")
 	if err != nil {
 		t.Fatal(err)
 	}
 	if _, err := s.Retire(f.ID); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := s.Correct(f.ID, "Факт про порт gitea 3001.", nil); !errors.Is(err, ErrRetired) {
+	if _, err := s.Correct(f.ID, "Факт про порт gitea 3001."); !errors.Is(err, ErrRetired) {
 		t.Fatalf("correcting a retired fact: %v, want ErrRetired", err)
 	}
 	got, err := s.Get(f.ID)
@@ -531,7 +520,7 @@ func TestSpecialCharactersStayInTheBasePath(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			f, err := s.Add("A fact in a base with an unusual path.", nil, "")
+			f, err := s.Add("A fact in a base with an unusual path.", "")
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -587,7 +576,7 @@ func TestOpenMemoryBase(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer func() { _ = s.Close() }()
-	f, err := s.Add("A fact in an in-memory base.", nil, "")
+	f, err := s.Add("A fact in an in-memory base.", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -599,7 +588,7 @@ func TestOpenMemoryBase(t *testing.T) {
 // A lost index row must not hide a fact from facts or an audit; reopening the base repairs Search too.
 func TestActiveSurvivesLostIndexRow(t *testing.T) {
 	s, path := open(t)
-	f, err := s.Add("Vaultwarden обслуживает vault.example.org", []string{"vaultwarden"}, "x 2026-10-20")
+	f, err := s.Add("Vaultwarden обслуживает vault.example.org", "x 2026-10-20")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -673,7 +662,7 @@ func TestStampedBaseStillRepairsALostIndexRow(t *testing.T) {
 // count of facts: the stamp no longer matches and the open indexes the version.
 func TestStampedBaseIndexesAVersionWrittenWithoutTheIndex(t *testing.T) {
 	s, path := open(t)
-	if _, err := s.Add("Vaultwarden обслуживает vault.example.org", nil, "x 2026-10-20"); err != nil {
+	if _, err := s.Add("Vaultwarden обслуживает vault.example.org", "x 2026-10-20"); err != nil {
 		t.Fatal(err)
 	}
 	s = reopen(t, s, path)
@@ -698,11 +687,11 @@ func TestStampedBaseIndexesAVersionWrittenWithoutTheIndex(t *testing.T) {
 // Merge rebuilds the index, and the rebuild leaves the stamp the next open trusts.
 func TestMergeLeavesACurrentStamp(t *testing.T) {
 	s, path := open(t)
-	if _, err := s.Add("Vaultwarden обслуживает vault.example.org", nil, "x 2026-10-20"); err != nil {
+	if _, err := s.Add("Vaultwarden обслуживает vault.example.org", "x 2026-10-20"); err != nil {
 		t.Fatal(err)
 	}
 	other, otherPath := open(t)
-	f, err := other.Add("Gitea слушает порт 3000", nil, "y 2026-10-21")
+	f, err := other.Add("Gitea слушает порт 3000", "y 2026-10-21")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -730,7 +719,7 @@ func TestMergeLeavesACurrentStamp(t *testing.T) {
 // ticket key becomes findable without re-adding the fact.
 func TestOpeningAnOldBaseRebuildsTicketStems(t *testing.T) {
 	s, path := open(t)
-	f, err := s.Add("Тикет PROJ-1234: берём в работу.", nil, "x 2026-10-20")
+	f, err := s.Add("Тикет PROJ-1234: берём в работу.", "x 2026-10-20")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -790,7 +779,7 @@ func TestOpeningACurrentBaseAddsMissingIndexes(t *testing.T) {
 // rebuild the index or change a byte.
 func TestOpenReadOnlyDoesNotTouchTheBase(t *testing.T) {
 	s, path := open(t)
-	if _, err := s.Add("Gitea слушает порт 3000.", []string{"gitea"}, "demo 2026-10-20"); err != nil {
+	if _, err := s.Add("Gitea слушает порт 3000.", "demo 2026-10-20"); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := s.db.Exec(`PRAGMA user_version = 3`); err != nil {
@@ -854,7 +843,7 @@ func TestOpenReadOnlyRefusesANewerSchema(t *testing.T) {
 // A version-3 base has no fact_vectors; opening it must create the table, which an older binary may still write.
 func TestOpeningAVersion3BaseCreatesFactVectors(t *testing.T) {
 	s, path := open(t)
-	f, err := s.Add("PostgreSQL-16 runs in a container on port 55432.", nil, "x 2026-10-20")
+	f, err := s.Add("PostgreSQL-16 runs in a container on port 55432.", "x 2026-10-20")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -901,7 +890,7 @@ func countVectors(t *testing.T, s *Store) int {
 func TestOpenDeletesStoredVectors(t *testing.T) {
 	s, path := open(t)
 	for i := range 300 {
-		f, err := s.Add(fmt.Sprintf("Факт %d про порт %d.", i, 3000+i), nil, "x 2026-10-22")
+		f, err := s.Add(fmt.Sprintf("Факт %d про порт %d.", i, 3000+i), "x 2026-10-22")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -937,7 +926,7 @@ func TestOpenDeletesStoredVectors(t *testing.T) {
 // A versioned name keeps its word in the index: the number is dropped, but "PostgreSQL" is still searchable.
 func TestVersionedNameKeepsItsWordInTheIndex(t *testing.T) {
 	s, _ := open(t)
-	f, err := s.Add("PostgreSQL-16 runs in a container on port 55432.", nil, "")
+	f, err := s.Add("PostgreSQL-16 runs in a container on port 55432.", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -950,7 +939,7 @@ func TestVersionedNameKeepsItsWordInTheIndex(t *testing.T) {
 // searchable again.
 func TestOpeningAVersion2BaseRebuildsVersionedStems(t *testing.T) {
 	s, path := open(t)
-	f, err := s.Add("PostgreSQL-16 runs in a container on port 55432.", nil, "x 2026-10-20")
+	f, err := s.Add("PostgreSQL-16 runs in a container on port 55432.", "x 2026-10-20")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1032,7 +1021,7 @@ func TestAddBatchConcurrentIDsAreUnique(t *testing.T) {
 // changed since the caller read it.
 func TestRelabelKeepsContentAndDate(t *testing.T) {
 	s, _ := open(t)
-	f, err := s.Add("Gradle needs JAVA_HOME.", []string{"gradle"}, "lists 2026-10-09 (lists/feedback_gradle.md)")
+	f, err := s.Add("Gradle needs JAVA_HOME.", "lists 2026-10-09 (lists/feedback_gradle.md)")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1063,7 +1052,7 @@ func TestRelabelKeepsContentAndDate(t *testing.T) {
 // to review, and a fact that is not retired is refused.
 func TestRestoreUndoesARetire(t *testing.T) {
 	s, _ := open(t)
-	f, err := s.AddWith("Порт gitea на loffe 3000.", []string{"gitea"}, "test 2026-10-22", "",
+	f, err := s.AddWith("Порт gitea на loffe 3000.", "test 2026-10-22", "",
 		Meta{Kind: "environment", Scope: "host:loffe", Source: "tool"})
 	if err != nil {
 		t.Fatal(err)
@@ -1113,8 +1102,7 @@ func TestRestoreUndoesARetire(t *testing.T) {
 func TestSplitFact(t *testing.T) {
 	s, _ := open(t)
 	meta := Meta{Kind: "environment", Scope: "host:loffe", Source: "tool"}
-	f, err := s.AddWith("На loffe стоит memcue 0.4.0; бинарь лежит в /opt/data/bin.", []string{"memcue"},
-		"hermes 2026-10-22", "", meta)
+	f, err := s.AddWith("На loffe стоит memcue 0.4.0; бинарь лежит в /opt/data/bin.", "hermes 2026-10-22", "", meta)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1162,14 +1150,14 @@ func TestSplitFact(t *testing.T) {
 func TestSplitFactRefuses(t *testing.T) {
 	s, _ := open(t)
 	parts := []string{"Порт 3000.", "Путь /srv."}
-	f, _ := s.Add("Порт 3000 и путь /srv.", nil, "")
-	if _, err := s.Correct(f.ID, "Порт 3000 и путь /srv/app.", nil); err != nil {
+	f, _ := s.Add("Порт 3000 и путь /srv.", "")
+	if _, err := s.Correct(f.ID, "Порт 3000 и путь /srv/app."); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := s.SplitFact(f.ID, 1, parts); !errors.Is(err, ErrChanged) {
 		t.Errorf("a changed fact: %v", err)
 	}
-	gone, _ := s.Add("Снятый факт про порт 3000 и путь /srv.", nil, "")
+	gone, _ := s.Add("Снятый факт про порт 3000 и путь /srv.", "")
 	if _, err := s.Retire(gone.ID); err != nil {
 		t.Fatal(err)
 	}
@@ -1183,63 +1171,14 @@ func TestSplitFactRefuses(t *testing.T) {
 }
 
 // The queries of a fact are searched like its words, and SetQueries writes them as a new version that keeps the rest.
-func TestQueriesAreSearchedAndSet(t *testing.T) {
-	s, _ := open(t)
-	f, err := s.Add("Caddy-private монтирует файл конфига; после замены пересоздать контейнер.", []string{"caddy"}, "x")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if hits, _ := s.Search([]string{"прокси"}, 10); len(hits) != 0 {
-		t.Fatalf("found before the queries: %+v", hits)
-	}
-	got, err := s.SetQueries(f.ID, f.Version, []string{"обратный прокси", "reverse proxy"})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if got.Version != 2 || got.Content != f.Content || len(got.Queries) != 2 || got.Keywords[0] != "caddy" {
-		t.Errorf("version %+v", got)
-	}
-	hits, err := s.Search([]string{"прокси"}, 10)
-	if err != nil || len(hits) != 1 || hits[0].ID != f.ID || len(hits[0].Queries) != 2 {
-		t.Errorf("search by a query word: %+v %v", hits, err)
-	}
-	if _, err := s.SetQueries(f.ID, 1, []string{"x"}); !errors.Is(err, ErrChanged) {
-		t.Errorf("a stale version: %v", err)
-	}
-	if _, err := s.Retire(f.ID); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := s.SetQueries(f.ID, 3, []string{"x"}); !errors.Is(err, ErrRetired) {
-		t.Errorf("a retired fact: %v", err)
-	}
-}
 
-// A correction of the text drops the queries written for the old text; a correction of the keywords alone keeps them.
-func TestCorrectDropsQueriesOfAnOldText(t *testing.T) {
-	s, _ := open(t)
-	facts, err := s.AddBatch([]FactInput{{Content: "Порт gitea 3000.", Queries: []string{"git сервер"}}})
-	if err != nil {
-		t.Fatal(err)
-	}
-	f := facts[0]
-	same, err := s.Correct(f.ID, f.Content, []string{"gitea"})
-	if err != nil || len(same.Queries) != 1 {
-		t.Errorf("keywords only: %+v %v", same, err)
-	}
-	moved, err := s.Correct(f.ID, "Порт gitea 3001.", nil)
-	if err != nil || len(moved.Queries) != 0 {
-		t.Errorf("new text: %+v %v", moved, err)
-	}
-}
-
-// A textconv of a base written before the queries column existed reads it with no queries instead of failing.
 func TestOpenReadOnlyReadsABaseWithoutQueries(t *testing.T) {
 	s, path := open(t)
-	f, err := s.Add("Gitea слушает порт 3000.", []string{"gitea"}, "demo 2026-10-20")
+	f, err := s.Add("Gitea слушает порт 3000.", "demo 2026-10-20")
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, q := range []string{`ALTER TABLE facts DROP COLUMN queries`, `PRAGMA user_version = 4`} {
+	for _, q := range []string{`PRAGMA user_version = 4`} {
 		if _, err := s.db.Exec(q); err != nil {
 			t.Fatal(err)
 		}
@@ -1256,52 +1195,19 @@ func TestOpenReadOnlyReadsABaseWithoutQueries(t *testing.T) {
 	if err := ro.Dump(&b); err != nil || !strings.Contains(b.String(), f.ID) {
 		t.Fatalf("dump of a version-4 base: %q %v", b.String(), err)
 	}
-	if got, err := ro.Get(f.ID); err != nil || got.Content != f.Content || len(got.Queries) != 0 {
+	if got, err := ro.Get(f.ID); err != nil || got.Content != f.Content {
 		t.Errorf("get %+v %v", got, err)
 	}
 }
 
 // A version-4 base whose index lost the stems of the queries, as the rebuild of an older memcue leaves it, is
 // reindexed once when a current memcue opens it.
-func TestOpeningAVersion4BaseIndexesTheQueries(t *testing.T) {
-	s, path := open(t)
-	facts, err := s.AddBatch([]FactInput{{Content: "Caddy-private монтирует файл конфига.", Queries: []string{"обратный прокси"}}})
-	if err != nil {
-		t.Fatal(err)
-	}
-	for _, q := range []string{
-		`UPDATE fact_index SET stems = 'caddy-privat монтир файл конфиг'`,
-		`INSERT INTO fact_fts(fact_fts) VALUES('rebuild')`,
-		`PRAGMA user_version = 4`,
-	} {
-		if _, err := s.db.Exec(q); err != nil {
-			t.Fatal(err)
-		}
-	}
-	if hits, _ := s.Search([]string{"прокс"}, 10); len(hits) != 0 {
-		t.Fatalf("setup: the index still holds the queries: %+v", hits)
-	}
-	if err := s.Close(); err != nil {
-		t.Fatal(err)
-	}
-	s2, err := Open(path)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer func() { _ = s2.Close() }()
-	hits, err := s2.Search([]string{"прокс"}, 10)
-	if err != nil || len(hits) != 1 || hits[0].ID != facts[0].ID {
-		t.Errorf("search by a query word after the migration: %+v %v", hits, err)
-	}
-}
 
-// RepoScopes names the repository scopes of the live facts, sorted and once each: a retired fact and a scope of another
-// kind are not among them, and a provisional fact and a candidate an older memcue left are (#514).
 func TestRepoScopes(t *testing.T) {
 	s, _ := open(t)
 	add := func(scope, review string) Fact {
 		t.Helper()
-		f, err := s.AddWith("fact under "+scope, nil, "x 2026-10-26", "", Meta{Scope: scope, Review: review})
+		f, err := s.AddWith("fact under "+scope, "x 2026-10-26", "", Meta{Scope: scope, Review: review})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -1336,7 +1242,7 @@ func TestOriginTiers(t *testing.T) {
 	s, _ := open(t)
 	add := func(origin, review string) Fact {
 		t.Helper()
-		f, err := s.AddWith("fact from "+origin, nil, origin, "", Meta{Review: review})
+		f, err := s.AddWith("fact from "+origin, origin, "", Meta{Review: review})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -1363,11 +1269,11 @@ func TestOriginTiers(t *testing.T) {
 
 func TestSearchFilteredShelf(t *testing.T) {
 	s, _ := open(t)
-	shelved, err := s.AddWith("the api allows sixty requests", nil, "", "", Meta{Kind: "environment", Scope: "shelf:research"})
+	shelved, err := s.AddWith("the api allows sixty requests", "", "", Meta{Kind: "environment", Scope: "shelf:research"})
 	if err != nil {
 		t.Fatal(err)
 	}
-	plain, err := s.AddWith("our proxy allows sixty requests", nil, "", "", Meta{Kind: "environment", Scope: "host:mac"})
+	plain, err := s.AddWith("our proxy allows sixty requests", "", "", Meta{Kind: "environment", Scope: "host:mac"})
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -45,8 +45,8 @@ func legacyRow(t *testing.T, id, content, kind, scope, source, review, expires s
 		t.Fatal(err)
 	}
 	defer func() { _ = db.Close() }()
-	if _, err := db.Exec(`INSERT INTO facts(id, version, content, keywords, origin, created, status, author, kind,
-		scope, source, review, expires) VALUES (?, 1, ?, '', 'hermes 2026-10-20', '2026-10-20T12:00:00Z', 'active', 'old',
+	if _, err := db.Exec(`INSERT INTO facts(id, version, content, origin, created, status, author, kind,
+		scope, source, review, expires) VALUES (?, 1, ?, 'hermes 2026-10-20', '2026-10-20T12:00:00Z', 'active', 'old',
 		?, ?, ?, ?, ?)`, id, content, kind, scope, source, review, expires); err != nil {
 		t.Fatal(err)
 	}
@@ -73,7 +73,7 @@ func TestDreamReadsExpiredFactsWhateverTheirReview(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	expiredApproved, err := s.AddWith("Одобренный факт про порт grafana 3001.", nil, "x 2026-10-19", past, store.Meta{})
+	expiredApproved, err := s.AddWith("Одобренный факт про порт grafana 3001.", "x 2026-10-19", past, store.Meta{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -90,9 +90,7 @@ func TestDreamReadsExpiredFactsWhateverTheirReview(t *testing.T) {
 				t.Errorf("%s: the dream lacks %s:\n%s", when, id, out.String())
 			}
 		}
-		if n, err := pendingExpansions(); err != nil || n != len(all) {
-			t.Errorf("%s: pending expansions %d %v, want %d", when, n, err, len(all))
-		}
+
 	}
 	read("before a correction")
 
@@ -100,7 +98,7 @@ func TestDreamReadsExpiredFactsWhateverTheirReview(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	f, err := s.Correct(expiredCand, "Кандидат про порт redis 6381.", nil)
+	f, err := s.Correct(expiredCand, "Кандидат про порт redis 6381.")
 	_ = s.Close()
 	if err != nil || f.Review != "" || f.Expires != past {
 		t.Fatalf("corrected %+v %v", f, err)
@@ -113,7 +111,7 @@ func TestDreamReadsExpiredFactsWhateverTheirReview(t *testing.T) {
 func TestAddIsSearchableAtOnce(t *testing.T) {
 	env(t)
 	var out bytes.Buffer
-	if err := runAdd([]string{"-source", "memory", "-kind", "environment", "-keywords", "gradle,jdk", gradleFact},
+	if err := runAdd([]string{"-source", "memory", "-kind", "environment", gradleFact},
 		&out); err != nil {
 		t.Fatal(err)
 	}
@@ -195,7 +193,7 @@ func TestLegacyProvisionalIsSearchedAndListed(t *testing.T) {
 	if err := runFacts(&out); err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(out.String(), "01JLEGACYCMD00000000000011 v1 hermes 2026-10-20 [] expires="+day) {
+	if !strings.Contains(out.String(), "01JLEGACYCMD00000000000011 v1 hermes 2026-10-20 expires="+day) {
 		t.Errorf("facts %q", out.String())
 	}
 }
@@ -238,9 +236,9 @@ func TestImportStoresEveryFactLive(t *testing.T) {
 	if f := got["Факт заметки."]; f.PromptVersion != 3 {
 		t.Errorf("prompt version lost: %+v", f)
 	}
-	for _, q := range []string{"note", "session", "old"} {
+	for _, q := range []string{"заметк", "kind", "стар"} {
 		hits, err := s.Search([]string{q}, 5)
-		if err != nil || len(hits) != 1 {
+		if err != nil || (q != "kind" && len(hits) != 1 || q == "kind" && len(hits) != 2) {
 			t.Errorf("search %q: %+v %v", q, hits, err)
 		}
 	}

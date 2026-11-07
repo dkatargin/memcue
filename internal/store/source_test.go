@@ -12,8 +12,7 @@ import (
 func unlabelled(t *testing.T, dir string) (active, provisional, retired, user, tool Fact) {
 	t.Helper()
 	at := func(m int) time.Time { return t0.Add(time.Duration(m) * time.Minute) }
-	active = Fact{ID: "01JSOURCE00000000000000001", Version: 1, Content: "Порт db1 — 5432", Keywords: []string{"db1"},
-		Origin: "x 2026-10-19", Created: at(0), Status: Active, Author: "mac", Meta: Meta{Kind: "environment"}}
+	active = Fact{ID: "01JSOURCE00000000000000001", Version: 1, Content: "Порт db1 — 5432", Origin: "x 2026-10-19", Created: at(0), Status: Active, Author: "mac", Meta: Meta{Kind: "environment"}}
 	corrected := active
 	corrected.Version, corrected.Content, corrected.Author, corrected.Created = 2, "Порт db1 — 5433", "server", at(1)
 	provisional = Fact{ID: "01JSOURCE00000000000000002", Version: 1, Content: "Caddy перечитывает конфиг по SIGUSR1",
@@ -207,14 +206,14 @@ func TestOpenOfASQLiteBaseRelabels(t *testing.T) {
 // A fact written now without a source is the agent's, and so is a new version of a fact that had none.
 func TestAWriteWithoutASourceIsTheAgents(t *testing.T) {
 	s, _ := open(t)
-	f, err := s.AddWith("Порт db4 — 5432", nil, "x", "", Meta{Kind: "environment"})
+	f, err := s.AddWith("Порт db4 — 5432", "x", "", Meta{Kind: "environment"})
 	if err != nil || f.Source != "agent" {
 		t.Fatalf("added %+v %v", f, err)
 	}
 	if got, _ := s.Get(f.ID); got.Source != "agent" {
 		t.Errorf("stored %+v", got)
 	}
-	u, err := s.AddWith("Коммиты на английском", nil, "x", "", Meta{Kind: "rule", Source: "user"})
+	u, err := s.AddWith("Коммиты на английском", "x", "", Meta{Kind: "rule", Source: "user"})
 	if err != nil || u.Source != "user" {
 		t.Errorf("a user fact %+v %v", u, err)
 	}

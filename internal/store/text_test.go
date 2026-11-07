@@ -14,17 +14,16 @@ import (
 func TestTextRoundTripKeepsEveryField(t *testing.T) {
 	s := openAt(t, filepath.Join(t.TempDir(), "facts.db"), "mac", t0)
 	defer func() { _ = s.Close() }()
-	plain, err := s.AddWith("Порт <db1> & \"кавычки\",\nвторая строка\tи таб", []string{"db1", "порт, postgres"},
-		"github.com/me/app 2026-10-19", "2026-12-01", Meta{Kind: "environment", Scope: "host:mac", Source: "tool",
-			Evidence: "`psql -p 5433` → ok", PromptVersion: 3})
+	plain, err := s.AddWith("Порт <db1> & \"кавычки\",\nвторая строка\tи таб", "github.com/me/app 2026-10-19", "2026-12-01", Meta{Kind: "environment", Scope: "host:mac", Source: "tool",
+		Evidence: "`psql -p 5433` → ok", PromptVersion: 3})
 	if err != nil {
 		t.Fatal(err)
 	}
 	s.now = func() time.Time { return t0.Add(1234567 * time.Nanosecond) }
-	if _, err := s.Correct(plain.ID, "Порт db1 — 5433 🚀", []string{"db1"}); err != nil {
+	if _, err := s.Correct(plain.ID, "Порт db1 — 5433 🚀"); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := s.SetQueries(plain.ID, 2, []string{"какой порт у db1", "db1 port"}); err != nil {
+	if _, err := s.Retag(plain.ID, 2, "corrected origin", "host:mac"); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := s.Relabel(plain.ID, 3, "pitfall", "global", ""); err != nil {
@@ -39,7 +38,7 @@ func TestTextRoundTripKeepsEveryField(t *testing.T) {
 	if _, err := s.Restore(plain.ID); err != nil {
 		t.Fatal(err)
 	}
-	bare, err := s.AddWith("x", nil, "", "", Meta{})
+	bare, err := s.AddWith("x", "", "", Meta{})
 	if err != nil {
 		t.Fatal(err)
 	}

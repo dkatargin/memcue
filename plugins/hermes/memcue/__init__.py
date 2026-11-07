@@ -22,8 +22,7 @@ Config, all optional (``memory.memcue`` in config.yaml):
           environment's MEMCUE_HOST, else the host name; set it where a container's host name is unstable)
   dream: run a due dream, in the background on the endpoint below or else by the model on the system prompt's hint
           (default true)
-  api_url, model, api_key_env: the OpenAI-compatible endpoint a background dream and the search queries of
-          ``memcue_add`` go to, its model, and the environment variable holding its key (passed as MEMCUE_API_URL,
+  api_url, model, api_key_env: the OpenAI-compatible endpoint a background dream goes to, its model, and the environment variable holding its key (passed as MEMCUE_API_URL,
           MEMCUE_MODEL and MEMCUE_API_KEY; default: unset, so the gateway's environment decides)
   facts:  the fact base (default: $MEMCUE_FACTS, else the text history $HERMES_HOME/memcue/facts once
           `memcue migrate -text` wrote it, else $HERMES_HOME/memcue/facts.db; share one with Claude Code by pointing
@@ -89,7 +88,7 @@ _FACT_LANGUAGE_NOTE = "Write new and corrected facts in English regardless of th
 _QUERY_LANGUAGE_NOTE = 'Write the first search query in English regardless of the chat language; if English misses, retry with synonyms and Russian or another legacy language.'
 
 _CJK = re.compile("[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uac00-\ud7af\uf900-\ufaff]")
-_CJK_HINT = "Legacy facts include Russian and English: search first in English; if English misses, retry in Russian or another legacy language."
+_CJK_HINT = "Facts use English by default; legacy facts may use other languages: search first in English; if English misses, retry in Russian or another legacy language."
 _WRITE_TIMEOUT = 15
 _DREAM_TIMEOUT = 60  # a packet groups up to 40 facts by recall, and an answer writes up to a few hundred versions
 _ORIGIN = "hermes"
@@ -352,8 +351,7 @@ ADD_SCHEMA = _schema(
     "to remember one (kind procedure). One self-contained "
     "statement in one to three sentences, naming the system or project, with exact values; only what the user said "
     "or a tool confirmed. Search first and correct a stored fact instead of adding a second copy.",
-    {"content": _FACT_LANGUAGE_NOTE, "keywords": "Comma-separated words someone would ask with, synonyms and both "
-                                         "languages included.",
+    {"content": _FACT_LANGUAGE_NOTE,
      "expires": "Optional last day the fact is worth recalling, YYYY-MM-DD (e.g. a one-off reminder); "
                 "omit for a fact that stays true.",
      "kind": "Optional: rule, decision, pitfall, environment, procedure (steps the user asked to remember) or event "
@@ -367,14 +365,13 @@ ADD_SCHEMA = _schema(
 CORRECT_SCHEMA = _schema(
     "memcue_correct", "Replace a stored fact with a corrected version (the history keeps the old one).",
     {"id": "Fact ID from memcue_search.", "content": _FACT_LANGUAGE_NOTE,
-     "keywords": "Comma-separated keywords; omit to keep the current ones.",
      "expires": "Optional new last day the fact is worth recalling, YYYY-MM-DD."}, ["id", "content"])
 RETIRE_SCHEMA = _schema(
     "memcue_retire", "Stop recalling a stored fact that no longer holds (the history keeps it).",
     {"id": "Fact ID from memcue_search."}, ["id"])
 DREAM_PREPARE_SCHEMA = _schema(
     "memcue_dream_prepare", "Start tidying long-term memory (the memcue dream): returns the instructions and the facts "
-    "to split, to give search queries, to review in groups and global facts to check the scope of. "
+    "to split, to review in groups and global facts to check the scope of. "
     "Answer it with memcue_dream_apply. 'nothing for the dream' means there is nothing to do.",
     {"since": "Optional: 'all' reviews every fact, a date (YYYY-MM-DD) the facts written since; the default is "
               "the facts new since the last dream. The first dream on a base needs one of them."}, [])
@@ -1015,6 +1012,9 @@ class MemcueMemoryProvider(MemoryProvider):
             return json.dumps({"result": out}, ensure_ascii=False) if ok else tool_error(out)
         if not self._writes:
             return tool_error("memory writes are off in this context")
+        if tool_name in ("memcue_add", "memcue_correct") and any(
+                field in args for field in ("keywords", "queries", "translation")):
+            return tool_error("auxiliary fields are no longer supported: store content only")
         if tool_name == "memcue_add":
             if not arg("content"):
                 return tool_error("content is required")
@@ -1022,8 +1022,6 @@ class MemcueMemoryProvider(MemoryProvider):
             if source not in _ADD_SOURCES:
                 return tool_error("source must be one of: " + ", ".join(_ADD_SOURCES))
             cmd = ["add", "-source", source, "-cwd", self._workspace]
-            if arg("keywords"):
-                cmd += ["-keywords", arg("keywords")]
             if arg("expires"):
                 cmd += ["-expires", arg("expires")]
             if arg("kind"):
@@ -1037,8 +1035,6 @@ class MemcueMemoryProvider(MemoryProvider):
             if not arg("id") or not arg("content"):
                 return tool_error("id and content are required")
             cmd = ["correct"]
-            if arg("keywords"):
-                cmd += ["-keywords", arg("keywords")]
             if arg("expires"):
                 cmd += ["-expires", arg("expires")]
             ok, out = self._run(cmd + ["--", arg("id"), arg("content")])

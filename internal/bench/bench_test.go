@@ -61,7 +61,7 @@ func binary(t *testing.T) string {
 			return
 		}
 		binPath = filepath.Join(buildDir, "memcue")
-		cmd := exec.Command("go", "build", "-o", binPath, "./cmd/memcue")
+		cmd := exec.Command("go", "build", "-p", "2", "-o", binPath, "./cmd/memcue")
 		cmd.Dir = moduleRoot
 		if out, err := cmd.CombinedOutput(); err != nil {
 			binErr = &buildError{err: err, out: out}
@@ -206,18 +206,17 @@ func (b *base) refuse(t *testing.T, dir string, args ...string) string {
 
 // addOpts are the flags of `memcue add` the cases use; empty is the flag left out.
 type addOpts struct {
-	cwd      string // where add runs, so the default origin is that directory's project
-	scope    string
-	kind     string
-	keywords string
-	expires  string
+	cwd     string // where add runs, so the default origin is that directory's project
+	scope   string
+	kind    string
+	expires string
 }
 
 // add stores a fact in the user's words and returns its id, the one line add prints.
 func add(t *testing.T, b *base, text string, o addOpts) string {
 	t.Helper()
 	args := []string{"add", "-source", "user"}
-	for _, f := range [][2]string{{"-scope", o.scope}, {"-kind", o.kind}, {"-keywords", o.keywords},
+	for _, f := range [][2]string{{"-scope", o.scope}, {"-kind", o.kind},
 		{"-expires", o.expires}} {
 		if f[1] != "" {
 			args = append(args, f[0], f[1])
@@ -259,14 +258,13 @@ func (o searchOpts) args() []string {
 // hit is one fact of `search -json`, by the field names of searchFact in cmd/memcue/facts.go. Raw keeps the object
 // as printed, for the shape check.
 type hit struct {
-	ID       string                     `json:"id"`
-	Content  string                     `json:"content"`
-	Keywords []string                   `json:"keywords"`
-	Origin   string                     `json:"origin"`
-	Scope    string                     `json:"scope"`
-	Created  string                     `json:"created"`
-	Expires  string                     `json:"expires"`
-	Raw      map[string]json.RawMessage `json:"-"`
+	ID      string                     `json:"id"`
+	Content string                     `json:"content"`
+	Origin  string                     `json:"origin"`
+	Scope   string                     `json:"scope"`
+	Created string                     `json:"created"`
+	Expires string                     `json:"expires"`
+	Raw     map[string]json.RawMessage `json:"-"`
 }
 
 // answer is what one search printed: the facts, the hints that came with them, and the raw streams.
@@ -435,7 +433,7 @@ func (w *world) names(ids []string) string {
 
 // jsonFields are the fields searchFact in cmd/memcue/facts.go prints; the always ones carry no omitempty.
 var (
-	jsonFields       = []string{"id", "content", "keywords", "origin", "scope", "created", "expires"}
+	jsonFields       = []string{"id", "content", "origin", "scope", "created", "expires"}
 	jsonFieldsAlways = []string{"id", "content", "created"}
 )
 

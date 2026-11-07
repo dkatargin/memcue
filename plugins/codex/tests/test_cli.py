@@ -59,7 +59,7 @@ class RealCLI(unittest.TestCase):
         return json.loads(self.cli('search','-json','-min-score','0','-n','100',*args,cwd=cwd).stdout)
 
     def add(self, content, *args):
-        return self.cli('add',*args,'-keywords','synthetic orchard','--',content).stdout.strip()
+        return self.cli('add',*args,'--',content).stdout.strip()
 
     def dump(self):
         return [json.loads(line) for path in sorted((self.home/'facts').glob('*/*.jsonl'))
@@ -131,10 +131,18 @@ class RealCLI(unittest.TestCase):
         self.cli('dream','-prepare')
         packet=json.loads((self.home/'state/dream.packet.json').read_text())
         answer=self.home/'answer.json'
-        answer.write_text(json.dumps({'packet':packet['id'],'splits':[],'expansions':[{'id':fact,'queries':['synthetic orchard review label']}],
+        answer.write_text(json.dumps({'packet':packet['id'],'splits':[],
                                       'actions':[],'scopes':[]}))
+        before=self.dump()
+        obsolete=self.home/'obsolete-answer.json'
+        obsolete.write_text(json.dumps({'packet':packet['id'],
+            'splits':[{'id':fact,'parts':['Synthetic orchard reviews require labels.','The label is amber.'],'reason':'fixture'}],
+            'actions':[],'scopes':[],'expansions':[{'id':fact,'queries':['obsolete marker']}]}))
+        refused=self.cli('dream','-apply',str(obsolete),ok=False)
+        self.assertIn('unknown field',refused.stderr)
+        self.assertEqual(self.dump(),before)
         r=self.cli('dream','-apply',str(answer))
-        self.assertIn('synthetic orchard review label',[f for f in self.dump() if f['id']==fact][-1]['queries'])
+        self.assertNotIn('queries',[f for f in self.dump() if f['id']==fact][-1])
         self.add('Synthetic orchard labels remain visible.','-kind','rule','-source','user','-scope','repo')
         self.cli('dream','-prepare')
         r=self.cli('dream','-apply',str(answer),ok=False)
@@ -167,20 +175,21 @@ class RealCLI(unittest.TestCase):
         self.assertNotIn('## Данные: перевод',prepared.stdout)
         self.assertNotIn('translate',packet)
         self.assertEqual(packet['seen'][fact],1)
-        self.assertEqual(packet['expand'][fact],1)
+        self.assertEqual(packet['split'][fact],1)
+        self.assertNotIn('expand',packet)
         self.assertFalse(schedule.exists())  # Prepare keeps a packet; apply completes the native dream.
         answer=self.home/'first-answer.json'
-        query='synthetic orchard first review label'
         answer.write_text(json.dumps({'packet':packet['id'],'splits':[],
-                                      'expansions':[{'id':fact,'queries':[query]}],'actions':[],'scopes':[]}))
+                                      'actions':[],'scopes':[]}))
         self.cli('dream','-apply',str(answer))  # Fresh process reads the persisted packet.
         self.assertTrue(schedule.is_file())
         latest=[f for f in self.dump() if f['id']==fact][-1]
-        self.assertIn(query,latest['queries'])
+        self.assertNotIn('queries',latest)
+        self.assertNotIn('keywords',latest)
         self.assertEqual(latest['source'],'user')
         log=[json.loads(line) for line in (self.home/'state/dream.log').read_text().splitlines()]
         self.assertEqual(log[-1]['packet'],packet['id'])
-        self.assertEqual(log[-1]['expanded'],1)
+        self.assertNotIn('expanded',log[-1])
         self.add('Synthetic orchard labels remain visible.','-kind','rule','-source','user','-scope','repo')
         self.cli('dream','-prepare')  # Subsequent dreams need no initialization flag.
         next_packet=json.loads(packet_path.read_text())

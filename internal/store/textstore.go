@@ -1,6 +1,8 @@
 package store
 
 import (
+	"bytes"
+	"crypto/sha256"
 	"database/sql"
 	"encoding/json"
 	"errors"
@@ -32,35 +34,36 @@ const (
 	textRowsDirty = "dirty"     // a write to the files failed since the last open brought them together
 )
 
-// OpenText opens the base whose history is the text at dir, with its cache at cache. A cache that does not open (a
-// newer schema, a damaged file) is set aside and built again from the text: it holds nothing the text lacks once the
-// last open brought them together. So is a cache of an older schema: the memcue that filled it read the files without
-// the fields added since (channel, #625), and merged by versions its copy of such a version and the file's would
-// count as two.
+// OpenText opens a text history and its derived SQLite cache. Readable older caches
+// are retained after rescuing pending versions. Unreadable/newer caches are refused:
+// silently rebuilding one could lose versions whose JSONL write never completed.
+// Legacy auxiliary JSONL is backed up outside the current history and rewritten
+// under the text lock. See docs/content-only-upgrade.md for coordinated rollout.
 func OpenText(dir, cache string) (*Store, error) {
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return nil, err
 	}
-	if v, err := cacheSchema(cache); err == nil && v > 0 && v < schemaVersion {
+	v, err := cacheSchema(cache)
+	if err != nil {
+		return nil, fmt.Errorf("inspect text cache %s: %w", cache, err)
+	}
+	if v > schemaVersion {
+		return nil, fmt.Errorf("text cache has schema %d, this memcue knows %d: update memcue", v, schemaVersion)
+	}
+	if v > 0 && v < schemaVersion {
 		if err := setAside(dir, cache, v); err != nil {
 			return nil, fmt.Errorf("text history %s: %w", dir, err)
 		}
+	}
+	if err := os.MkdirAll(filepath.Dir(cache), 0o700); err != nil {
+		return nil, err
 	}
 	if err := buildCache(dir, cache); err != nil {
 		return nil, fmt.Errorf("text history %s: %w", dir, err)
 	}
 	s, err := openFile(cache)
 	if err != nil {
-		aside := fmt.Sprintf("%s.unreadable-%d", cache, time.Now().Unix())
-		if renameErr := os.Rename(cache, aside); renameErr != nil {
-			return nil, err
-		}
-		if err := buildCache(dir, cache); err != nil {
-			return nil, fmt.Errorf("text history %s: %w", dir, err)
-		}
-		if s, err = openFile(cache); err != nil {
-			return nil, err
-		}
+		return nil, fmt.Errorf("open text cache %s: %w", cache, err)
 	}
 	s.text, s.textLock = dir, cache+".lock"
 	if err := s.syncText(); err != nil {
@@ -124,23 +127,45 @@ func setAside(dir, cache string, v int) error {
 	if now, err := cacheSchema(cache); err != nil || now != v {
 		return err // set aside by another process while this one waited
 	}
+	backup, err := legacyTextBackupPath(dir, cache)
+	if err != nil {
+		return err
+	}
+	dirs, err := textDirs(dir)
+	if err != nil {
+		return err
+	}
+	if err := stripLegacyText(dir, backup, dirs); err != nil {
+		return err
+	}
 	if err := rescueVersions(dir, cache); err != nil {
 		return err
 	}
-	return os.Rename(cache, fmt.Sprintf("%s.schema%d-%d", cache, v, time.Now().Unix()))
+	// Link creation is exclusive: even a same-second retirement cannot replace
+	// earlier rollback evidence. Keep the source until its saved name exists.
+	base := fmt.Sprintf("%s.schema%d-%d", cache, v, time.Now().Unix())
+	for n := 0; ; n++ {
+		saved := base
+		if n > 0 {
+			saved = fmt.Sprintf("%s-%d", base, n)
+		}
+		if err := os.Link(cache, saved); errors.Is(err, os.ErrExist) {
+			continue
+		} else if err != nil {
+			return err
+		}
+		return os.Remove(cache)
+	}
 }
 
-// rescueVersions appends to the fact files the versions the cache at cache holds past the last version of each file.
-// It reads every file rather than trust the stamp textRowsStamp: an older memcue saved the count after a write that
-// succeeded even when an earlier one had failed, so its stamp can claim versions no file holds (#640). A set-aside
-// happens once an upgrade, while the build that follows reads every file anyway. A version numbered at or below a
-// file's last one stays out: a file that git changed since holds a history only a merge could bring together, and
-// this memcue would not merge with a cache of another schema. A cache it cannot read (a hot journal) is set aside as
-// before and kept next to the new one: an open must not fail on it.
+// rescueVersions unions pending cache writes into the files, including divergent writes below the file tail.
+// It reads every file rather than trusting a row-count stamp, which cannot prove
+// that individual versions reached disk. Missing schema fields are projections,
+// not independent writes. Read failures are returned before retiring the cache.
 func rescueVersions(dir, cache string) error {
 	r, err := OpenReadOnly(cache)
 	if err != nil {
-		return nil
+		return fmt.Errorf("rescue pending cache versions: %w", err)
 	}
 	defer func() { _ = r.Close() }()
 	all, err := r.Rows()
@@ -161,18 +186,59 @@ func rescueVersions(dir, cache string) error {
 		if err != nil {
 			return err
 		}
-		last := 0
-		for _, f := range file {
-			last = max(last, f.Version)
+		cached := byID[id]
+		identified := false
+		used := map[int]bool{}
+		bind := func(i, j int) {
+			g := file[j]
+			if g.WriteID == "" && cached[i].WriteID != "" {
+				g.WriteID = cached[i].WriteID
+				file[j] = g
+				identified = true
+			}
+			cached[i] = g
+			used[j] = true
 		}
-		var missing []Fact
-		for _, f := range byID[id] {
-			if f.Version > last {
-				missing = append(missing, f)
+		// A common sequence of complete available legacy data establishes a
+		// projection, not a guessed match based only on a version number.
+		prefix := 0
+		for prefix < len(cached) && prefix < len(file) && sameCacheProjection(cached[prefix], file[prefix], r.absent, true) {
+			bind(prefix, prefix)
+			prefix++
+		}
+		missingLabels := false
+		for name := range r.absent {
+			if name != "write_id" {
+				missingLabels = true
 			}
 		}
-		if len(missing) > 0 {
-			if err := appendFacts(path, missing); err != nil {
+		for i := prefix; i < len(cached); i++ {
+			var matches []int
+			for j, g := range file {
+				if !used[j] && sameCacheProjection(cached[i], g, r.absent, false) {
+					matches = append(matches, j)
+				}
+			}
+			if missingLabels && len(matches) > 1 {
+				return fmt.Errorf("ambiguous legacy cache projection for %s: keep the old cache and reconcile its original history", id)
+			}
+			if len(matches) > 0 {
+				bind(i, matches[0])
+				continue
+			}
+			if missingLabels {
+				// Losing labels can change occurrence classes. After divergence,
+				// do not invent correspondence to an otherwise matching record.
+				for j, g := range file {
+					if !used[j] && sameCacheProjection(cached[i], g, r.absent, true) {
+						return fmt.Errorf("ambiguous legacy cache occurrence for %s: keep the old cache and reconcile its original history", id)
+					}
+				}
+			}
+		}
+		h := MergeHistories(file, cached)
+		if h.Changed() || identified {
+			if err := WriteFactFile(path, h.Versions); err != nil {
 				return err
 			}
 		}
@@ -182,8 +248,10 @@ func rescueVersions(dir, cache string) error {
 
 // cacheSchema is the schema version of the cache file at path as it is, 0 for a file that is not there.
 func cacheSchema(path string) (int, error) {
-	if _, err := os.Stat(path); err != nil {
+	if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
 		return 0, nil
+	} else if err != nil {
+		return 0, err
 	}
 	dsn, _, err := readOnlyDataSource(path)
 	if err != nil {
@@ -344,6 +412,19 @@ func (s *Store) syncTextLocked() error {
 		return err
 	} else if v != "" {
 		_ = json.Unmarshal([]byte(v), &saved)
+	}
+	changed := map[string]int64{}
+	for name, mtime := range dirs {
+		if saved[name] != mtime {
+			changed[name] = mtime
+		}
+	}
+	backup, err := legacyTextBackupPath(s.text, strings.TrimSuffix(s.textLock, ".lock"))
+	if err != nil {
+		return err
+	}
+	if err := stripLegacyText(s.text, backup, changed); err != nil {
+		return err
 	}
 	rows, err := s.stamp(textRowsStamp)
 	if err != nil {
@@ -531,4 +612,181 @@ func sameHistory(a, b []Fact) bool {
 		}
 	}
 	return true
+}
+
+// stripLegacyText rewrites legacy lines under the text lock. Backups live outside the
+// current history, keyed by the original bytes, so retries never overwrite evidence.
+// Each replacement is atomic; failure is returned and the next open resumes the pass.
+func stripLegacyText(dir, backup string, dirs map[string]int64) error {
+	for name := range dirs {
+		entries, err := os.ReadDir(filepath.Join(dir, name))
+		if err != nil {
+			return err
+		}
+		for _, e := range entries {
+			if e.IsDir() || strings.HasPrefix(e.Name(), ".") || !strings.HasSuffix(e.Name(), ".jsonl") {
+				continue
+			}
+			path := filepath.Join(dir, name, e.Name())
+			if e.Type()&fs.ModeSymlink != 0 {
+				return fmt.Errorf("%s: a fact file must not be a symbolic link", path)
+			}
+			data, err := os.ReadFile(path)
+			if err != nil {
+				return err
+			}
+			legacy := false
+			for _, line := range bytes.Split(data, []byte("\n")) {
+				if len(bytes.TrimSpace(line)) == 0 {
+					continue
+				}
+				var fields map[string]json.RawMessage
+				if err := json.Unmarshal(line, &fields); err != nil {
+					return fmt.Errorf("%s: %w", path, err)
+				}
+				if _, ok := fields["keywords"]; ok {
+					legacy = true
+				}
+				if _, ok := fields["queries"]; ok {
+					legacy = true
+				}
+			}
+			if !legacy {
+				continue
+			}
+			facts, err := ParseFacts(data)
+			if err != nil {
+				return fmt.Errorf("%s: %w", path, err)
+			}
+			if err := os.MkdirAll(backup, 0o700); err != nil {
+				return err
+			}
+			saved := filepath.Join(backup, fmt.Sprintf("%x.jsonl", sha256.Sum256(data)))
+			f, err := os.OpenFile(saved, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600)
+			if errors.Is(err, os.ErrExist) {
+				old, readErr := os.ReadFile(saved)
+				if readErr != nil {
+					return readErr
+				}
+				if !bytes.Equal(old, data) {
+					return fmt.Errorf("legacy backup differs: %s", saved)
+				}
+			} else if err != nil {
+				return err
+			} else {
+				_, writeErr := f.Write(data)
+				if writeErr == nil {
+					writeErr = f.Sync()
+				}
+				closeErr := f.Close()
+				if writeErr != nil {
+					_ = os.Remove(saved)
+					return writeErr
+				}
+				if closeErr != nil {
+					return closeErr
+				}
+			}
+			if err := WriteFactFile(path, facts); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// A caller may keep its cache inside the history. Never put old JSONL there:
+// it would become current input on the next directory scan.
+func legacyTextBackupPath(dir, cache string) (string, error) {
+	history, err := physicalPath(dir)
+	if err != nil {
+		return "", err
+	}
+	backup, err := physicalPath(cache + ".schema7-text-backup")
+	if err != nil {
+		return "", err
+	}
+	inside := func(path string) bool {
+		rel, err := filepath.Rel(history, path)
+		return err != nil || rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator))
+	}
+	if inside(backup) {
+		// Choose the sibling of the physical history, not of its lexical alias.
+		backup, err = physicalPath(history + ".schema7-text-backup")
+		if err != nil {
+			return "", err
+		}
+	}
+	if inside(backup) {
+		return "", fmt.Errorf("legacy backup must be physically outside history: %s", backup)
+	}
+	return backup, nil
+}
+
+// Resolve existing components even when the destination's final components have
+// not been created. Broken links and non-directory parents remain errors.
+func physicalPath(path string) (string, error) {
+	path, err := filepath.Abs(path)
+	if err != nil {
+		return "", err
+	}
+	var tail []string
+	for {
+		_, err := os.Lstat(path)
+		if err == nil {
+			resolved, err := filepath.EvalSymlinks(path)
+			if err != nil {
+				return "", err
+			}
+			for i := len(tail) - 1; i >= 0; i-- {
+				resolved = filepath.Join(resolved, tail[i])
+			}
+			return resolved, nil
+		}
+		if !errors.Is(err, os.ErrNotExist) {
+			return "", err
+		}
+		tail = append(tail, filepath.Base(path))
+		parent := filepath.Dir(path)
+		if parent == path {
+			return "", err
+		}
+		path = parent
+	}
+}
+
+// sameCacheProjection compares only fields the old cache could actually store.
+func sameCacheProjection(cached, file Fact, absent map[string]string, occurrencesMayBeProjected bool) bool {
+	base := func(id string) string { first, _, _ := strings.Cut(id, "."); return first }
+	if file.WriteID == "" && (cached.WriteID == projectedWriteID(file, "", "") || occurrencesMayBeProjected && base(cached.WriteID) == projectedWriteID(file, "", "")) {
+		file.WriteID = cached.WriteID
+	}
+	if occurrencesMayBeProjected && base(cached.WriteID) == base(file.WriteID) {
+		file.WriteID = cached.WriteID
+	}
+	if _, missing := absent["expires"]; missing {
+		file.Expires = ""
+	}
+	if _, missing := absent["kind"]; missing {
+		file.Kind = ""
+	}
+	if _, missing := absent["scope"]; missing {
+		file.Scope = ""
+	}
+	if _, missing := absent["source"]; missing {
+		file.Source = ""
+	}
+	if _, missing := absent["evidence"]; missing {
+		file.Evidence = ""
+	}
+	if _, missing := absent["review"]; missing {
+		file.Review = ""
+	}
+	if _, missing := absent["prompt_version"]; missing {
+		file.PromptVersion = 0
+	}
+	if _, missing := absent["channel"]; missing {
+		file.Channel = ""
+	}
+	return same(cached, file)
 }
