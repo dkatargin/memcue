@@ -23,8 +23,19 @@ jobs:
           go-version-file: go.mod
           cache: true
 
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: "24"
+          package-manager-cache: false
+
+      - name: install model-free native Claude test client
+        run: npm install --prefix "$RUNNER_TEMP/claude-client" --no-audit --no-fund --maxsockets=2 @anthropic-ai/claude-code@2.1.301
+
+      - name: release prerequisite regression
+        run: node --test --test-concurrency=2 plugins/claude-code/test/release-prerequisites.test.mjs
+
       - name: test
-        run: make test
+        run: make test CLAUDE_BIN="$RUNNER_TEMP/claude-client/node_modules/.bin/claude"
 
       - uses: goreleaser/goreleaser-action@a4f02ab5355a589de60d917a659ce617ed19b3de # v7
         with:

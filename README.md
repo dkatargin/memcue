@@ -58,7 +58,7 @@ not yet run for long in daily work.
 
 ## Compatibility
 
-This release candidate is `0.31.0`; the fact-base schema is **9**. Content-only storage is an incompatible
+This release candidate is `0.31.1`; the fact-base schema is **9**. Content-only storage is an incompatible
 upgrade: stop every consumer on every sharing machine and pause sync before opening a base. Make a full verified
 backup and test isolated copies first. Old JSONL consumers are not blocked by the SQLite schema number.
 See [Upgrade](#upgrade) for coordinated rollout and rollback data risks. All versioned plugin manifests carry
@@ -66,7 +66,7 @@ the same release version. Publication and live deployment are separate steps; ne
 
 | memcue | schema | Claude Code plugin | DSH plugin | Hermes plugin |
 |---|---|---|---|---|
-| 0.31.0 | 9 | 0.31.0 | 0.31.0 (`dsh >=0.2.0-rc.2 <0.3.0`) | 0.31.0 (`hermes-agent` >=0.17.0) |
+| 0.31.1 | 9 | 0.31.1 | 0.31.1 (`dsh >=0.2.0-rc.2 <0.3.0`) | 0.31.1 (`hermes-agent` >=0.17.0) |
 | 0.30.0 | 7 | 0.30.0 | 0.30.0 (`dsh >=0.2.0-rc.2 <0.3.0`) | 0.30.0 (`hermes-agent` 0.15.2) |
 | 0.29.0 | 7 | 0.29.0 | 0.29.0 (`dsh >=0.2.0-rc.2 <0.3.0`) | 0.29.0 (`hermes-agent` 0.15.2) |
 | 0.28.0 | 7 | 0.28.0 | 0.28.0 (`dsh >=0.2.0-rc.2 <0.3.0`) | 0.28.0 (`hermes-agent` 0.15.2) |
@@ -274,7 +274,11 @@ included (#453); the Hermes and DSH plugins read both it and the bare array of a
 
 ## Upgrade
 
-### 0.31.0: content-only storage and pull integrations
+### 0.31.1: content-only storage and pull integrations
+
+The v0.31.0 tag was consumed by a [failed release run](https://github.com/juev/memcue/actions/runs/42400343386);
+no release or assets were published. v0.31.1 includes the changes since the last published v0.30.0 and fixes
+the release job’s missing pinned native Claude test client (#688).
 
 - **Schema 9 is an incompatible content-only upgrade** (#678): auxiliary keywords/translations are removed;
   literal content is indexed and legacy write identity is preserved. Stop all consumers and pause sync together,
