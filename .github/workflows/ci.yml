@@ -41,13 +41,22 @@ jobs:
           node-version: "24"
           package-manager-cache: false
 
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version-file: go.mod
+          cache: true
+
       # The plugin imports the harness packages as peers. Pin the tested runtime so a new API cannot slip in
       # unnoticed; the repository root is a dsh bundle, so the packages resolve from the checkout.
       - name: install harness packages
         run: npm install --no-save --no-package-lock @deepseek-ai/dsh-llm@0.2.0-rc.2 @deepseek-ai/dsh-tools@0.2.0-rc.2
 
+      # Jobs do not share binaries: the pre-command integration test executes the real CLI.
+      - name: build memcue
+        run: go build -p 2 -o bin/memcue ./cmd/memcue
+
       - name: test plugins
-        run: node --test plugins/deepseek-harness/test/*.test.mjs plugins/claude-code/test/*.test.mjs
+        run: node --test --test-concurrency=2 plugins/deepseek-harness/test/*.test.mjs plugins/claude-code/test/*.test.mjs
 
   card-research:
     name: card research contracts

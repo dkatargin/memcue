@@ -17,6 +17,7 @@ test('real CLI packet through the DSH tool keeps target scope, budget and repeat
   const binary = process.env.MEMCUE_BIN || resolve('bin/memcue')
   const facts = join(root, 'facts')
   const added = spawnSync(binary, ['add', '-cwd', repo, '-kind', 'pitfall', '-scope', 'repo', '--', 'Orchard build requires amber mode only for synthetic fixtures.'], { env: { ...process.env, MEMCUE_FACTS: facts, MEMCUE_API_URL: '', MEMCUE_API_KEY: '' }, encoding: 'utf8' })
+  assert.ifError(added.error)
   assert.equal(added.status, 0, added.stderr)
   const id = added.stdout.trim().split(/\s+/)[0]
   const tools = new Map()
