@@ -413,3 +413,23 @@ func resolve(p string) string {
 }
 
 func sameDir(a, b string) bool { return resolve(a) == resolve(b) }
+
+// RepositoryKeys names only git repositories, without the non-git module/path fallback.
+func RepositoryKeys(dir, claudeDir string) []string {
+	if dir == "" {
+		return nil
+	}
+	abs, err := filepath.Abs(dir)
+	if err != nil {
+		return nil
+	}
+	repo, ok := locate(abs)
+	if !ok {
+		return nil
+	}
+	keys := Keys(abs, claudeDir)
+	if len(keys) == 0 {
+		return []string{DirPrefix + repo.main}
+	}
+	return keys
+}

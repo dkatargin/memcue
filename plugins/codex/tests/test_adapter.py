@@ -200,12 +200,12 @@ elif sys.argv[1]=='search':print(json.dumps({'facts':[],'hints':['No facts; try 
         self.assertNotIn('@MEMCUE@',r.stdout)
         self.assertFalse((self.home/'state').exists())
 
-    def test_plugin_delivers_only_session_start_and_cli_skills(self):
+    def test_plugin_delivers_lifecycle_hooks_and_cli_skills(self):
         manifest=json.loads((ROOT/'.codex-plugin/plugin.json').read_text())
         self.assertEqual(manifest['name'],'memcue')
         self.assertEqual(manifest['skills'],'./skills/')
         hooks=json.loads((ROOT/'hooks/hooks.json').read_text())['hooks']
-        self.assertEqual(set(hooks),{'SessionStart'})
+        self.assertEqual(set(hooks),{'SessionStart', 'UserPromptSubmit', 'PreToolUse'})
         handler=hooks['SessionStart'][0]['hooks'][0]
         self.assertIn('PLUGIN_ROOT',handler['command'])
         self.assertIn('memcue.py',handler['command'])

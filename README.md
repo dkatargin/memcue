@@ -948,6 +948,33 @@ older binary refuses the version-4 base instead of reading it, and 0.2.1 does no
 `fact_vectors` and rebuilds the derived index once; version 4 adds the optional vectors on top of the version-3
 stems, which keep the word of a versioned name such as `PostgreSQL-16`.
 
+## Automatic repository pitfalls
+
+Repository pitfalls are a narrow automatic channel: all latest active, unexpired `kind=pitfall` facts explicitly
+scoped to the current git repository arrive as whole content, including conditions and workarounds. Origin alone
+never grants applicability. Linked worktrees share repository identity; a non-git directory loads no pitfalls.
+Rules, decisions, environment, service/host/global facts and the research shelf stay on their existing search paths.
+Snapshots name their repository and supersede earlier snapshots; facts remain data whose conditions need checking.
+This channel does not consume or acknowledge pre-command budgets/receipts, and adds no model calls.
+
+Claude Code uses native function hooks (verified client 2.1.301): a single snapshot produces a dynamic array of
+whole facts on start/task entry. Large facts use first-message context blocks on startup/rebuild and additive prompt
+or tool-result context for later work. No static chunk count or independently reread chunk hooks remain. Actual cwd
+changes after a tool returns are read through the host session API; tool output and cached history are preserved.
+Organization-managed Claude deployments must allow the mod through managed policy; sec-default, trust and safe mode
+are respected. Transport failure or a real host ceiling produces an explicit diagnostic, never a partial fact subset.
+
+Codex start/task/Bash hooks deliver complete native snapshots with `additionalContextLimit: 0`; its launcher read
+ceiling remains 4 MiB (an adapter limit, not a verified Codex host limit). DSH refreshes on turn/cwd changes and
+compaction. Hermes >=0.17.0 uses the normal `memcue-context` companion plugin: every messages/Responses provider
+request gets a transient developer context item from the active initialized provider for that profile/session.
+Enable the companion as part of installation, alongside `memory.provider: memcue`; it is not an optional recall
+feature. Runtime cwd is resolved per request, including within a turn and after compaction. Cached system/prefetch
+facts are suppressed in supported middleware mode. Legacy hosts report their turn-entry-only limitation explicitly.
+Native model-free client/loader fixtures run without auth or inference; live model delivery remains unverified.
+
+See [transport and lifecycle evidence](docs/repository-pitfalls.md) for supported APIs and remaining limits.
+
 ## Use
 
 The Hermes provider, Claude Code plugin/skill/session-start and DeepSeek Harness instructions ask agents to write

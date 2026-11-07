@@ -89,8 +89,8 @@ func init() {
 const usage = `usage: memcue <command>
 
 commands:
-  session-start   SessionStart hook: tells the agent where its memory is and how to search it: memcue session-start [-part N] (part 1 carries the text; 2 and 3 print nothing, for an older plugin)
-  session-card    session-start without the note: the upgrade and dream hints for a host that has its own instructions: memcue session-card [-dream-tools]
+  session-start   SessionStart hook: repository pitfalls, memory instructions and hints: memcue session-start [-part N] (part 1 carries the text; 2 and 3 print nothing, for an older plugin)
+  session-card    session-start without the note: repository pitfalls and maintenance hints: memcue session-card [-dream-tools] [-pitfalls-only | -pitfalls-json | -hints-only]
   pre-command bounded scoped pull: -cwd DIR -session TASK -action FAMILY [-epoch GENERATION] [-ack RECEIPT] WORDS
   observe-problem record an evidenced occurrence: -fact ID -incident STABLE_ID
   search    find the facts that fit the words, with their IDs: memcue search [-n N] [-min-score F] [-in WHERE] [-kind K] [-since DAY] [-expired] [-all-words] [-json] [-cwd DIR] [-session ID] TEXT
@@ -141,15 +141,25 @@ func main() {
 	switch os.Args[1] {
 	case "session-start":
 		fs := flag.NewFlagSet("session-start", flag.ContinueOnError)
+		instructionsOnly := fs.Bool("instructions-only", false, "omit automatic pitfalls when separate whole-fact hooks deliver them")
 		part := fs.Int("part", 0, "the share of the text this hook carries, 1 to 3; 0 is the whole text in one block")
 		if err = fs.Parse(os.Args[2:]); err == nil {
-			err = runSessionStartPart(os.Stdin, os.Stdout, *part)
+			err = runSessionStartWith(os.Stdin, os.Stdout, *part, !*instructionsOnly)
 		}
 	case "session-card":
 		fs := flag.NewFlagSet("session-card", flag.ContinueOnError)
+		hintsOnly := fs.Bool("hints-only", false, "maintenance hints without automatic pitfall context")
+		pitfallsJSON := fs.Bool("pitfalls-json", false, "whole-fact repository snapshot for native function hooks")
+		pitfallsOnly := fs.Bool("pitfalls-only", false, "only automatic repository pitfalls, without instructions or maintenance hints")
 		dreamTools := fs.Bool("dream-tools", false, "also say when a dream is due, naming the memcue_dream_* tools")
 		if err = fs.Parse(os.Args[2:]); err == nil {
-			err = runSessionCardWith(os.Stdin, os.Stdout, *dreamTools)
+			if *pitfallsJSON {
+				err = runSessionPitfallsJSON(os.Stdin, os.Stdout)
+			} else if *pitfallsOnly {
+				err = runSessionPitfalls(os.Stdin, os.Stdout)
+			} else {
+				err = runSessionCardMode(os.Stdin, os.Stdout, *dreamTools, !*hintsOnly)
+			}
 		}
 	case "hook-extract", "extract-session", "extract-messages":
 		// Nothing is extracted any more (#494), but a plugin older than that still calls these after a turn or at

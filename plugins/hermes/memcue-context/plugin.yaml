@@ -1,0 +1,4 @@
+name: memcue-context
+version: 0.30.0
+kind: standalone
+description: Per-request repository pitfall context for the active memcue provider

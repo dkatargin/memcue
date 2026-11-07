@@ -23,9 +23,10 @@ test('the marketplace points at the Claude Code plugin', async () => {
 	assert.equal(plugin.source, './plugins/claude-code')
 })
 
-test('the hooks cover the session start only: no recall with a prompt (#361), no extraction (#494)', async () => {
+test('the hooks cover session/task entry and target switches, without extraction', async () => {
 	const config = await json('hooks/hooks.json')
 	assert.deepEqual(Object.keys(config.hooks), ['SessionStart'])
+ assert.deepEqual(config.modules, ['./register.js'])
 })
 
 test('the SessionStart hook can install the binary and warns about an older one', async () => {
@@ -39,11 +40,8 @@ test('the SessionStart hook can install the binary and warns about an older one'
 
 test('every hook runs the binary through the plugin script, with a timeout', async () => {
 	const config = await json('hooks/hooks.json')
-	// One SessionStart hook since the card went (#656): the note and the hints fit part 1, under the 10 000 characters
-	// Claude Code shows of a hook (#480); the binary still answers parts 2 and 3 of an older plugin with nothing.
-	const expected = {
-		SessionStart: ['session-start -part 1'],
-	}
+	// The note has its own hook. Automatic pitfalls use whole-fact chunks below the immutable host ceiling.
+	const expected = { SessionStart: ['session-start -part 1 -instructions-only'] }
 	for (const [event, commands] of Object.entries(expected)) {
 		const groups = config.hooks[event]
 		assert.equal(groups.length, commands.length, `${event} needs ${commands.length} matcher groups`)

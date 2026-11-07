@@ -169,3 +169,12 @@ older provider kept for its extraction are removed at start.
 
 Entries written to `MEMORY.md`/`USER.md` before the provider was switched on are not copied. Add the ones worth
 keeping with `memcue add`, or let the agent do it with `memcue_add`.
+
+## Automatic repository pitfalls (required companion)
+
+Full per-request delivery requires Hermes >=0.17.0. Install `memcue-context` next to `memcue` under the same profile's
+`plugins/` directory and run `hermes plugins enable memcue-context`, retaining `memory.provider: memcue`.
+This normal plugin activation is required for the supported integration, not an optional recall feature. It injects
+whole current-repository pitfalls on each provider request via released middleware, including after actual runtime
+cwd changes within a turn. Other profiles/providers/sessions are excluded. Legacy 0.15.2 retains tools/search and
+reports its turn-entry-only limitation. See [delivery details](../../docs/repository-pitfalls.md).

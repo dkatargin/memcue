@@ -8,8 +8,35 @@
             "type": "command",
             "command": "python3 -I \"${PLUGIN_ROOT}/scripts/memcue.py\" hook",
             "timeout": 30,
-            "additionalContextLimit": 5000,
+            "additionalContextLimit": 0,
             "statusMessage": "Loading memcue policy and maintenance hints"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -I \"${PLUGIN_ROOT}/scripts/memcue.py\" hook",
+            "timeout": 30,
+            "additionalContextLimit": 0,
+            "statusMessage": "Loading repository pitfalls"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -I \"${PLUGIN_ROOT}/scripts/memcue.py\" hook",
+            "timeout": 30,
+            "additionalContextLimit": 0,
+            "statusMessage": "Loading repository pitfalls"
           }
         ]
       }

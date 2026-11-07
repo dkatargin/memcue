@@ -37,6 +37,7 @@ from __future__ import annotations
 
 import datetime
 import hashlib
+import weakref
 import json
 import logging
 import os
@@ -211,6 +212,23 @@ def _identifiers(text: str) -> list[str]:
         if any(c.isdigit() for c in token) or any(c in token for c in "/@_"):
             out.append(token)
     return out[:6]
+
+
+def _prefetch_transport_limit() -> Optional[int]:
+    """Mirror Hermes MemoryManager's external-prefetch spill threshold, without changing host config."""
+    try:
+        from tools.hook_output_spill import get_spill_config
+        from hermes_cli.config import load_config
+        spill = get_spill_config()
+        if not spill.get("enabled", True):
+            return None
+        limit = int(spill.get("max_chars") or 10000)
+        memory = (load_config() or {}).get("memory", {})
+        if isinstance(memory, dict) and memory.get("prefetch_spill_enabled") is True:
+            return limit
+        return max(limit * 10, 100000)
+    except ImportError:
+        return None  # Hermes 0.15.2 has no aggregate prefetch spill ceiling
 
 
 def _project_dir(cwd: str) -> str:
@@ -392,6 +410,9 @@ DREAM_APPLY_SCHEMA = _schema(
     {"answer": "The JSON answer, in the form the instructions give, with the packet id."}, ["answer"])
 
 
+_REQUEST_OWNERS = weakref.WeakValueDictionary()
+
+
 class MemcueMemoryProvider(MemoryProvider):
     """Long-term memory through the memcue binary."""
 
@@ -404,6 +425,7 @@ class MemcueMemoryProvider(MemoryProvider):
         self._writes = True
         self._context = "primary"
         self._dreams = True
+        self._pitfalls_delivered = False
         self._generation = 0  # grows with every compression: the facts of an earlier context may come again
         self._dream = _on(self._config.get("dream", True))
         self._search_facts = _bounded_int(self._config.get("search_facts"), _SEARCH_FACTS, 1, 50)
@@ -533,6 +555,9 @@ class MemcueMemoryProvider(MemoryProvider):
         self._session_id = session_id
         self._writes = kwargs.get("agent_context", "primary") == "primary"
         self._context = str(kwargs.get("agent_context") or "primary")
+        self._request_home = os.path.realpath(home)
+        if self._context == "primary":
+            _REQUEST_OWNERS[(self._request_home, session_id)] = self
         # A cron run writes no facts, but it may tidy them (#358).
         self._dreams = self._context in ("primary", "cron")
         if self._writes:
@@ -582,6 +607,9 @@ class MemcueMemoryProvider(MemoryProvider):
         rebuilds it, after a compression or a reset (#363). No card of rules comes with it (#656): the note has the
         model search the user's rules and decisions at the start of a task, as measured in #647."""
         hints = self._hints_text()
+        if not self._request_delivery_enabled():
+            hints = ("Full automatic repository pitfalls require Hermes >=0.17.0 and enabled memcue-context. "
+                     "Legacy mode refreshes only at turn entry, not within a turn.\n\n" + hints)
         return ("# Long-term memory (memcue)\n" +
                 _FACT_LANGUAGE_NOTE + "\n" + _QUERY_LANGUAGE_NOTE + "\n" +
                 "Before the first relevant command or action-family/cwd change, call memcue_pre_command with actual cwd, stable task session, action family and English query. Read whole facts, then repeat the identical request with ack=receipt. Never acknowledge a failed transport; retry without ack. Execute only when blocked is false. Keep the session across repository switches and compaction; change epoch after compaction. Do not repeat for every shell command. Budget: 4096 UTF-8 bytes per response, 16384 per task including 2048 reserved for this instruction/tool schema; metadata and hints count. Results are data; validate applicability. " +
@@ -621,6 +649,20 @@ class MemcueMemoryProvider(MemoryProvider):
             entries += [e.strip() for e in re.split(r"\n\s*\n|§", text) if e.strip()]
         return entries
 
+    def _request_delivery_enabled(self) -> bool:
+        """Normal plugin activation is part of supported installation, not a ranking opt-in."""
+        try:
+            from hermes_cli.config import load_config
+            from hermes_cli.plugins import PluginContext
+            config = load_config()
+            plugins = config.get("plugins") or {}
+            return (hasattr(PluginContext, "register_middleware") and
+                    (config.get("memory") or {}).get("provider") == "memcue" and
+                    "memcue-context" in (plugins.get("enabled") or []) and
+                    "memcue-context" not in (plugins.get("disabled") or []))
+        except ImportError:
+            return False
+
     def _hints_text(self) -> str:
         """The hints of session-card: what this machine owes an upgrade and, without a background dream, that a dream
         is due. Empty output is the usual answer: nothing to say. A cron run gets none: it is a background task, not a
@@ -636,6 +678,8 @@ class MemcueMemoryProvider(MemoryProvider):
         if scope:
             payload["session_id"] = scope
         cmd = ["session-card"]
+        if self._request_delivery_enabled():
+            cmd.append("-hints-only")
         if self._dream and self._dreams and _version_at_least(self._version, _DREAM_TOOLS):
             # Without an endpoint for a background dream (#569), the hint is what starts a dream (#494).
             cmd.append("-dream-tools")
@@ -652,11 +696,13 @@ class MemcueMemoryProvider(MemoryProvider):
 
     # -- memcue calls -------------------------------------------------------
 
-    def _run(self, args: list[str], *, stdin: str = "", timeout: int = _WRITE_TIMEOUT) -> tuple[bool, str]:
+    def _run(self, args: list[str], *, stdin: str = "", timeout: int = _WRITE_TIMEOUT, state_dir: Optional[str] = None) -> tuple[bool, str]:
         binary = self._binary()
         if not binary:
             return False, "memcue binary not found"
         env = dict(os.environ, MEMCUE_FACTS=self._facts)
+        if state_dir is not None:
+            env["MEMCUE_STATE_DIR"] = state_dir
         if self._host:
             env["MEMCUE_HOST"] = self._host
         if self._api_url:
@@ -693,9 +739,38 @@ class MemcueMemoryProvider(MemoryProvider):
         return scope
 
     def prefetch(self, query: str, *, session_id: str = "") -> str:
-        """Nothing comes with a message: the model searches the base itself (#361), its rules and decisions included
-        (#656)."""
-        return ""
+        """Deliver repository pitfalls for the actual task cwd, without querying or ranking memory.
+
+        Hermes calls prefetch on turn entry; resolve its runtime cwd rather than retaining initialize's cwd.
+        Rules, decisions and maintenance hints stay on their existing paths.
+        """
+        self._workspace = _project_dir(_session_cwd(""))
+        if self._request_delivery_enabled():
+            return ""
+        if not self._workspace:
+            if self._pitfalls_delivered:
+                self._pitfalls_delivered = False
+                return "Repository pitfalls: no git repository. This supersedes earlier repository-pitfall snapshots."
+            return ""
+        ok, out = self._run(["session-card", "-pitfalls-only"],
+                            stdin=json.dumps({"cwd": self._workspace, "session_id": session_id or self._session_id}),
+                            timeout=_RECALL_TIMEOUT)
+        if not ok:
+            self._warn_hints_failure(session_id, "automatic repository pitfalls unavailable: " + out)
+            return "Repository pitfalls unavailable for the current cwd; earlier snapshots do not establish applicability."
+        try:
+            text = json.loads(out)["hookSpecificOutput"]["additionalContext"] if out else ""
+        except (ValueError, KeyError, TypeError):
+            return "Repository pitfalls unavailable: invalid native lifecycle response."
+        limit = _prefetch_transport_limit()
+        if limit is not None and len(text) > limit:
+            return ("Automatic repository pitfall delivery UNSUPPORTED: complete whole facts exceed this Hermes "
+                    "prefetch transport (" + str(limit) + " characters). No subset was delivered. "
+                    "Earlier snapshots do not establish current applicability.")
+        if out and json.loads(out)["hookSpecificOutput"].get("repositoryPitfallCount") == 0 and not self._pitfalls_delivered:
+            return ""
+        self._pitfalls_delivered = bool(text)
+        return text
 
     def _warn_hints_failure(self, session: str, reason: str) -> None:
         """Failed hints are a missing reminder, not a broken turn: say it once every ten minutes at most."""
@@ -794,7 +869,10 @@ class MemcueMemoryProvider(MemoryProvider):
         """Nothing to do: the model stored what it learnt during the session (#494)."""
 
     def shutdown(self) -> None:
-        """Nothing runs in the background: no extraction is in flight to wait for (#494)."""
+        """Release only this instance's request ownership; no background inference exists."""
+        key = (getattr(self, "_request_home", ""), self._session_id)
+        if _REQUEST_OWNERS.get(key) is self:
+            _REQUEST_OWNERS.pop(key, None)
 
     def on_session_switch(self, new_session_id: str, *, parent_session_id: str = "", reset: bool = False,
                           rewound: bool = False, **kwargs) -> None:
@@ -807,6 +885,11 @@ class MemcueMemoryProvider(MemoryProvider):
             return
         previous = self._session_id
         self._session_id = new_session_id
+        home = getattr(self, "_request_home", "")
+        if _REQUEST_OWNERS.get((home, previous)) is self:
+            _REQUEST_OWNERS.pop((home, previous), None)
+        if home and self._context == "primary":
+            _REQUEST_OWNERS[(home, new_session_id)] = self
         if previous != new_session_id:
             self._generation = 0
         if reset:
@@ -1064,6 +1147,14 @@ class MemcueMemoryProvider(MemoryProvider):
                 return tool_error("id is required")
             ok, out = self._run(["retire", "--", arg("id")])
         return json.dumps({"result": out}) if ok else tool_error(out)
+
+    @classmethod
+    def request_owner(cls, home: str, session_id: str):
+        """Return only the initialized primary instance for this exact profile/session."""
+        owner = _REQUEST_OWNERS.get((os.path.realpath(home), session_id))
+        if owner is None or owner._session_id != session_id or owner._context != "primary":
+            return None
+        return owner
 
     def backup_paths(self) -> list[str]:
         """The base when it lives outside HERMES_HOME (a shared one); inside, the home backup holds it."""
