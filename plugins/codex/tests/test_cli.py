@@ -20,8 +20,7 @@ class RealCLI(unittest.TestCase):
     def setUp(self):
         binary = os.environ.get('MEMCUE_BIN')
         self.assertTrue(binary and Path(binary).is_file(), 'build bin/memcue and set MEMCUE_BIN; this suite must execute')
-        (REPO/'bin').mkdir(exist_ok=True)
-        self.tmp = tempfile.TemporaryDirectory(prefix='codex-synthetic-',dir=REPO/'bin')
+        self.tmp = tempfile.TemporaryDirectory(prefix='codex-synthetic-')
         self.addCleanup(self.tmp.cleanup)
         self.home = Path(self.tmp.name)
         self.project = self.home/'project'
@@ -64,6 +63,56 @@ class RealCLI(unittest.TestCase):
     def dump(self):
         return [json.loads(line) for path in sorted((self.home/'facts').glob('*/*.jsonl'))
                 for line in path.read_text().splitlines() if line]
+
+    def test_repository_pitfalls_on_task_and_target_switch(self):
+        text = "Codex fixture failed because its schema was stale; regenerate its whole schema."
+        self.add(text, '-kind', 'pitfall', '-scope', 'repo', '-source', 'tool')
+        def hook(event, cwd, **fields):
+            payload = dict(hook_event_name=event, session_id='pitfalls-task', cwd=str(cwd),
+                           model='synthetic-model', permission_mode='default', transcript_path=None, **fields)
+            result = self.cli('hook', data=json.dumps(payload))
+            return json.loads(result.stdout)['hookSpecificOutput']
+        for source in ('startup', 'compact'):
+            self.assertIn(text, hook('SessionStart', self.nested, source=source)['additionalContext'])
+        task = hook('UserPromptSubmit', self.nested, prompt='Unrelated task', turn_id='one')
+        self.assertEqual(task['hookEventName'], 'UserPromptSubmit')
+        self.assertIn(text, task['additionalContext'], 'task hook omitted automatic repository pitfall')
+        other = self.home/'other'
+        subprocess.run(['git', 'init', '-q', str(other)], env=self.env, check=True)
+        subprocess.run(['git', '-C', str(other), 'remote', 'add', 'origin',
+                        'https://example.invalid/team/other.git'], env=self.env, check=True)
+        switched = hook('PreToolUse', self.nested, turn_id='one', tool_name='Bash',
+                        tool_input={'command':'pwd', 'workdir':str(other)})
+        self.assertEqual(switched['hookEventName'], 'PreToolUse')
+        self.assertNotIn(text, switched['additionalContext'])
+        self.assertIn('No active repository pitfalls', switched['additionalContext'])
+        self.assertIn('supersedes', switched['additionalContext'])
+
+    def test_pitfall_transport_has_no_preview_threshold(self):
+        content = ("Codex full condition and workaround: " + "schema repair detail. " * 1200).strip()
+        self.add(content, '-kind', 'pitfall', '-scope', 'repo', '-source', 'tool')
+        payload = dict(hook_event_name='SessionStart', source='startup', session_id='large-pitfall',
+                       cwd=str(self.nested), model='synthetic-model', permission_mode='default', transcript_path=None)
+        response = json.loads(self.cli('hook', data=json.dumps(payload)).stdout)
+        self.assertIn(content, response['hookSpecificOutput']['additionalContext'])
+        hooks = json.loads((ROOT/'hooks/hooks.json').read_text())['hooks']
+        for event in ('SessionStart', 'UserPromptSubmit', 'PreToolUse'):
+            self.assertEqual(hooks[event][0]['hooks'][0]['additionalContextLimit'], 0,
+                             'host would spill complete repository pitfalls to a preview')
+
+    def test_relative_target_resolved_once(self):
+        target = self.nested/'target'
+        nested = target/'target'
+        for path, name in ((target,'intended'),(nested,'unintended')):
+            subprocess.run(['git','init','-q',str(path)],env=self.env,check=True)
+            subprocess.run(['git','-C',str(path),'remote','add','origin','https://example.invalid/'+name+'.git'],env=self.env,check=True)
+            self.cli('add','-cwd',str(path),'-kind','pitfall','-scope','repo','--',name+' failure; repair fixture.')
+        for field in ('workdir','cwd'):
+            for value in ('target',str(target)):
+                payload=dict(hook_event_name='PreToolUse',session_id='relative',cwd=str(self.nested),model='synthetic',permission_mode='default',transcript_path=None,tool_name='Bash',tool_input={'command':'pwd',field:value})
+                text=json.loads(self.cli('hook',data=json.dumps(payload)).stdout)['hookSpecificOutput']['additionalContext']
+                self.assertIn('intended failure;',text)
+                self.assertNotIn('unintended failure;',text)
 
     def test_pre_command_uses_configured_base_and_actual_cwd(self):
         fact=self.add('Synthetic orchard build requires amber mode.', '-kind','pitfall','-source','tool','-scope','repo')

@@ -319,6 +319,8 @@ export function apply(ctx, config) {
 	let compatible = true // cleared when the binary is older than MIN_BINARY
 	let scopedSearch = true // cleared when the binary is older than SCOPED_SEARCH
 	let searchControls = true // cleared when the binary is older than SEARCH_CONTROLS
+	const pitfallTurns = new Map() // session -> latest task/cwd snapshot
+	let pitfallCapable = false
 	const hintSources = new Map() // session id -> "startup" | "compact" | "done"
 	const warnedHints = new Set()
 
@@ -361,6 +363,7 @@ export function apply(ctx, config) {
 				if (!found) console.warn(`memcue: no memcue binary on PATH, and the plugin could not install ${version || 'its release'}: ${error.message}`)
 			}
 		}
+		pitfallCapable = found && versionAtLeast(reported, '0.30.1')
 		scopedSearch = !found || versionAtLeast(reported, SCOPED_SEARCH)
 		searchControls = !found || versionAtLeast(reported, SEARCH_CONTROLS)
 		if (!found || versionAtLeast(reported, MIN_BINARY)) return
@@ -378,10 +381,13 @@ export function apply(ctx, config) {
 		const cwd = payload.agent.session.header?.cwd ?? process.cwd()
 
 		// The hints (an upgrade owed, a due dream) come on the first prompt of a session and again after a
-		// compaction; often there are none. Nothing else comes with a prompt: the model searches itself (#361, #656).
+		// compaction. Repository pitfalls also refresh at task entry and on cwd changes; other facts remain searched.
+		await binaryChecked
 		const hintSource = hintSources.get(sessionId) ?? 'startup'
-		if (!compatible || hintSource === 'done') return decision
-		const { code, out, err } = await runMemcue(settings, ['session-card'], {
+        const taskKey = JSON.stringify([cwd, payload.turn])
+        const pitfallsOnly = hintSource === 'done'
+		if (!compatible || (pitfallsOnly && (!pitfallCapable || pitfallTurns.get(sessionId) === taskKey))) return decision
+		const { code, out, err } = await runMemcue(settings, ['session-card', ...(pitfallsOnly ? ['-pitfalls-only'] : [])], {
 			input: JSON.stringify({ session_id: sessionId, cwd, source: hintSource }),
 			timeoutMs: HOOK_TIMEOUT_MS,
 		})
@@ -394,7 +400,9 @@ export function apply(ctx, config) {
 			return decision
 		}
 		hintSources.set(sessionId, 'done')
-		const hints = contextOf(out)
+        const previousTask = pitfallTurns.get(sessionId)
+        pitfallTurns.set(sessionId, taskKey)
+		const hints = contextOf(out) || (pitfallsOnly && previousTask !== taskKey ? 'Repository pitfalls: no git repository. This supersedes earlier repository-pitfall snapshots.' : '')
 		if (!hints) return decision
 		const messages = [...decision.messages, createUserMessage({
 			content: [{ type: 'text', text: hints }],
@@ -406,6 +414,7 @@ export function apply(ctx, config) {
 	ctx.on('session/disposed', (session) => {
 		const id = memcueSessionId(session.id)
 		hintSources.delete(id)
+        pitfallTurns.delete(id)
 		warnedHints.delete(id)
 	})
 

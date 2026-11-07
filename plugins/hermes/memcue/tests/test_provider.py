@@ -101,6 +101,7 @@ class ProviderTest(unittest.TestCase):
         # would turn the usage log on behind the tests that assert it is off, and a recall setting changes what is served.
         for key in _shell_memcue_vars():
             del os.environ[key]
+        os.environ["MEMCUE_DREAM_BACKGROUND"] = "0"
         _pin_builtin_memory(self)
         self.p = memcue_provider.MemcueMemoryProvider({"binary": BIN})
         self.p.initialize("s1", hermes_home=self.home, agent_context="primary")
@@ -165,6 +166,61 @@ class ProviderTest(unittest.TestCase):
         acknowledged=json.loads(self.p.handle_tool_call("memcue_pre_command",dict(args,ack=retry["receipt"])))
         self.assertFalse(acknowledged["blocked"])
         self.assertEqual(acknowledged["facts"],[])
+
+    def test_repository_pitfalls_follow_task_cwd_and_compaction(self):
+        repo = Path(self.home)/"pitfall-repo"
+        other = Path(self.home)/"other-repo"
+        for path, name in ((repo, "repo"), (other, "other")):
+            subprocess.run(["git", "init", "-q", str(path)], check=True)
+            subprocess.run(["git", "-C", str(path), "remote", "add", "origin",
+                            "https://example.invalid/team/"+name+".git"], check=True)
+        os.environ["MEMCUE_DREAM_BACKGROUND"] = "0"
+        os.environ["GIT_CONFIG_GLOBAL"] = "/dev/null"
+        os.environ["GIT_CONFIG_SYSTEM"] = "/dev/null"
+        os.environ["GIT_CONFIG_NOSYSTEM"] = "1"
+        content = "Hermes fixture failed because its index was stale; rebuild the whole index."
+        self.memcue("add", "-cwd", str(repo), "-kind", "pitfall", "-scope", "repo", "--", content)
+        self.p._workspace = str(repo)
+        self.assertIn(content, self.p.system_prompt_block())  # native entry control
+        with unittest.mock.patch.object(memcue_provider, "_session_cwd", return_value=str(repo)):
+            first = self.p.prefetch("Unrelated new task", session_id="s1")
+            self.assertIn(content, first, "task entry must automatically deliver the whole repository pitfall")
+            self.p.on_pre_compress([])
+            self.assertIn(content, self.p.prefetch("Unrelated continuation", session_id="s1"))
+        with unittest.mock.patch.object(memcue_provider, "_session_cwd", return_value=str(other)):
+            switched = self.p.prefetch("Next task", session_id="s1")
+            self.assertNotIn(content, switched)
+            self.assertIn("supersedes", switched)
+            self.assertIn("No active repository pitfalls", switched)
+        with unittest.mock.patch.object(memcue_provider, "_session_cwd", return_value=self.home):
+            self.assertNotIn(content, self.p.prefetch("No repository", session_id="s1"))
+
+    def test_pitfall_transport_reports_unsupported_instead_of_host_preview(self):
+        repo = Path(self.home)/"large-pitfall-repo"
+        subprocess.run(["git", "init", "-q", str(repo)], check=True)
+        subprocess.run(["git", "-C", str(repo), "remote", "add", "origin",
+                        "https://example.invalid/team/large.git"], check=True)
+        os.environ["MEMCUE_DREAM_BACKGROUND"] = "0"
+        text = "Cause and full workaround. " * 4100
+        self.memcue("add", "-cwd", str(repo), "-kind", "pitfall", "-scope", "repo", "--", text)
+        with unittest.mock.patch.object(memcue_provider, "_session_cwd", return_value=str(repo)), \
+             unittest.mock.patch.object(memcue_provider, "_prefetch_transport_limit", return_value=100000, create=True):
+            context = self.p.prefetch("Unrelated task", session_id="s1")
+        self.assertIn("UNSUPPORTED", context, "Hermes would replace whole facts with a spill preview")
+        self.assertIn("No subset", context)
+        self.assertLess(len(context), 100000)
+
+    def test_literal_empty_sentinel_is_fact_data(self):
+        repo = Path(self.home)/"literal"
+        subprocess.run(["git", "init", "-q", str(repo)], check=True)
+        subprocess.run(["git", "-C", str(repo), "remote", "add", "origin", "https://example.invalid/literal.git"], check=True)
+        text = "Failure prints No active repository pitfalls; escape that literal as the workaround."
+        self.memcue("add", "-cwd", str(repo), "-kind", "pitfall", "-scope", "repo", "--", text)
+        with unittest.mock.patch.object(memcue_provider, "_session_cwd", return_value=str(repo)):
+            self.assertIn(text, self.p.prefetch("unrelated"))
+
+    def test_legacy_mode_reports_missing_per_request_activation(self):
+        self.assertIn("Full automatic repository pitfalls require Hermes >=0.17.0 and enabled memcue-context", self.p.system_prompt_block())
 
     def facts(self):
         return self.memcue("facts")
@@ -495,7 +551,7 @@ class ProviderTest(unittest.TestCase):
         stub.chmod(0o755)
         p = memcue_provider.MemcueMemoryProvider({"binary": str(stub)})
         p.initialize("s1", hermes_home=self.home, agent_context="primary")
-        self.memcue("add", "-kind", "pitfall", "--", "Хост vega-3: sshd слушает порт 2222, а не 22.")
+        self.memcue("add", "-kind", "pitfall", "-scope", "host:vega-3", "--", "Хост vega-3: sshd слушает порт 2222, а не 22.")
         error = "ssh vega-3: connection refused on port 22, unexpected error"
         p.system_prompt_block()
         self.assertEqual(p.prefetch(error, session_id="s1"), "")

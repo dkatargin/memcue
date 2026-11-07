@@ -1,16 +1,19 @@
 {
-  "description": "memcue: the note to search and keep memory, at session start",
+  "description": "memcue: instructions and automatic repository pitfalls",
   "hooks": {
     "SessionStart": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/memcue.sh\" session-start -part 1 || true",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/memcue.sh\" session-start -part 1 -instructions-only || true",
             "timeout": 90
           }
         ]
       }
     ]
-  }
+  },
+  "modules": [
+    "./register.js"
+  ]
 }

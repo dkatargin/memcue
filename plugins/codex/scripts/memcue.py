@@ -74,7 +74,7 @@ def call(config, args, cwd, data='', timeout=TIMEOUT):
         if result.returncode:
             raise AdapterError('memcue command failed (exit ' + str(result.returncode) + '): ' + bounded(diagnostic))
         if len(output) > LIMIT:
-            raise AdapterError('memcue output exceeds 4 MiB; narrow the request')
+            raise AdapterError('memcue output exceeds the supported 4 MiB transport; complete delivery is unsupported, no subset delivered')
         return output.decode('utf-8')
 
 
@@ -83,9 +83,9 @@ def hook_input():
     if len(raw) > INPUT_LIMIT:
         raise AdapterError('hook input exceeds 64 KiB')
     data = json.loads(raw)
-    if not isinstance(data, dict) or data.get('hook_event_name') != 'SessionStart':
+    if not isinstance(data, dict) or data.get('hook_event_name') not in ('SessionStart', 'UserPromptSubmit', 'PreToolUse'):
         raise AdapterError('expected SessionStart hook input')
-    if data.get('source') not in ('startup', 'resume', 'clear', 'compact', 'fork'):
+    if data['hook_event_name'] == 'SessionStart' and data.get('source') not in ('startup', 'resume', 'clear', 'compact', 'fork'):
         raise AdapterError('unsupported SessionStart source')
     for key in ('session_id', 'cwd', 'model', 'permission_mode'):
         if not isinstance(data.get(key), str) or not data[key]:
@@ -94,6 +94,16 @@ def hook_input():
         raise AdapterError('invalid permission_mode')
     if 'transcript_path' not in data or not (data['transcript_path'] is None or isinstance(data['transcript_path'], str)):
         raise AdapterError('hook input needs nullable transcript_path')
+    if data['hook_event_name'] == 'PreToolUse':
+        tool = data.get('tool_input')
+        if data.get('tool_name') != 'Bash' or not isinstance(tool, dict):
+            raise AdapterError('expected Bash tool input')
+        target = tool.get('workdir') or tool.get('cwd')
+        if target:
+            if not isinstance(target, str):
+                raise AdapterError('tool cwd must be a path')
+            data['cwd'] = os.path.abspath(Path(data['cwd']) / target)
+            data['tool_input'] = {k:v for k,v in tool.items() if k not in ('workdir', 'cwd')}
     cwd = Path(data['cwd'])
     if not cwd.is_absolute() or not cwd.is_dir():
         raise AdapterError('hook cwd must name an existing absolute directory')
@@ -120,16 +130,21 @@ def main():
         if hook:
             response['hookSpecificOutput'] = {'hookEventName': 'SessionStart', 'additionalContext': context(command)}
             data = hook_input()
-            call(config, ['version', '-minimum', '0.30.0'], data['cwd'], timeout=5)
-            card = call(config, ['session-card', '-dream-tools'], data['cwd'], json.dumps(data), timeout=10)
+            event = data['hook_event_name']
+            response['hookSpecificOutput'] = {'hookEventName': event, 'additionalContext': context(command) if event == 'SessionStart' else ''}
+            call(config, ['version', '-minimum', '0.30.1'], data['cwd'], timeout=5)
+            flags = ['-dream-tools'] if event == 'SessionStart' else ['-pitfalls-only']
+            card = call(config, ['session-card', *flags], data['cwd'], json.dumps(data), timeout=10)
             if card.strip():
                 output = json.loads(card)['hookSpecificOutput']
-                if not isinstance(output, dict) or output.get('hookEventName') != 'SessionCard' or not isinstance(output.get('additionalContext'), str):
+                if not isinstance(output, dict) or output.get('hookEventName') != ('SessionCard' if event == 'SessionStart' else event) or not isinstance(output.get('additionalContext'), str):
                     raise AdapterError('invalid memcue SessionCard response')
                 hints = output['additionalContext'].replace(
                     'call memcue_dream_prepare and answer its packet with memcue_dream_apply',
                     'run the memcue-dream skill with the configured launcher')
                 response['hookSpecificOutput']['additionalContext'] += '\n\n' + hints
+            elif event != 'SessionStart':
+                response['hookSpecificOutput']['additionalContext'] = 'Repository pitfalls: no git repository. This supersedes earlier repository-pitfall snapshots.'
         elif args.command == 'instructions':
             sys.stdout.write((ROOT / 'AGENTS.md.snippet').read_text(encoding='utf-8').replace(
                 '@MEMCUE@', command).replace('@ROOT@', str(ROOT)))

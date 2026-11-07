@@ -21,9 +21,17 @@ jobs:
           go-version-file: go.mod
           cache: true
 
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: "24"
+          package-manager-cache: false
+
+      - name: install model-free native Claude test client
+        run: npm install --prefix "$RUNNER_TEMP/claude-client" --no-audit --no-fund --maxsockets=2 @anthropic-ai/claude-code@2.1.301
+
       # Builds bin/memcue, runs the Go tests with -race and the Hermes plugin tests against that binary.
       - name: test
-        run: make test
+        run: make test CLAUDE_BIN="$RUNNER_TEMP/claude-client/node_modules/.bin/claude"
 
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v9
@@ -92,7 +100,7 @@ jobs:
       - name: install Hermes
         run: |
           python3 -m venv /tmp/hermes-venv
-          /tmp/hermes-venv/bin/python -m pip install --disable-pip-version-check 'hermes-agent==0.15.2'
+          /tmp/hermes-venv/bin/python -m pip install --disable-pip-version-check 'hermes-agent==0.17.0'
 
       # MEMCUE_REQUIRE_HERMES fails the run when Hermes does not import, instead of falling back to the stubs.
       - name: test against real Hermes
@@ -100,12 +108,27 @@ jobs:
           MEMCUE_REQUIRE_HERMES=1 MEMCUE_BIN="$PWD/bin/memcue" \
             /tmp/hermes-venv/bin/python plugins/hermes/memcue/tests/test_provider.py
 
+      - name: test released normal-plugin request bridge
+        run: |
+          MEMCUE_BIN="$PWD/bin/memcue" /tmp/hermes-venv/bin/python -I plugins/hermes/test_request_context.py -v
+
       # An installed plugin is a copy of plugins/hermes/memcue alone, without the rest of the checkout (#526).
       - name: test an installed copy against real Hermes
         run: |
           home="$(mktemp -d)"
           mkdir -p "$home/plugins"
           cp -r plugins/hermes/memcue "$home/plugins/memcue"
+          cp -r plugins/hermes/memcue-context "$home/plugins/memcue-context"
+          cp plugins/hermes/test_request_context.py "$home/plugins/test_request_context.py"
           cd "$home"
           HERMES_HOME="$home" MEMCUE_REQUIRE_HERMES=1 MEMCUE_BIN="$GITHUB_WORKSPACE/bin/memcue" \
             /tmp/hermes-venv/bin/python "$home/plugins/memcue/tests/test_provider.py"
+
+      - name: test installed normal-plugin pair
+        run: |
+          home="$(mktemp -d)"
+          mkdir -p "$home/plugins"
+          cp -r plugins/hermes/memcue plugins/hermes/memcue-context "$home/plugins/"
+          cp plugins/hermes/test_request_context.py "$home/plugins/"
+          cd "$home"
+          MEMCUE_BIN="$GITHUB_WORKSPACE/bin/memcue" /tmp/hermes-venv/bin/python -I "$home/plugins/test_request_context.py" -v
