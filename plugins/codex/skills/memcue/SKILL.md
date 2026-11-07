@@ -13,7 +13,7 @@ Run from the session's current working directory, including a nested or non-Git 
 
 ```text
 search -json -in all "<words of the fact>"
-add -kind rule -scope global -source user -keywords "<3–8 useful words>" -- "<fact>"
+add -kind rule -scope global -source user -- "<fact>"
 correct ID "<corrected fact>"
 retire ID
 reopen ID
@@ -22,12 +22,12 @@ reopen ID
 Write new and corrected fact content in English; search in English first, then synonyms, exact identifiers and
 legacy-language words if needed. Preserve identifiers, commands, paths, versions, exact values and verbatim quotations.
 Keep user-facing replies in the requested language. The store accepts other languages; this policy does not translate data.
-Never correct a fact solely to change its language. Existing facts and indexed translations remain as stored.
+Never correct a fact solely to change its language. Existing fact content remains as stored.
 
 Read the actual search object: `facts` is an array, `hints` is optional. A fact carries `id`, `content`, optional
-`keywords`, `origin`, `scope`, `expires`, and `created`; it has no `source` or `kind` field in search JSON.
+`origin`, `scope`, `expires`, and `created`; it has no `source` or `kind` field in search JSON.
 Inspect the configured base history when persisted provenance is needed. Correct the matching fact instead of adding a duplicate.
-`correct` preserves source, kind, scope and expiry; `-keywords` replaces keywords, `-expires YYYY-MM-DD` changes expiry,
+`correct` preserves source, kind, scope and expiry; `-expires YYYY-MM-DD` changes expiry,
 and `-no-expires` removes it. `retire` keeps the history; `reopen` undoes retirement. Tell the user what changed.
 
 Choose metadata deliberately on add:
@@ -48,7 +48,7 @@ scope when no project exists; do not invent a repository. `-origin` is for delib
 For outside research, search `search -json -in shelf:research "<words>"` first. Then use:
 
 ```text
-add -shelf research -source tool -keywords "<words>" -- "<finding>. Source: <document, version or date>."
+add -shelf research -source tool -- "<finding>. Source: <document, version or date>."
 ```
 
 Ordinary search excludes shelves. Store what the source says and its limits, mark inference, and compare version/date

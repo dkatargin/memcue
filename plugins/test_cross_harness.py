@@ -67,7 +67,7 @@ class ShelfTextTest(unittest.TestCase):
 
     def measured(self, name: str) -> str:
         path = PLUGINS.parent / "docs" / "research" / "scripts" / "confirm531" / "candidate" / name
-        return path.read_text(encoding="utf-8").strip()
+        return re.sub(r' -keywords "[^"\n]*"', "", path.read_text(encoding="utf-8").strip())
 
     def test_the_skill_carries_its_section(self):
         skill = (PLUGINS / "claude-code" / "skills" / "memcue" / "SKILL.md").read_text(encoding="utf-8")
@@ -88,7 +88,7 @@ class PitfallLineTest(unittest.TestCase):
 
     def measured(self, name: str) -> str:
         path = PLUGINS.parent / "docs" / "research" / "scripts" / "pitfall566" / "candidate" / name
-        return path.read_text(encoding="utf-8").strip()
+        return re.sub(r' -keywords "[^"\n]*"', "", path.read_text(encoding="utf-8").strip())
 
     def test_the_skill_carries_the_line(self):
         skill = (PLUGINS / "claude-code" / "skills" / "memcue" / "SKILL.md").read_text(encoding="utf-8")

@@ -27,7 +27,7 @@ func setup(t *testing.T) *store.Store {
 	}
 	t.Cleanup(func() { _ = s.Close() })
 	for _, f := range facts {
-		if _, err := s.AddWith(f.content, splitKW(f.keywords), f.origin, "", store.Meta{}); err != nil {
+		if _, err := s.AddWith(f.content, f.origin, "", store.Meta{}); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -41,7 +41,7 @@ func TestProvisionalComesAfterApprovedAndExpires(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	approved, err := s.AddWith("Caddy config.", nil, "x", "", store.Meta{})
+	approved, err := s.AddWith("Caddy config.", "x", "", store.Meta{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -82,13 +82,6 @@ func TestProvisionalComesAfterApprovedAndExpires(t *testing.T) {
 	}
 }
 
-func splitKW(s string) []string {
-	if s == "" {
-		return nil
-	}
-	return []string{s}
-}
-
 func recall(t *testing.T, s *store.Store, prompt string) []Hit {
 	t.Helper()
 	hs, err := Recall(s, prompt, testParams)
@@ -111,13 +104,13 @@ func TestConfirmationsRecallNothing(t *testing.T) {
 // fact on the two rarest prompt terms comes before a long one that holds every term with a larger share.
 func TestPassingFactsAreServedInBM25Order(t *testing.T) {
 	s := setup(t)
-	short, err := s.AddWith("Конфиг kafka без zookeeper.", []string{"kafka", "zookeeper"}, "infra 2026-10-01", "", store.Meta{})
+	short, err := s.AddWith("Конфиг kafka без zookeeper.", "infra 2026-10-01", "", store.Meta{})
 	if err != nil {
 		t.Fatal(err)
 	}
 	filler := strings.Repeat("брокеры топики ретеншн мониторинг алерты дашборды бэкапы ротация ", 8)
 	long, err := s.AddWith("Кластер kafka в staging: "+filler+"zookeeper больше не нужен, конфиг лежит в репозитории.",
-		[]string{"kafka"}, "infra 2026-10-02", "", store.Meta{})
+		"infra 2026-10-02", "", store.Meta{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -198,12 +191,12 @@ func TestShortPromptWithKnownTermsRecalls(t *testing.T) {
 // A ticket key is an exact anchor, not a project word: PROJ-1234 recalls for PROJ-1234 and never for PROJ-1235.
 func TestTicketKeyRecallsExactOnly(t *testing.T) {
 	s := setup(t)
-	a, err := s.AddWith("Тикет PROJ-1234: берём в работу.", []string{"PROJ"}, "x 2026-10-20", "",
+	a, err := s.AddWith("Тикет PROJ-1234: берём в работу.", "x 2026-10-20", "",
 		store.Meta{Kind: "decision", Scope: "repo:x"})
 	if err != nil {
 		t.Fatal(err)
 	}
-	b, err := s.AddWith("Тикет PROJ-1235: отложен.", []string{"PROJ"}, "x 2026-10-20", "",
+	b, err := s.AddWith("Тикет PROJ-1235: отложен.", "x 2026-10-20", "",
 		store.Meta{Kind: "decision", Scope: "repo:x"})
 	if err != nil {
 		t.Fatal(err)
@@ -231,7 +224,7 @@ func TestVersionedPromptIsNotATicket(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer func() { _ = s.Close() }()
-	f, err := s.AddWith("Postgres 16 runs in a container on port 55432.", nil, "demo 2026-10-19", "", store.Meta{})
+	f, err := s.AddWith("Postgres 16 runs in a container on port 55432.", "demo 2026-10-19", "", store.Meta{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -246,8 +239,7 @@ func TestVersionedPromptIsNotATicket(t *testing.T) {
 
 func TestExpiredFactIsNotRecalled(t *testing.T) {
 	s := setup(t)
-	f, err := s.AddWith("Стенд нагрузки поднимается на порту 8443 в staging.", []string{"staging"},
-		"loadtest 2026-10-01", "2026-10-10", store.Meta{})
+	f, err := s.AddWith("Стенд нагрузки поднимается на порту 8443 в staging.", "loadtest 2026-10-01", "2026-10-10", store.Meta{})
 	if err != nil {
 		t.Fatal(err)
 	}

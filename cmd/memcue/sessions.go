@@ -65,7 +65,7 @@ func runSessions(args []string, out io.Writer) error {
 		msgs = inDir(msgs, dir)
 	}
 	exclude := map[string]bool{}
-	for _, id := range splitKeywords(*session) {
+	for _, id := range splitList(*session) {
 		exclude[id] = true
 	}
 	res := history.Search(msgs, query, limit, exclude, *n, sessionsHalf)

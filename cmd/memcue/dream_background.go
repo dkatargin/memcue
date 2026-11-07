@@ -72,8 +72,8 @@ func startDream() {
 			return
 		}
 	}
-	fresh, pending, _, err := dreamDue(dir, every)
-	if err != nil || fresh == 0 && pending == 0 {
+	fresh, _, err := dreamDue(dir, every)
+	if err != nil || fresh == 0 {
 		return
 	}
 	stamp := []byte(time.Now().UTC().Format(time.RFC3339Nano) + "\n")

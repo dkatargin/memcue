@@ -103,8 +103,8 @@ func TestMigrateSkipsSecrets(t *testing.T) {
 	old := noteFn
 	noteFn = func(context.Context, string, string) (extract.Result, error) {
 		return extract.Result{Facts: []extract.Fact{
-			{Content: "Обычный факт про порт 3000.", Keywords: []string{"port"}},
-			{Content: "Ключ API: " + secretToken, Keywords: []string{"key"}},
+			{Content: "Обычный факт про порт 3000."},
+			{Content: "Ключ API: " + secretToken},
 		}}, nil
 	}
 	t.Cleanup(func() { noteFn = old })

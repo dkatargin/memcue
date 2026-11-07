@@ -12,6 +12,8 @@
 //
 // count reads the fact files under each DIR (a text history: DIR/<c>/<ID>.jsonl) and prints the facts, versions and
 // bytes each rule would keep. It reads only; nothing is written.
+// Current compatibility: this historical auxiliary-field experiment refuses execution
+// with the content-only model. Use its original source revision to reproduce results.
 package main
 
 import (
@@ -83,9 +85,9 @@ func main() {
 	var err error
 	switch os.Args[1] {
 	case "cases":
-		cases()
+		err = historicalOnly(cases)
 	case "count":
-		err = count(os.Args[2:])
+		err = historicalOnly(count)
 	default:
 		err = fmt.Errorf("unknown command %q", os.Args[1])
 	}
@@ -158,15 +160,11 @@ func (s *side) correct(content string, at time.Duration) {
 }
 
 func (s *side) keywords(words []string, at time.Duration) {
-	f := s.last()
-	f.Keywords = words
-	s.put(f, at)
+	panic("historical keyword scenario requires the pre-content-only revision")
 }
 
 func (s *side) queries(q []string, at time.Duration) {
-	f := s.last()
-	f.Queries = q
-	s.put(f, at)
+	panic("historical query scenario requires the pre-content-only revision")
 }
 
 func (s *side) retire(at time.Duration) {
@@ -210,11 +208,11 @@ func shared() []store.Fact {
 		f.Version, f.Created = h[len(h)-1].Version+1, t0.Add(at)
 		h = append(h, f)
 	}
-	v.Queries = []string{"модель hermes"}
+
 	add(v, time.Minute)
 	v.Content = "Hermes работает на модели deepseek-flash"
 	add(v, 2*time.Minute)
-	v.Queries = []string{"модель hermes", "deepseek"}
+
 	add(v, 3*time.Minute)
 	return h
 }
@@ -378,4 +376,10 @@ func unnumbered(cur string) string {
 		return rest
 	}
 	return cur
+}
+
+// Keep the historical experiment functions for reference, but never execute changed
+// content-only semantics as if they reproduced the published auxiliary-field run.
+func historicalOnly(_ any) error {
+	return fmt.Errorf("this historical auxiliary-field experiment requires its pre-content-only source revision; current results would not be comparable")
 }

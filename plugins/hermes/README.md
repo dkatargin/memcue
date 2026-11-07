@@ -42,14 +42,14 @@ memcue fact base:
 - **Tools** `memcue_search`, `memcue_add`, `memcue_correct`, `memcue_retire` let the model find and fix facts.
   `memcue_search` takes an optional `limit` and runs `memcue search` with the session's workspace and id, so facts of
   this host and of the session's repository win ties and `MEMCUE_SEARCH_LOG=1` can name the session; `memcue_correct`
-  can set `keywords` and an `expires` date, as the CLI does. The call hands over at most **five** facts unless `limit`
+  can set an `expires` date, as the CLI does. The call hands over at most **five** facts unless `limit`
   says otherwise (on a live base ten doubled the characters and reached no prompt five did not), and only those that
   fit the query: a fact far below the best one is left out, so one fitting fact comes alone (#407). `search_facts`
   (default 5, 1–50) sets the most.
   Subagents, cron and flush runs get only `memcue_search` and do not write facts; a cron run also gets the dream
   tools below.
 - **Dream tools** `memcue_dream_prepare` and `memcue_dream_apply` let the model tidy the base: the first returns the
-  instructions and the facts to split, give search queries, review in groups and check the scope of (`since: all` for the first
+  instructions and the facts to split, review in groups and check the scope of (`since: all` for the first
   dream on a base), the second takes the JSON answer and reports what
   memcue applied and refused. See [Dream](#dream).
 
@@ -57,7 +57,7 @@ The delivered prompt and tool schemas request new and corrected fact content in 
 They preserve identifiers, commands, paths, versions, exact values and verbatim quotes and leave the user's reply
 language unchanged. English misses may be retried in Russian or another legacy language. The binary and built-in
 memory mirror keep accepting non-English input unchanged. Dreams do not translate facts or create translation debt;
-existing indexed translations remain searchable, and saved translation answers are ignored.
+auxiliary fields are removed during upgrade, and old auxiliary answers are refused.
 
 ## Candidates
 
@@ -73,7 +73,7 @@ Hermes runs one external memory provider at a time, so memcue replaces the one y
 ## Dream
 
 A dream is due once `MEMCUE_DREAM_EVERY` (default `24h`, #665) has passed since the last one and some fact is fresh or lacks
-ordinary search queries. With an endpoint configured, the `session-card` call that builds the system prompt starts one
+maintenance review. With an endpoint configured, the `session-card` call that builds the system prompt starts one
 `memcue dream -run` pass in the background and the hints say nothing of the dream (#569):
 
 ```bash
@@ -84,7 +84,7 @@ hermes config set memory.memcue.api_key_env DEEPSEEK_API_KEY
 
 `api_url`, `model` and `api_key_env` reach the binary as `MEMCUE_API_URL`, `MEMCUE_MODEL` and `MEMCUE_API_KEY`, the
 key read from the named environment variable of the gateway, so it stays out of `config.yaml`. They also give
-`memcue_add` its search queries in one short call. Without them the gateway's own `MEMCUE_API_URL` decides, and a
+the background dream its endpoint. Without them the gateway's own `MEMCUE_API_URL` decides, and a
 `claude` on the gateway's `PATH` runs the dream on `claude -p`.
 
 Without either, the system prompt ends with one line that says a dream is due and names the tools (the

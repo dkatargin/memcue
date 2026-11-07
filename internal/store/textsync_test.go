@@ -14,7 +14,7 @@ import (
 func TestAnOpenSeesAReplacedFileAndNotAnInPlaceEdit(t *testing.T) {
 	dir, cache := t.TempDir(), filepath.Join(t.TempDir(), "facts.db")
 	s := openTextAt(t, dir, cache, "mac", t0)
-	f, err := s.AddWith("Порт db1 — 5432", []string{"db1"}, "x 2026-10-19", "", Meta{})
+	f, err := s.AddWith("Порт db1 — 5432", "x 2026-10-19", "", Meta{})
 	if err != nil {
 		t.Fatal(err)
 	}

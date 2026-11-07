@@ -439,10 +439,10 @@ test('memcue_search hints on a Chinese query (#410)', async () => {
 	const { tools } = mount()
 	const search = tools.get('memcue_search')
 	const result = await search.execute({ query: '如何 harness base' }, {})
-	assert.match(result.hint, /Russian and English/)
+	assert.match(result.hint, /English by default; legacy facts may use other languages/)
 	assert.equal((await search.execute({ query: 'harness base' }, {})).hint, undefined)
 	const [part] = search.output.render({}, result)
-	assert.match(part.text, /Russian and English/)
+	assert.match(part.text, /English by default; legacy facts may use other languages/)
 })
 
 test('memcue_search passes a leading dash as a query', async () => {
@@ -507,7 +507,6 @@ test('memcue_add sends provenance, expiry, cwd and a separator', async () => {
 	const exec = { agent: { session: { header: { cwd: '/repo/demo' } } } }
 	const result = await tools.get('memcue_add').execute({
 		text: 'A new fact.',
-		keywords: 'new, fact',
 		expires: '2026-10-21',
 		kind: 'rule',
 		scope: 'global',
@@ -515,7 +514,7 @@ test('memcue_add sends provenance, expiry, cwd and a separator', async () => {
 	assert.equal(result.stored, true)
 	const text = await waitForLog('arg: add ')
 	// A rule is the user's words by default (#494).
-	assert.match(text, /arg: add -source user -cwd \/repo\/demo -keywords new, fact -expires 2026-10-21 -kind rule -scope global -- A new fact\./)
+	assert.match(text, /arg: add -source user -cwd \/repo\/demo -expires 2026-10-21 -kind rule -scope global -- A new fact\./)
 })
 
 test('memcue_add passes the source it is given and refuses an unknown one (#494)', async () => {
@@ -572,12 +571,11 @@ test('memcue_correct and memcue_retire pass the id and text', async () => {
 	const corrected = await tools.get('memcue_correct').execute({
 		id: 'f1',
 		text: 'Corrected fact.',
-		keywords: 'fixed',
 		expires: '2026-10-21',
 	}, {})
 	assert.equal(corrected.stored, true)
 	let text = await waitForLog('arg: correct ')
-	assert.match(text, /arg: correct -keywords fixed -expires 2026-10-21 -- f1 Corrected fact\./)
+	assert.match(text, /arg: correct -expires 2026-10-21 -- f1 Corrected fact\./)
 
 	const retired = await tools.get('memcue_retire').execute({ id: 'f1' }, {})
 	assert.equal(retired.stored, true)
@@ -680,4 +678,17 @@ test('English-first instructions reach the system prompt and registered tool sch
 	const query = tools.get('memcue_search').parameters.properties.query.description
 	assert.match(query, /first search query in English/)
 	assert.match(query, /Russian or another legacy language/)
+})
+
+test('content-only tools reject obsolete fields before invoking the binary', async () => {
+ const { tools } = mount()
+ for (const name of ['memcue_add', 'memcue_correct']) {
+  const tool = tools.get(name)
+  for (const field of ['keywords', 'queries', 'translation']) {
+   assert.equal(Object.hasOwn(tool.parameters.properties, field), false, `${name} exposes ${field}`)
+   const result = await tool.execute({text:'Cobalt observatory.', id:'f1', [field]:'saffron'}, {})
+   assert.equal(result.stored, false)
+   assert.match(result.message, /no longer supported|content.only/)
+  }
+ }
 })

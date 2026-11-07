@@ -30,6 +30,9 @@ import (
 )
 
 // Bump when the schema or the way facts become stems changes; Open migrates or rebuilds the derived index.
+// Version 9 preserves opaque legacy write identities across projection and merges.
+// Version 8 removes auxiliary keywords/queries and rebuilds the content-only index atomically.
+// Older SQLite writers must refuse it; old text writers still require a coordinated shutdown.
 // Version 6 ends the quarantine (#514): a fact is live whatever its review column says, so a candidate a base still
 // holds is indexed and found. The rows stay as they were written; opening a version-5 base only rebuilds the index. An
 // older memcue must refuse such a base: it would hide those facts again, and its index check would take them out of
@@ -47,14 +50,13 @@ import (
 // derived index once. Version 2 first made ticket keys exact and added the columns after version 1 (expires, kind,
 // scope, source, evidence, review, prompt_version); an older memcue refuses a newer base instead of reading
 // candidates as active facts.
-const schemaVersion = 7
+const schemaVersion = 9
 
 const schema = `
 CREATE TABLE IF NOT EXISTS facts (
 	id       TEXT NOT NULL,
 	version  INTEGER NOT NULL,
 	content  TEXT NOT NULL,
-	keywords TEXT NOT NULL DEFAULT '',
 	origin   TEXT NOT NULL DEFAULT '',
 	created  TEXT NOT NULL,
 	status   TEXT NOT NULL CHECK (status IN ('active', 'retired')),
@@ -66,7 +68,6 @@ CREATE TABLE IF NOT EXISTS facts (
 	evidence TEXT NOT NULL DEFAULT '',
 	review   TEXT NOT NULL DEFAULT '',
 	prompt_version INTEGER NOT NULL DEFAULT 0,
-	queries  TEXT NOT NULL DEFAULT '',
 	PRIMARY KEY (id, version)
 ) WITHOUT ROWID;
 CREATE TABLE IF NOT EXISTS fact_index (rid INTEGER PRIMARY KEY, id TEXT NOT NULL UNIQUE, stems TEXT NOT NULL,
@@ -116,18 +117,16 @@ const (
 
 // Fact is one version of a fact.
 type Fact struct {
-	ID       string
-	Version  int
-	Content  string
-	Keywords []string
-	Origin   string // where it was learnt: "<repository> <date>"
-	Created  time.Time
-	Status   string
-	Author   string // machine that wrote the version
-	Expires  string // last day the fact is worth recalling, "YYYY-MM-DD"; empty never expires
-	// Queries are the words and short phrases a user would ask about the fact with, written by the main model; the
-	// index holds them next to the content and the keywords. Empty means the fact has not been expanded yet.
-	Queries []string
+	ID      string
+	Version int
+	// WriteID preserves legacy write identity across content-only projection and renumbering.
+	WriteID string
+	Content string
+	Origin  string // where it was learnt: "<repository> <date>"
+	Created time.Time
+	Status  string
+	Author  string // machine that wrote the version
+	Expires string // last day the fact is worth recalling, "YYYY-MM-DD"; empty never expires
 	Meta
 }
 
@@ -146,11 +145,9 @@ type Meta struct {
 
 // FactInput is one new fact for AddBatch: the same fields AddWith takes, without the generated id, author or time.
 type FactInput struct {
-	Content  string
-	Keywords []string
-	Origin   string
-	Expires  string
-	Queries  []string
+	Content string
+	Origin  string
+	Expires string
 	Meta
 }
 
@@ -170,7 +167,9 @@ type Store struct {
 	now    func() time.Time
 	// absent are the columns an older base read without migration lacks, with the value they read as; Open adds
 	// them, so it is empty for a writable store.
-	absent map[string]string
+	absent    map[string]string
+	legacy    map[string]bool
+	legacyIDs map[legacyVersion]string
 	// text is the directory of the text history and textLock the file that serializes writes to it; both are empty
 	// for a base that is one SQLite file (see OpenText).
 	text, textLock string
@@ -273,7 +272,16 @@ func OpenReadOnly(path string) (*Store, error) {
 		}
 	}
 	host, _ := os.Hostname()
-	return &Store{db: db, author: host, now: time.Now, absent: absent}, nil
+	s := &Store{db: db, author: host, now: time.Now, absent: absent, legacy: have}
+	if have["keywords"] || have["queries"] {
+		// Load the complete legacy history once: a subset query cannot assign
+		// stable occurrences to repeated equal records.
+		if _, err := s.queryLegacy(db, `SELECT `+s.cols("")+` FROM facts ORDER BY id,version`); err != nil {
+			_ = db.Close()
+			return nil, err
+		}
+	}
+	return s, nil
 }
 
 // dataSource returns the SQLite data source for path and the file it names, or "" for an in-memory base. A file path
@@ -345,12 +353,14 @@ var added = []addedColumn{
 	{"evidence", "TEXT", "''"},
 	{"review", "TEXT", "''"},
 	{"prompt_version", "INTEGER", "0"},
-	{"queries", "TEXT", "''"},
 	{"channel", "TEXT", "''"},
+	{"write_id", "TEXT", "''"},
 }
 
 // factColumns names the columns the facts table of db has.
-func factColumns(db *sql.DB) (map[string]bool, error) {
+func factColumns(db interface {
+	Query(string, ...any) (*sql.Rows, error)
+}) (map[string]bool, error) {
 	rows, err := db.Query(`PRAGMA table_info(facts)`)
 	if err != nil {
 		return nil, err
@@ -372,14 +382,20 @@ func factColumns(db *sql.DB) (map[string]bool, error) {
 }
 
 // ensureColumns adds to a base the columns written after it was created.
-func (s *Store) ensureColumns() error {
-	have, err := factColumns(s.db)
+func (s *Store) ensureColumns() error { return ensureColumns(s.db) }
+
+func ensureColumns(db interface {
+	Query(string, ...any) (*sql.Rows, error)
+	QueryRow(string, ...any) *sql.Row
+	Exec(string, ...any) (sql.Result, error)
+}) error {
+	have, err := factColumns(db)
 	if err != nil {
 		return err
 	}
 	for _, c := range added {
 		if !have[c.name] {
-			if _, err := s.db.Exec(`ALTER TABLE facts ADD COLUMN ` + c.name + ` ` + c.typ + ` NOT NULL DEFAULT ` + c.def); err != nil {
+			if _, err := db.Exec(`ALTER TABLE facts ADD COLUMN ` + c.name + ` ` + c.typ + ` NOT NULL DEFAULT ` + c.def); err != nil {
 				return err
 			}
 		}
@@ -387,12 +403,12 @@ func (s *Store) ensureColumns() error {
 	// numbers stamps an index row with the version of the number terms it was stemmed with. An older memcue names
 	// the columns it inserts, so its rows read 0 and the next open stems them again (see restamp).
 	var numbers int
-	if err := s.db.QueryRow(`SELECT count(*) FROM pragma_table_info('fact_index') WHERE name = 'numbers'`).
+	if err := db.QueryRow(`SELECT count(*) FROM pragma_table_info('fact_index') WHERE name = 'numbers'`).
 		Scan(&numbers); err != nil {
 		return err
 	}
 	if numbers == 0 {
-		if _, err := s.db.Exec(`ALTER TABLE fact_index ADD COLUMN numbers INTEGER NOT NULL DEFAULT 0`); err != nil {
+		if _, err := db.Exec(`ALTER TABLE fact_index ADD COLUMN numbers INTEGER NOT NULL DEFAULT 0`); err != nil {
 			return err
 		}
 	}
@@ -532,24 +548,23 @@ func (s *Store) restamp() error {
 // a fact whose text has a digit, a separator and a digit can give one, so SQL cuts the set to those before the
 // lexer runs: opening a base does not stem every fact.
 func (s *Store) unnumbered() (int, error) {
-	kw, q := s.col("f", "keywords"), s.col("f", "queries")
 	// The latest version per id is a grouped join, not a correlated max(): the same rows in half the time.
-	rows, err := s.db.Query(`SELECT f.content, `+kw+`, `+q+`, coalesce(i.stems, '') FROM facts f
+	rows, err := s.db.Query(`SELECT f.content, coalesce(i.stems, '') FROM facts f
 		JOIN (SELECT id, max(version) mv FROM facts GROUP BY id) m ON f.id = m.id AND f.version = m.mv
 		LEFT JOIN fact_index i ON i.id = f.id
 		WHERE f.status = ?
-			AND (f.content || char(10) || `+kw+` || char(10) || `+q+`) GLOB '*[0-9][-.:/][0-9]*'`, Active)
+			AND f.content GLOB '*[0-9][-.:/][0-9]*'`, Active)
 	if err != nil {
 		return 0, err
 	}
 	defer func() { _ = rows.Close() }()
 	n := 0
 	for rows.Next() {
-		var content, keywords, queries, stems string
-		if err := rows.Scan(&content, &keywords, &queries, &stems); err != nil {
+		var content, stems string
+		if err := rows.Scan(&content, &stems); err != nil {
 			return 0, err
 		}
-		if text.HasNumberTerm(content+"\n"+keywords+"\n"+queries) && !hasNumberTerm(strings.Fields(stems)) {
+		if text.HasNumberTerm(content) && !hasNumberTerm(strings.Fields(stems)) {
 			n++
 		}
 	}
@@ -602,34 +617,63 @@ func (s *Store) IndexStats() (IndexStats, error) {
 func (s *Store) Close() error { return s.db.Close() }
 
 func (s *Store) migrate() error {
+	tx, err := s.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
 	var v int
-	if err := s.db.QueryRow(`PRAGMA user_version`).Scan(&v); err != nil {
+	if err := tx.QueryRow(`PRAGMA user_version`).Scan(&v); err != nil {
 		return err
 	}
 	if v == schemaVersion {
-		return nil
+		return tx.Commit()
 	}
 	if v > schemaVersion {
 		return fmt.Errorf("fact base has schema %d, this memcue knows %d: update memcue", v, schemaVersion)
 	}
-	if _, err := s.db.Exec(schema); err != nil {
+	if _, err := tx.Exec(schema); err != nil {
 		return err
 	}
-	// An old base may lack columns the rebuild reads (review, prompt_version), so add them before touching the index.
-	if err := s.ensureColumns(); err != nil {
+	if err := ensureColumns(tx); err != nil {
 		return err
 	}
-	if err := s.Rebuild(); err != nil {
+	have, err := factColumns(tx)
+	if err != nil {
 		return err
 	}
-	_, err := s.db.Exec(fmt.Sprintf(`PRAGMA user_version = %d`, schemaVersion))
-	return err
+	if have["keywords"] || have["queries"] {
+		legacy := &Store{legacy: have}
+		rows, err := legacy.queryLegacy(tx, `SELECT `+legacy.cols("")+` FROM facts ORDER BY id,version`)
+		if err != nil {
+			return err
+		}
+		for _, f := range rows {
+			if _, err := tx.Exec(`UPDATE facts SET write_id=? WHERE id=? AND version=?`, f.WriteID, f.ID, f.Version); err != nil {
+				return err
+			}
+		}
+	}
+	for _, name := range []string{"keywords", "queries"} {
+		if have[name] {
+			if _, err := tx.Exec(`ALTER TABLE facts DROP COLUMN ` + name); err != nil {
+				return err
+			}
+		}
+	}
+	if err := rebuild(tx); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(fmt.Sprintf(`PRAGMA user_version = %d`, schemaVersion)); err != nil {
+		return err
+	}
+	return tx.Commit()
 }
 
 // AddWith stores a new fact as version 1 with what it is and what it rests on. It is found from the write.
-func (s *Store) AddWith(content string, keywords []string, origin, expires string, m Meta) (Fact, error) {
+func (s *Store) AddWith(content string, origin, expires string, m Meta) (Fact, error) {
 	facts, err := s.AddBatch([]FactInput{{
-		Content: content, Keywords: keywords, Origin: origin, Expires: expires, Meta: m,
+		Content: content, Origin: origin, Expires: expires, Meta: m,
 	}})
 	if err != nil {
 		return Fact{}, err
@@ -659,9 +703,8 @@ func (s *Store) AddBatch(inputs []FactInput) ([]Fact, error) {
 		if err != nil {
 			return nil, err
 		}
-		facts = append(facts, Fact{ID: id.String(), Version: 1, Content: content, Keywords: in.Keywords,
-			Origin: in.Origin, Created: s.now().UTC(), Status: Active, Author: s.author, Expires: in.Expires,
-			Queries: in.Queries, Meta: approved(in.Meta)})
+		facts = append(facts, Fact{ID: id.String(), Version: 1, Content: content, Origin: in.Origin, Created: s.now().UTC(), Status: Active, Author: s.author, Expires: in.Expires,
+			Meta: approved(in.Meta)})
 	}
 	if len(facts) == 0 {
 		return facts, nil
@@ -686,15 +729,15 @@ func (s *Store) AddBatch(inputs []FactInput) ([]Fact, error) {
 	return facts, nil
 }
 
-// Correct adds a version with new content and keywords; the origin stays.
-func (s *Store) Correct(id, content string, keywords []string) (Fact, error) {
-	return s.CorrectExpiring(id, content, keywords, nil)
+// Correct adds a version with new content; the origin stays.
+func (s *Store) Correct(id, content string) (Fact, error) {
+	return s.CorrectExpiring(id, content, nil)
 }
 
-// CorrectExpiring adds a version with new content, keywords and optionally a new expiry: nil keeps the current one, a
+// CorrectExpiring adds a version with new content and optionally a new expiry: nil keeps the current one, a
 // pointer to "" clears it. A retired fact cannot be corrected: retirement is final, and bringing it back would undo a
 // decision (a vet verdict, a review rejection or an explicit retire) without review. Add a new fact instead.
-func (s *Store) CorrectExpiring(id, content string, keywords []string, expires *string) (Fact, error) {
+func (s *Store) CorrectExpiring(id, content string, expires *string) (Fact, error) {
 	cur, err := s.Get(id)
 	if err != nil {
 		return Fact{}, err
@@ -707,11 +750,10 @@ func (s *Store) CorrectExpiring(id, content string, keywords []string, expires *
 		return Fact{}, errors.New("empty fact")
 	}
 	f := cur
-	f.Version, f.Content, f.Keywords, f.Created, f.Status, f.Author = cur.Version+1, content, keywords,
+	f.Version, f.Content, f.Created, f.Status, f.Author = cur.Version+1, content,
 		s.now().UTC(), Active, s.author
 	if content != cur.Content {
-		f.Queries = nil // they were written for the old text; the caller asks for new ones, the dream as a fallback
-		f.Channel = ""  // the dream judged the old text and reads the new one (#625)
+		f.Channel = "" // the dream judged the old text and reads the new one (#625)
 	}
 	if expires != nil {
 		if err := ValidExpiry(*expires); err != nil {
@@ -782,8 +824,8 @@ func (s *Store) agentSources() ([]Fact, error) {
 	if v, err := s.stamp(sourcesStamp); err != nil || v == strconv.Itoa(n) {
 		return nil, err
 	}
-	relabelled, err := s.query(`INSERT INTO facts(`+columns+`) SELECT id, version + 1, content, keywords, origin,
-		created, status, author, expires, kind, scope, 'agent', evidence, review, prompt_version, queries, channel
+	relabelled, err := s.query(`INSERT INTO facts(`+columns+`) SELECT id, version + 1, content, origin,
+		created, status, author, expires, kind, scope, 'agent', evidence, review, prompt_version, channel, ''
 		FROM facts f
 		WHERE f.source = '' AND f.status = ? AND f.version = (SELECT max(version) FROM facts WHERE id = f.id)
 		RETURNING `+columns, Active)
@@ -863,24 +905,6 @@ func (s *Store) CountNamed(name string) (int, error) {
 func (s *Store) Backup(path string) error {
 	_, err := s.db.Exec(`VACUUM INTO ?`, path)
 	return err
-}
-
-// SetQueries adds a version of a fact with the search queries the main model wrote for it; the content and everything
-// else stay. Like Relabel, it refuses a fact edited since version (ErrChanged) and a retired fact.
-func (s *Store) SetQueries(id string, version int, queries []string) (Fact, error) {
-	cur, err := s.Get(id)
-	if err != nil {
-		return Fact{}, err
-	}
-	if cur.Version != version {
-		return Fact{}, fmt.Errorf("%w: %s is at version %d, not %d", ErrChanged, id, cur.Version, version)
-	}
-	if cur.Status == Retired {
-		return Fact{}, fmt.Errorf("%w: %s", ErrRetired, id)
-	}
-	f := cur
-	f.Version, f.Author, f.Queries = cur.Version+1, s.author, queries
-	return s.write(f)
 }
 
 // ErrNotRetired is returned when a fact to restore is not retired.
@@ -974,6 +998,9 @@ func (s *Store) split(cur Fact, parts []string) ([]Fact, error) {
 // write stores a new version of a fact as this memcue writes it, and returns the version as stored.
 func (s *Store) write(f Fact) (Fact, error) {
 	f.Meta = approved(f.Meta)
+	if f.WriteID != "" {
+		f.WriteID = projectedWriteID(f, "", "")
+	}
 	tx, err := s.db.Begin()
 	if err != nil {
 		return Fact{}, err
@@ -994,10 +1021,10 @@ func (s *Store) write(f Fact) (Fact, error) {
 
 // insert writes one version as it is.
 func insert(tx *sql.Tx, f Fact) error {
-	_, err := tx.Exec(`INSERT INTO facts(`+columns+`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, f.ID, f.Version,
-		f.Content, strings.Join(f.Keywords, ", "), f.Origin, f.Created.Format(time.RFC3339Nano), f.Status, f.Author,
-		f.Expires, f.Kind, f.Scope, f.Source, f.Evidence, f.Review, f.PromptVersion, strings.Join(f.Queries, ", "),
-		f.Channel)
+	_, err := tx.Exec(`INSERT INTO facts(`+columns+`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, f.ID, f.Version,
+		f.Content, f.Origin, f.Created.Format(time.RFC3339Nano), f.Status, f.Author,
+		f.Expires, f.Kind, f.Scope, f.Source, f.Evidence, f.Review, f.PromptVersion,
+		f.Channel, f.WriteID)
 	return err
 }
 
@@ -1011,16 +1038,16 @@ func reindex(tx *sql.Tx, id string) error {
 	if _, err := tx.Exec(`DELETE FROM fact_index WHERE id = ?`, id); err != nil {
 		return err
 	}
-	var content, keywords, queries, status string
-	err := tx.QueryRow(`SELECT content, keywords, queries, status FROM facts WHERE id = ? ORDER BY version DESC
-		LIMIT 1`, id).Scan(&content, &keywords, &queries, &status)
+	var content, status string
+	err := tx.QueryRow(`SELECT content, status FROM facts WHERE id = ? ORDER BY version DESC
+		LIMIT 1`, id).Scan(&content, &status)
 	if errors.Is(err, sql.ErrNoRows) || status == Retired {
 		return nil
 	}
 	if err != nil {
 		return err
 	}
-	stems := strings.Join(text.Stems(content+"\n"+keywords+"\n"+queries), " ")
+	stems := strings.Join(text.Stems(content), " ")
 	numbers := 0
 	if text.NumbersEnabled() {
 		numbers = text.NumberTermsVersion
@@ -1044,6 +1071,13 @@ func (s *Store) Rebuild() error {
 		return err
 	}
 	defer func() { _ = tx.Rollback() }()
+	if err := rebuild(tx); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+func rebuild(tx *sql.Tx) error {
 	if _, err := tx.Exec(`DELETE FROM fact_index`); err != nil {
 		return err
 	}
@@ -1078,24 +1112,19 @@ func (s *Store) Rebuild() error {
 	if err := saveStamp(tx, indexStampName, stamp); err != nil {
 		return err
 	}
-	return tx.Commit()
+	return nil
 }
 
-const columns = `id, version, content, keywords, origin, created, status, author, expires, kind, scope, source, evidence, review, prompt_version, queries, channel`
+const columns = `id, version, content, origin, created, status, author, expires, kind, scope, source, evidence, review, prompt_version, channel, write_id`
 
-func scan(row interface{ Scan(...any) error }) (Fact, error) {
+func scan(row interface{ Scan(...any) error }, extra ...any) (Fact, error) {
 	var f Fact
-	var keywords, created, queries string
-	if err := row.Scan(&f.ID, &f.Version, &f.Content, &keywords, &f.Origin, &created, &f.Status, &f.Author,
-		&f.Expires, &f.Kind, &f.Scope, &f.Source, &f.Evidence, &f.Review, &f.PromptVersion, &queries,
-		&f.Channel); err != nil {
+	var created string
+	args := []any{&f.ID, &f.Version, &f.Content, &f.Origin, &created, &f.Status, &f.Author,
+		&f.Expires, &f.Kind, &f.Scope, &f.Source, &f.Evidence, &f.Review, &f.PromptVersion,
+		&f.Channel, &f.WriteID}
+	if err := row.Scan(append(args, extra...)...); err != nil {
 		return Fact{}, err
-	}
-	if keywords != "" {
-		f.Keywords = strings.Split(keywords, ", ")
-	}
-	if queries != "" {
-		f.Queries = strings.Split(queries, ", ")
 	}
 	f.Created, _ = time.Parse(time.RFC3339Nano, created)
 	return f, nil
@@ -1103,7 +1132,7 @@ func scan(row interface{ Scan(...any) error }) (Fact, error) {
 
 // Get returns the latest version of a fact, active or retired.
 func (s *Store) Get(id string) (Fact, error) {
-	f, err := scan(s.db.QueryRow(`SELECT `+s.cols("")+` FROM facts WHERE id = ? ORDER BY version DESC LIMIT 1`, id))
+	f, err := s.scanLegacy(s.db.QueryRow(`SELECT `+s.cols("")+` FROM facts WHERE id = ? ORDER BY version DESC LIMIT 1`, id))
 	if errors.Is(err, sql.ErrNoRows) {
 		return Fact{}, fmt.Errorf("%w: %s", ErrNotFound, id)
 	}
@@ -1174,6 +1203,18 @@ func (s *Store) cols(alias string) string {
 			out[i] = alias + "." + c
 		}
 	}
+	if s.legacy["keywords"] || s.legacy["queries"] {
+		for _, c := range []string{"keywords", "queries"} {
+			v := "''"
+			if s.legacy[c] {
+				v = c
+				if alias != "" {
+					v = alias + "." + c
+				}
+			}
+			out = append(out, v)
+		}
+	}
 	return strings.Join(out, ", ")
 }
 
@@ -1186,7 +1227,7 @@ func (s *Store) col(alias, c string) string {
 }
 
 func (s *Store) query(q string, args ...any) ([]Fact, error) {
-	return queryOn(s.db, q, args...)
+	return s.queryLegacy(s.db, q, args...)
 }
 
 // queryOn runs a query of facts on a *sql.DB or inside a *sql.Tx.
@@ -1327,19 +1368,20 @@ func (s *Store) SearchFiltered(terms []string, limit int, f Filter) ([]Hit, erro
 	var out []Hit
 	for rows.Next() {
 		var h Hit
-		var stems, keywords, created, queries string
-		if err := rows.Scan(&stems, &h.BM25, &h.ID, &h.Version, &h.Content, &keywords, &h.Origin, &created, &h.Status,
-			&h.Author, &h.Expires, &h.Kind, &h.Scope, &h.Source, &h.Evidence, &h.Review, &h.PromptVersion, &queries,
-			&h.Channel); err != nil {
+		var stems, created, kw, qu string
+		args := []any{&stems, &h.BM25, &h.ID, &h.Version, &h.Content, &h.Origin, &created, &h.Status,
+			&h.Author, &h.Expires, &h.Kind, &h.Scope, &h.Source, &h.Evidence, &h.Review, &h.PromptVersion,
+			&h.Channel, &h.WriteID}
+		if s.legacy["keywords"] || s.legacy["queries"] {
+			args = append(args, &kw, &qu)
+		}
+		if err := rows.Scan(args...); err != nil {
 			return nil, err
 		}
-		if keywords != "" {
-			h.Keywords = strings.Split(keywords, ", ")
-		}
-		if queries != "" {
-			h.Queries = strings.Split(queries, ", ")
-		}
 		h.Created, _ = time.Parse(time.RFC3339Nano, created)
+		if s.legacy["keywords"] || s.legacy["queries"] {
+			h.WriteID = s.legacyIDs[legacyVersion{h.ID, h.Version}]
+		}
 		h.Stems = strings.Fields(stems)
 		out = append(out, h)
 	}

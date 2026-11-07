@@ -21,7 +21,7 @@ func TestNumbersAreIndexedOnNextOpen(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, content := range []string{"Стенд собран под Go 1.27 и только под него.", "Старый стенд жил на Go 1.20."} {
-		if _, err := s.Add(content, nil, "notes 2026-10-19"); err != nil {
+		if _, err := s.Add(content, "notes 2026-10-19"); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -63,7 +63,7 @@ func TestNumbersStayOutWithTheOptOut(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := s.Add("Стенд собран под Go 1.27 и только под него.", nil, "notes 2026-10-19"); err != nil {
+	if _, err := s.Add("Стенд собран под Go 1.27 и только под него.", "notes 2026-10-19"); err != nil {
 		t.Fatal(err)
 	}
 	if err := s.Close(); err != nil {
@@ -117,12 +117,12 @@ func TestPartlyNumberedIndexIsRepairedOnOpen(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	newer, err := s.Add("Стенд собран под Go 1.27 и только под него.", nil, "notes 2026-10-19")
+	newer, err := s.Add("Стенд собран под Go 1.27 и только под него.", "notes 2026-10-19")
 	if err != nil {
 		t.Fatal(err)
 	}
 	for _, content := range []string{"Старый стенд жил на Go 1.20.", "Резолвер проверять через dig @1.1.1.1."} {
-		if _, err := s.Add(content, nil, "notes 2026-10-19"); err != nil {
+		if _, err := s.Add(content, "notes 2026-10-19"); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -212,11 +212,11 @@ func TestRowOfAnOlderMemcueIsRestampedAlone(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	old, err := s.Add("Старый стенд жил на Go 1.20.", nil, "notes 2026-10-19")
+	old, err := s.Add("Старый стенд жил на Go 1.20.", "notes 2026-10-19")
 	if err != nil {
 		t.Fatal(err)
 	}
-	other, err := s.Add("Стенд собран под Go 1.27 и только под него.", nil, "notes 2026-10-19")
+	other, err := s.Add("Стенд собран под Go 1.27 и только под него.", "notes 2026-10-19")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -320,7 +320,7 @@ func TestOlderNumberTermsAreRestemmedOnOpen(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	f, err := s.Add("Правила проверять образом victoriametrics/vmalert:v1.106.1 с -dryRun.", nil, "notes 2026-10-25")
+	f, err := s.Add("Правила проверять образом victoriametrics/vmalert:v1.106.1 с -dryRun.", "notes 2026-10-25")
 	if err != nil {
 		t.Fatal(err)
 	}

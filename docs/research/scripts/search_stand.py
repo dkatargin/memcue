@@ -464,7 +464,9 @@ def prepare_arm(case: dict, arm: dict, out: Path, timeout: float) -> tuple[Path,
     keys: dict[str, str] = {}
     for f in case["facts"]:
         argv = [arm["binary"], "add", f"-kind={f['kind']}", "-source=user", f"-cwd={repos[f['repo']]}"]
-        argv += [f"-{opt}={f[opt]}" for opt in ("scope", "keywords") if opt in f]
+        # Legacy case files may still carry keyword labels. Current writers store only text;
+        # results from this importer are not repeats of historical auxiliary-field experiments.
+        argv += [f"-{opt}={f[opt]}" for opt in ("scope",) if opt in f]
         stdout, _ = run_proc(argv + ["--", f["text"]], env, repos[f["repo"]], timeout)
         fid = stdout.strip()
         if not FACT_ID.fullmatch(fid):

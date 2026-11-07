@@ -12,8 +12,7 @@ import (
 func TestAddTakesProcedureAndEvent(t *testing.T) {
 	env(t)
 	t.Setenv("MEMCUE_EVENT_TTL_DAYS", "")
-	proc := addFactForTest(t, "-kind", "procedure", "-keywords", "gateway, restart",
-		"Рестарт gateway: `s6-svc -r /run/service/gateway-default` от root.")
+	proc := addFactForTest(t, "-kind", "procedure", "Рестарт gateway: `s6-svc -r /run/service/gateway-default` от root.")
 	if f := storedFact(t, proc); f.Kind != "procedure" || f.Expires != "" {
 		t.Errorf("procedure stored as %+v", f)
 	}

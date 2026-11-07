@@ -22,9 +22,8 @@ type dreamReply struct{ Actions []extract.Action }
 type splitReply struct{ Splits []extract.Split }
 
 var (
-	dreamFn  = func(string) (dreamReply, error) { return dreamReply{}, nil }
-	splitFn  = func(string) (splitReply, error) { return splitReply{}, nil }
-	expandFn = func(string) (extract.ExpandResult, error) { return extract.ExpandResult{}, nil }
+	dreamFn = func(string) (dreamReply, error) { return dreamReply{}, nil }
+	splitFn = func(string) (splitReply, error) { return splitReply{}, nil }
 	// translateFn answers the facts a packet gives to translate (#396); by default the model writes none.
 	translateFn = func(string) ([]extract.Translated, error) { return nil, nil }
 	// scopeFn answers the global facts a packet gives to check the scope of (#607); by default all hold everywhere.
@@ -88,20 +87,6 @@ func answerPacket(text string) (dreamAnswer, error) {
 			return a, err
 		}
 		a.Splits = r.Splits
-	}
-	if in := packetBlock(text, "## Данные: поисковые запросы"); hasFacts(in) {
-		r, err := expandFn(in)
-		if err != nil {
-			return a, err
-		}
-		a.Expansions = r.Facts
-	}
-	if in := packetBlock(text, "## Данные: перевод"); hasFacts(in) {
-		r, err := translateFn(in)
-		if err != nil {
-			return a, err
-		}
-		a.Translations = r
 	}
 	if in := packetBlock(text, "## Данные: область"); hasFacts(in) {
 		r, err := scopeFn(in)

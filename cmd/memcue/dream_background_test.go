@@ -20,7 +20,7 @@ func dreamDueNow(t *testing.T, dir string) string {
 		t.Fatal(err)
 	}
 	dreamBase(t)
-	if _, _, _, err := dreamDue(state, time.Hour); err != nil { // the first check marks the base
+	if _, _, err := dreamDue(state, time.Hour); err != nil { // the first check marks the base
 		t.Fatal(err)
 	}
 	if err := markDream(state, time.Now().Add(-dreamEvery-time.Minute)); err != nil {

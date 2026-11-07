@@ -227,7 +227,7 @@ func containedIn(s *store.Store, prompt string, candidates []Hit, weight map[str
 	own := make([][]string, len(candidates))
 	var unknown []string
 	for i, h := range candidates {
-		own[i] = text.Terms(h.Content + " " + strings.Join(h.Keywords, " "))
+		own[i] = text.Terms(h.Content)
 		for _, t := range own[i] {
 			if _, ok := weight[t]; !ok && !slices.Contains(unknown, t) {
 				unknown = append(unknown, t)

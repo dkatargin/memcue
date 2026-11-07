@@ -31,7 +31,7 @@ func TestSearchOrdersTiesByHostProjectGlobal(t *testing.T) {
 		{"example.com/me/app 2026-09-12", "repo:example.com/me/app"},
 		{"example.com/elsewhere/y 2026-09-13", "host:mac"},
 	} {
-		if _, err := s.AddWith(text, []string{"nats"}, f.origin, "", store.Meta{Scope: f.scope}); err != nil {
+		if _, err := s.AddWith(text, f.origin, "", store.Meta{Scope: f.scope}); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -56,7 +56,7 @@ func TestSearchOrdersTiesByHostProjectGlobal(t *testing.T) {
 func TestSearchAnyProjectKeyWinsTies(t *testing.T) {
 	s := emptyBase(t)
 	for _, origin := range []string{"example.com/elsewhere/z 2026-09-10", "example.com/them/upstream 2026-08-01"} {
-		if _, err := s.AddWith("Брокер nats слушает 4222, мониторинг на 8222.", []string{"nats"}, origin, "", store.Meta{}); err != nil {
+		if _, err := s.AddWith("Брокер nats слушает 4222, мониторинг на 8222.", origin, "", store.Meta{}); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -73,7 +73,7 @@ func TestSearchAnyProjectKeyWinsTies(t *testing.T) {
 func TestSearchCutKeepsTheTieWinner(t *testing.T) {
 	s := emptyBase(t)
 	for _, sc := range []string{"host:mac", "", ""} {
-		if _, err := s.AddWith("Брокер nats слушает 4222.", []string{"nats"}, "x 2026-09-10", "",
+		if _, err := s.AddWith("Брокер nats слушает 4222.", "x 2026-09-10", "",
 			store.Meta{Scope: sc}); err != nil {
 			t.Fatal(err)
 		}
@@ -93,7 +93,7 @@ func TestSearchCutKeepsTheTieWinnerOfALongRun(t *testing.T) {
 		if i == 11 {
 			sc = "host:mac"
 		}
-		if _, err := s.AddWith("Брокер nats слушает 4222.", []string{"nats"}, "x 2026-09-10", "",
+		if _, err := s.AddWith("Брокер nats слушает 4222.", "x 2026-09-10", "",
 			store.Meta{Scope: sc}); err != nil {
 			t.Fatal(err)
 		}
@@ -127,11 +127,11 @@ func TestSearchNoRoomFindsNothing(t *testing.T) {
 func TestSearchLeavesOutWhatDoesNotFit(t *testing.T) {
 	s := emptyBase(t)
 	if _, err := s.AddWith("Брокер nats на db1 слушает порт 4222, мониторинг nats на 8222, кластер nats из трёх узлов.",
-		[]string{"nats", "брокер"}, "x 2026-09-10", "", store.Meta{}); err != nil {
+		"x 2026-09-10", "", store.Meta{}); err != nil {
 		t.Fatal(err)
 	}
 	for _, c := range []string{"Порт postgres на db1 — 5432.", "На db1 стоит node_exporter.", "db1 перезагружали в среду."} {
-		if _, err := s.AddWith(c, nil, "x 2026-09-10", "", store.Meta{}); err != nil {
+		if _, err := s.AddWith(c, "x 2026-09-10", "", store.Meta{}); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -139,7 +139,7 @@ func TestSearchLeavesOutWhatDoesNotFit(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(got) != 1 || got[0].Keywords[0] != "nats" {
+	if len(got) != 1 || !strings.Contains(strings.ToLower(got[0].Content), "nats") {
 		t.Fatalf("got %d facts %+v, want the nats fact alone", len(got), got)
 	}
 	all, err := Search(s, Query{Text: "брокер nats db1", Project: nil, Host: "", N: 5, MinScore: 0})
@@ -165,7 +165,7 @@ func controlBase(t *testing.T) *store.Store {
 		{"service nats", "example.com/them/lib 2026-09-10", "", "procedure", "service:hermes"},
 		{"expired nats", "example.com/me/app 2026-09-10", "2026-09-30", "event", "repo:example.com/me/app"},
 	} {
-		if _, err := s.AddWith(f.content, []string{"nats"}, f.origin, f.expires, store.Meta{Kind: f.kind, Scope: f.scope}); err != nil {
+		if _, err := s.AddWith(f.content, f.origin, f.expires, store.Meta{Kind: f.kind, Scope: f.scope}); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -250,7 +250,7 @@ func TestSearchDefaultInARepository(t *testing.T) {
 		{"another repo nats", "example.com/them/lib 2026-10-26", "repo:example.com/them/lib"},
 		{"another host nats", "example.com/them/lib 2026-10-26", "host:loft"},
 	} {
-		if _, err := s.AddWith(f.content, []string{"nats"}, f.origin, "", store.Meta{Scope: f.scope}); err != nil {
+		if _, err := s.AddWith(f.content, f.origin, "", store.Meta{Scope: f.scope}); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -368,11 +368,11 @@ func TestSearchSince(t *testing.T) {
 func TestSearchFiltersBeforeTheLimit(t *testing.T) {
 	s := emptyBase(t)
 	for range 30 {
-		if _, err := s.AddWith("nats nats nats broker", nil, "x 2026-09-10", "", store.Meta{}); err != nil {
+		if _, err := s.AddWith("nats nats nats broker", "x 2026-09-10", "", store.Meta{}); err != nil {
 			t.Fatal(err)
 		}
 	}
-	if _, err := s.AddWith("a rule about nats among many words of other kinds", nil, "x 2026-09-10", "",
+	if _, err := s.AddWith("a rule about nats among many words of other kinds", "x 2026-09-10", "",
 		store.Meta{Kind: "rule"}); err != nil {
 		t.Fatal(err)
 	}
@@ -386,7 +386,7 @@ func TestSearchFiltersBeforeTheLimit(t *testing.T) {
 func TestSearchAllWords(t *testing.T) {
 	s := emptyBase(t)
 	for _, c := range []string{"nats on db1", "nats elsewhere", "db1 reboots"} {
-		if _, err := s.AddWith(c, nil, "x 2026-09-10", "", store.Meta{}); err != nil {
+		if _, err := s.AddWith(c, "x 2026-09-10", "", store.Meta{}); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -414,7 +414,7 @@ func TestSearchRefusesUnknownControls(t *testing.T) {
 // An origin key outside ASCII still names its facts: the database counts characters, not bytes.
 func TestSearchProjectKeyOutsideASCII(t *testing.T) {
 	s := emptyBase(t)
-	if _, err := s.AddWith("nats на стенде", nil, "dir:/дом/проект 2026-10-25", "", store.Meta{}); err != nil {
+	if _, err := s.AddWith("nats на стенде", "dir:/дом/проект 2026-10-25", "", store.Meta{}); err != nil {
 		t.Fatal(err)
 	}
 	hits, err := Search(s, Query{Text: "nats", N: 5, Project: []string{"dir:/дом/проект"}, In: []string{"project"}})
@@ -452,11 +452,10 @@ func TestQueryFloor(t *testing.T) {
 // that answers one part of the message shares several. -min-score 0 stays the wide net (#417).
 func TestSearchMessageLeavesOutAFactOfOneTerm(t *testing.T) {
 	s := emptyBase(t)
-	if _, err := s.AddWith("NAS на хосте loffe держит restic-репозиторий в каталоге /volume1/backup.", nil,
-		"example.org/me/app 2026-10-20", "", store.Meta{}); err != nil {
+	if _, err := s.AddWith("NAS на хосте loffe держит restic-репозиторий в каталоге /volume1/backup.", "example.org/me/app 2026-10-20", "", store.Meta{}); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := s.AddWith("Файл /opt/data/memory_store.db занимает 260 КБ.", nil, "example.org/me/app 2026-10-20", "", store.Meta{}); err != nil {
+	if _, err := s.AddWith("Файл /opt/data/memory_store.db занимает 260 КБ.", "example.org/me/app 2026-10-20", "", store.Meta{}); err != nil {
 		t.Fatal(err)
 	}
 	msg := "Давай посмотрим сколько у нас свободно на диске на nas? Что больше всего занимает и сколько весят бекапы с loffe?"
@@ -552,7 +551,7 @@ func TestSearchShelf(t *testing.T) {
 	s := controlBase(t)
 	// Learnt in the session's project, so only the exclusion keeps it out of a project search.
 	for _, f := range []struct{ content, scope string }{{"research nats", "shelf:research"}, {"rust nats", "shelf:rust"}} {
-		if _, err := s.AddWith(f.content, []string{"nats"}, "example.com/me/app 2026-09-10", "",
+		if _, err := s.AddWith(f.content, "example.com/me/app 2026-09-10", "",
 			store.Meta{Kind: "environment", Scope: f.scope}); err != nil {
 			t.Fatal(err)
 		}
@@ -610,11 +609,11 @@ func TestNamesRepo(t *testing.T) {
 // Explicit problem evidence breaks only exact relevance/place ties, even at N=1.
 func TestSearchObservedRecurrenceTieOnly(t *testing.T) {
 	s := emptyBase(t)
-	old, err := s.AddWith("Orchard build synthetic workaround.", nil, "_global 2026-01-01", "", store.Meta{Scope: "global"})
+	old, err := s.AddWith("Orchard build synthetic workaround.", "_global 2026-01-01", "", store.Meta{Scope: "global"})
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = s.AddWith("Orchard build synthetic workaround.", nil, "_global 2026-02-01", "", store.Meta{Scope: "global"})
+	_, err = s.AddWith("Orchard build synthetic workaround.", "_global 2026-02-01", "", store.Meta{Scope: "global"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -623,7 +622,7 @@ func TestSearchObservedRecurrenceTieOnly(t *testing.T) {
 	if err != nil || len(got) != 1 || got[0].ID != old.ID {
 		t.Fatalf("observed tie winner missing: %+v %v", got, err)
 	}
-	local, err := s.AddWith("Orchard build synthetic workaround.", nil, "synthetic.invalid/orchard 2026-01-01", "", store.Meta{Scope: "repo:synthetic.invalid/orchard"})
+	local, err := s.AddWith("Orchard build synthetic workaround.", "synthetic.invalid/orchard 2026-01-01", "", store.Meta{Scope: "repo:synthetic.invalid/orchard"})
 	if err != nil {
 		t.Fatal(err)
 	}

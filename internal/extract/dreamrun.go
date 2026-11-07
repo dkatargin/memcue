@@ -7,25 +7,13 @@ import (
 )
 
 // dreamRunSystem is the system message of a dream packet sent to a model: the packet itself carries the instructions,
-// the four tasks, the data and the form of the answer.
+// the three tasks, the data and the form of the answer.
 const dreamRunSystem = "Ты — модель memcue dream. Сообщение пользователя — пакет работы целиком: инструкции, задачи и " +
-	"данные. Выполни его и верни ровно тот JSON-объект, который описан в разделе «Форма ответа», без пояснений и без " +
+	"данные. Выполни его и верни ровно тот JSON-объект, который описан в разделе «Answer format», без пояснений и без " +
 	"markdown."
 
 // dreamSchema is the form of a dream answer for `claude -p`, which holds its output to a JSON schema.
-const dreamSchema = `{"type":"object","additionalProperties":false,
-"required":["packet","splits","expansions","actions","scopes"],"properties":{
-"packet":{"type":"string"},
-"splits":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["id","parts","reason"],
-"properties":{"id":{"type":"string"},"parts":{"type":"array","items":{"type":"string"}},"reason":{"type":"string"}}}},
-"expansions":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["id","queries"],
-"properties":{"id":{"type":"string"},"queries":{"type":"array","items":{"type":"string"}}}}},
-"actions":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["op","id","reason"],
-"properties":{"op":{"type":"string","enum":["retire","correct"]},"id":{"type":"string"},"content":{"type":"string"},
-"keywords":{"type":"array","items":{"type":"string"}},"queries":{"type":"array","items":{"type":"string"}},
-"by":{"type":"string"},"kind":{"type":"string","enum":["duplicate","outdated"]},"reason":{"type":"string"}}}},
-"scopes":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["id","scope","reason"],
-"properties":{"id":{"type":"string"},"scope":{"type":"string"},"reason":{"type":"string"}}}}}}`
+const dreamSchema = `{"type":"object","additionalProperties":false,"required":["packet","splits","actions","scopes"],"properties":{"packet":{"type":"string"},"splits":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["id","parts","reason"],"properties":{"id":{"type":"string"},"parts":{"type":"array","items":{"type":"string"}},"reason":{"type":"string"}}}},"actions":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["op","id","reason"],"properties":{"op":{"type":"string","enum":["retire","correct"]},"id":{"type":"string"},"content":{"type":"string"},"by":{"type":"string"},"kind":{"type":"string","enum":["duplicate","outdated"]},"reason":{"type":"string"}}}},"scopes":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["id","scope","reason"],"properties":{"id":{"type":"string"},"scope":{"type":"string"},"reason":{"type":"string"}}}}}}`
 
 // ErrNoEndpoint: a plain memcue dream -run has no endpoint to send the packet to.
 var ErrNoEndpoint = errors.New("no MEMCUE_API_URL: the dream runs on the session's model (memcue dream -prepare), " +

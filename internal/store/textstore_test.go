@@ -54,17 +54,17 @@ func TestTextHistoryFollowsEveryWrite(t *testing.T) {
 	dir, cache := t.TempDir(), filepath.Join(t.TempDir(), "facts.db")
 	s := openTextAt(t, dir, cache, "mac", t0)
 	defer func() { _ = s.Close() }()
-	f, err := s.AddWith("Порт db1 — 5432", []string{"db1"}, "x 2026-10-19", "", Meta{Kind: "environment"})
+	f, err := s.AddWith("Порт db1 — 5432", "x 2026-10-19", "", Meta{Kind: "environment"})
 	if err != nil {
 		t.Fatal(err)
 	}
-	g, err := s.AddWith("Порт db2 — 6543; бэкап в 3:00", nil, "x 2026-10-19", "", Meta{})
+	g, err := s.AddWith("Порт db2 — 6543; бэкап в 3:00", "x 2026-10-19", "", Meta{})
 	if err != nil {
 		t.Fatal(err)
 	}
 	steps := []func() error{
-		func() error { _, err := s.Correct(f.ID, "Порт db1 — 5433", []string{"db1"}); return err },
-		func() error { _, err := s.SetQueries(f.ID, 2, []string{"какой порт у db1"}); return err },
+		func() error { _, err := s.Correct(f.ID, "Порт db1 — 5433"); return err },
+		func() error { _, err := s.Retag(f.ID, 2, "corrected origin", "host:mac"); return err },
 		func() error { _, err := s.Relabel(f.ID, 3, "pitfall", "global", ""); return err },
 		func() error { _, err := s.Retag(f.ID, 4, "y 2026-10-20", "repo:y"); return err },
 		func() error { _, err := s.Retire(f.ID); return err },
@@ -87,7 +87,7 @@ func TestTextHistoryFollowsEveryWrite(t *testing.T) {
 func TestOpenTakesInWhatGitWrote(t *testing.T) {
 	dir, cache := t.TempDir(), filepath.Join(t.TempDir(), "facts.db")
 	s := openTextAt(t, dir, cache, "mac", t0)
-	f, err := s.AddWith("Hermes работает на модели deepseek-flash", []string{"hermes"}, "x", "", Meta{})
+	f, err := s.AddWith("Hermes работает на модели deepseek-flash", "x", "", Meta{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -122,16 +122,16 @@ func TestOpenTakesInWhatGitWrote(t *testing.T) {
 func TestOpenWritesWhatTheFileMissed(t *testing.T) {
 	dir, cache := t.TempDir(), filepath.Join(t.TempDir(), "facts.db")
 	s := openTextAt(t, dir, cache, "mac", t0)
-	f, err := s.AddWith("Порт db1 — 5432", nil, "x", "", Meta{})
+	f, err := s.AddWith("Порт db1 — 5432", "x", "", Meta{})
 	if err != nil {
 		t.Fatal(err)
 	}
 	_ = s.Close()
 	plain := openAt(t, cache, "mac", t0.Add(time.Hour)) // writes the cache only, as a stopped process left it
-	if _, err := plain.Correct(f.ID, "Порт db1 — 5433", nil); err != nil {
+	if _, err := plain.Correct(f.ID, "Порт db1 — 5433"); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := plain.AddWith("Новый факт без файла", nil, "x", "", Meta{}); err != nil {
+	if _, err := plain.AddWith("Новый факт без файла", "x", "", Meta{}); err != nil {
 		t.Fatal(err)
 	}
 	_ = plain.Close()
@@ -149,11 +149,11 @@ func TestOpenWritesWhatTheFileMissed(t *testing.T) {
 func TestOpenThatCouldNotWriteAFileTriesAgain(t *testing.T) {
 	dir, cache := t.TempDir(), filepath.Join(t.TempDir(), "facts.db")
 	s := openTextAt(t, dir, cache, "mac", t0)
-	f, err := s.AddWith("Порт db1 — 5432", nil, "x", "", Meta{})
+	f, err := s.AddWith("Порт db1 — 5432", "x", "", Meta{})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := s.Correct(f.ID, "Порт db1 — 5433", nil); err != nil {
+	if _, err := s.Correct(f.ID, "Порт db1 — 5433"); err != nil {
 		t.Fatal(err)
 	}
 	_ = s.Close()
@@ -194,7 +194,7 @@ func changeCounter(t *testing.T, path string) uint32 {
 func TestOpenWithNothingNewWritesNothing(t *testing.T) {
 	dir, cache := t.TempDir(), filepath.Join(t.TempDir(), "facts.db")
 	s := openTextAt(t, dir, cache, "mac", t0)
-	f, err := s.AddWith("Порт db1 — 5432", nil, "x", "", Meta{})
+	f, err := s.AddWith("Порт db1 — 5432", "x", "", Meta{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -224,19 +224,18 @@ func TestOpenWithNothingNewWritesNothing(t *testing.T) {
 	}
 }
 
-// The cache is disposable: a missing one is built from the text, an unreadable one is set aside and built again.
+// A missing cache is rebuilt from the complete text. Unreadable caches require explicit recovery (see content_text_test.go).
 func TestCacheIsBuiltFromTheText(t *testing.T) {
 	dir, cache := t.TempDir(), filepath.Join(t.TempDir(), "facts.db")
 	s := openTextAt(t, dir, cache, "mac", t0)
-	f, _ := s.AddWith("Порт db1 — 5432", []string{"db1"}, "x", "", Meta{Kind: "environment"})
-	_, _ = s.Correct(f.ID, "Порт db1 — 5433", []string{"db1"})
-	_, _ = s.AddWith("Второй факт", nil, "x", "2026-12-01", Meta{Scope: "global"})
+	f, _ := s.AddWith("Порт db1 — 5432", "x", "", Meta{Kind: "environment"})
+	_, _ = s.Correct(f.ID, "Порт db1 — 5433")
+	_, _ = s.AddWith("Второй факт", "x", "2026-12-01", Meta{Scope: "global"})
 	want := dump(t, s)
 	_ = s.Close()
 
 	for _, damage := range []func() error{
 		func() error { return os.Remove(cache) },
-		func() error { return os.WriteFile(cache, []byte("not a database at all, just text"), 0o600) },
 	} {
 		if err := damage(); err != nil {
 			t.Fatal(err)
@@ -250,9 +249,7 @@ func TestCacheIsBuiltFromTheText(t *testing.T) {
 		}
 		_ = s.Close()
 	}
-	if aside, _ := filepath.Glob(cache + ".unreadable-*"); len(aside) != 1 {
-		t.Errorf("unreadable cache set aside: %v", aside)
-	}
+
 }
 
 // Writers in parallel lose no line of any file.
@@ -273,12 +270,12 @@ func TestTextHistoryUnderParallelWriters(t *testing.T) {
 			}
 			defer func() { _ = s.Close() }()
 			for i := range 10 {
-				f, err := s.AddWith(fmt.Sprintf("Факт %d от писателя %d", i, w), nil, "x", "", Meta{})
+				f, err := s.AddWith(fmt.Sprintf("Факт %d от писателя %d", i, w), "x", "", Meta{})
 				if err != nil {
 					errs <- err
 					return
 				}
-				if _, err := s.Correct(f.ID, fmt.Sprintf("Факт %d от писателя %d, исправлен", i, w), nil); err != nil {
+				if _, err := s.Correct(f.ID, fmt.Sprintf("Факт %d от писателя %d, исправлен", i, w)); err != nil {
 					errs <- err
 					return
 				}
@@ -303,14 +300,14 @@ func TestMergeRewritesTheFactFiles(t *testing.T) {
 	b, f := base(t)
 	other := clone(t, b)
 	o := openAt(t, other, "server", t0.Add(2*time.Hour))
-	if _, err := o.Correct(f.ID, "Hermes работает на deepseek-pro", nil); err != nil {
+	if _, err := o.Correct(f.ID, "Hermes работает на deepseek-pro"); err != nil {
 		t.Fatal(err)
 	}
 	_ = o.Close()
 	dir, cache := t.TempDir(), clone(t, b)
 	s := openTextAt(t, dir, cache, "mac", t0.Add(time.Hour))
 	defer func() { _ = s.Close() }()
-	if _, err := s.Correct(f.ID, "Hermes работает на deepseek-flash, fallback Codex", nil); err != nil {
+	if _, err := s.Correct(f.ID, "Hermes работает на deepseek-flash, fallback Codex"); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := s.Merge(other); err != nil {
@@ -324,7 +321,7 @@ func TestMergeRewritesTheFactFiles(t *testing.T) {
 func TestCacheOfAnOlderSchemaIsBuiltAgain(t *testing.T) {
 	dir, cache := t.TempDir(), filepath.Join(t.TempDir(), "facts.db")
 	s := openTextAt(t, dir, cache, "mac", t0)
-	f, err := s.AddWith("Commit messages are written in English.", []string{"commit"}, "x", "",
+	f, err := s.AddWith("Commit messages are written in English.", "x", "",
 		Meta{Kind: "rule", Scope: "global", Source: "user"})
 	if err != nil {
 		t.Fatal(err)
@@ -413,7 +410,7 @@ func TestASetAsideCacheGivesTheTextWhatItLacks(t *testing.T) {
 	}
 	dir, cache := t.TempDir(), filepath.Join(t.TempDir(), "facts.db")
 	s := openTextAt(t, dir, cache, "mac", t0)
-	kept, err := s.AddWith("Порт db1 — 5432", []string{"db1"}, "x 2026-10-19", "", Meta{})
+	kept, err := s.AddWith("Порт db1 — 5432", "x 2026-10-19", "", Meta{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -425,11 +422,11 @@ func TestASetAsideCacheGivesTheTextWhatItLacks(t *testing.T) {
 	if err := os.Chmod(bucket, 0o500); err != nil {
 		t.Fatal(err)
 	}
-	onlyCache, err := s.AddWith("Caddy слушает порт 8443", []string{"caddy"}, "x 2026-10-19", "", Meta{})
+	onlyCache, err := s.AddWith("Caddy слушает порт 8443", "x 2026-10-19", "", Meta{})
 	if err != nil {
 		t.Fatal(err)
 	}
-	corrected, err := s.Correct(kept.ID, "Порт db1 — 5433", nil)
+	corrected, err := s.Correct(kept.ID, "Порт db1 — 5433")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -467,7 +464,7 @@ func TestAFailedFileWriteIsNotHiddenByALaterOne(t *testing.T) {
 	}
 	dir, cache := t.TempDir(), filepath.Join(t.TempDir(), "facts.db")
 	s := openTextAt(t, dir, cache, "mac", t0)
-	kept, err := s.AddWith("Порт db1 — 5432", []string{"db1"}, "x 2026-10-19", "", Meta{})
+	kept, err := s.AddWith("Порт db1 — 5432", "x 2026-10-19", "", Meta{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -479,11 +476,11 @@ func TestAFailedFileWriteIsNotHiddenByALaterOne(t *testing.T) {
 		t.Fatal(err)
 	}
 	// a new fact needs a new file and fails; a correction appends to the file it has and succeeds
-	lost, err := s.AddWith("Caddy слушает порт 8443", []string{"caddy"}, "x 2026-10-19", "", Meta{})
+	lost, err := s.AddWith("Caddy слушает порт 8443", "x 2026-10-19", "", Meta{})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := s.Correct(kept.ID, "Порт db1 — 5433", nil); err != nil {
+	if _, err := s.Correct(kept.ID, "Порт db1 — 5433"); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.Chmod(bucket, 0o700); err != nil {

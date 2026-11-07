@@ -23,13 +23,13 @@ func dupBase(t *testing.T, originB, originA string) (a, b string) {
 	}
 	defer func() { _ = s.Close() }()
 	fb, err := s.AddWith("Workflow nightly-sync.yml подписывает bot на все репозитории владельца кроме форков и архивных.",
-		[]string{"nightly-sync", "workflow"}, originB, "", store.Meta{})
+		originB, "", store.Meta{})
 	if err != nil {
 		t.Fatal(err)
 	}
 	time.Sleep(3 * time.Millisecond) // a ULID orders by millisecond only
 	fa, err := s.AddWith("Каждую ночь workflow nightly-sync.yml подписывает аккаунт bot на все репозитории владельца, кроме форков.",
-		[]string{"nightly-sync", "workflow"}, originA, "", store.Meta{})
+		originA, "", store.Meta{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -131,7 +131,7 @@ func promotedBase(t *testing.T, dir, scopeA string, scopes ...string) (a, b stor
 	}
 	defer func() { _ = s.Close() }()
 	b, err = s.AddWith("Workflow nightly-sync.yml подписывает bot на все репозитории владельца кроме форков и архивных.",
-		[]string{"nightly-sync"}, "", "", store.Meta{Scope: scopes[0]})
+		"", "", store.Meta{Scope: scopes[0]})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -142,7 +142,7 @@ func promotedBase(t *testing.T, dir, scopeA string, scopes ...string) (a, b stor
 	}
 	time.Sleep(3 * time.Millisecond)
 	if a, err = s.AddWith("Каждую ночь workflow nightly-sync.yml подписывает аккаунт bot на все репозитории владельца.",
-		[]string{"nightly-sync"}, "", "", store.Meta{Scope: scopeA}); err != nil {
+		"", "", store.Meta{Scope: scopeA}); err != nil {
 		t.Fatal(err)
 	}
 	if a, err = s.Retire(a.ID); err != nil {
@@ -249,7 +249,7 @@ func scopeBase(t *testing.T) (project, one, everywhere store.Fact) {
 	}
 	defer func() { _ = s.Close() }()
 	add := func(content, scope string) store.Fact {
-		f, err := s.AddWith(content, []string{"k"}, "example.com/me/shop 2026-10-19", "", store.Meta{Kind: "rule", Scope: scope})
+		f, err := s.AddWith(content, "example.com/me/shop 2026-10-19", "", store.Meta{Kind: "rule", Scope: scope})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -312,7 +312,7 @@ func TestDreamMovesAGlobalFactOfOneProject(t *testing.T) {
 
 	// The next dream gives only a global fact stored since.
 	s, _ = store.Open(factsPath())
-	later, err := s.AddWith("Ветки создаются только в worktree.", []string{"k"}, "", "", store.Meta{Kind: "rule", Scope: "global"})
+	later, err := s.AddWith("Ветки создаются только в worktree.", "", "", store.Meta{Kind: "rule", Scope: "global"})
 	_ = s.Close()
 	if err != nil {
 		t.Fatal(err)
@@ -343,10 +343,10 @@ func TestDreamRefusesTheScopeOfAChangedFact(t *testing.T) {
 		t.Fatal(path, err)
 	}
 	s, _ := store.Open(factsPath())
-	if _, err := s.SetQueries(one.ID, one.Version, []string{"ci shop"}); err != nil {
+	if _, err := s.Relabel(one.ID, one.Version, one.Kind, one.Scope, one.Expires); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := s.Correct(everywhere.ID, "Коммиты и PR пишутся по-английски.", []string{"k"}); err != nil {
+	if _, err := s.Correct(everywhere.ID, "Коммиты и PR пишутся по-английски."); err != nil {
 		t.Fatal(err)
 	}
 	_ = s.Close()
@@ -375,7 +375,7 @@ func TestDreamRunAllChecksEveryGlobalFact(t *testing.T) {
 	old := packetScope
 	packetScope = 1
 	t.Cleanup(func() { packetScope = old })
-	fakeExpand(t, nil)
+
 	fakeDream(t, func(string) []extract.Action { return nil })
 	var given []string
 	scopeFn = func(in string) ([]extract.Rescope, error) {
@@ -412,7 +412,7 @@ func TestDreamRunAllDoesNotStallOnScopeChecks(t *testing.T) {
 	}
 	var ids []string
 	for i := range 5 {
-		f, err := s.AddWith(fmt.Sprintf("Общее правило номер %d для любой работы.", i), []string{"k"}, "", "",
+		f, err := s.AddWith(fmt.Sprintf("Общее правило номер %d для любой работы.", i), "", "",
 			store.Meta{Kind: "rule", Scope: "global"})
 		if err != nil {
 			t.Fatal(err)
@@ -424,7 +424,7 @@ func TestDreamRunAllDoesNotStallOnScopeChecks(t *testing.T) {
 	old := packetScope
 	packetScope = 1
 	t.Cleanup(func() { packetScope = old })
-	fakeExpand(t, nil)
+
 	fakeDream(t, func(string) []extract.Action { return nil })
 	var given []string
 	scopeFn = func(in string) ([]extract.Rescope, error) { given = append(given, in); return nil, nil }
@@ -451,7 +451,7 @@ func TestDreamOffersOnlyProjectsFactsWereLearntIn(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := s.AddWith("Хук конфига срабатывает на Stop.", []string{"k"}, "_global 2026-10-19", "",
+	if _, err := s.AddWith("Хук конфига срабатывает на Stop.", "_global 2026-10-19", "",
 		store.Meta{Kind: "rule", Scope: "repo:example.com/me/config"}); err != nil {
 		t.Fatal(err)
 	}

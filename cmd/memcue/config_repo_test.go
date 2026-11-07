@@ -28,7 +28,7 @@ func TestClaudeConfigDirectoryIsARepository(t *testing.T) {
 
 	t.Chdir(config)
 	var out bytes.Buffer
-	if err := runAdd([]string{"-kind", "rule", "-source", "user", "-keywords", "hook", "--",
+	if err := runAdd([]string{"-kind", "rule", "-source", "user", "--",
 		"Хук ревью конфига срабатывает на два триггера."}, &out); err != nil {
 		t.Fatal(err)
 	}
@@ -41,7 +41,7 @@ func TestClaudeConfigDirectoryIsARepository(t *testing.T) {
 		t.Fatalf("a fact stored in the config directory: %+v", active)
 	}
 	configRule := active[0].ID
-	old, err := s.AddWith("Коммиты пишутся по-английски.", []string{"k"}, "_global 2026-10-01", "",
+	old, err := s.AddWith("Коммиты пишутся по-английски.", "_global 2026-10-01", "",
 		store.Meta{Kind: "rule", Scope: "global", Source: "user"})
 	if err != nil {
 		t.Fatal(err)

@@ -9,7 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/juev/memcue/internal/extract"
 	"github.com/juev/memcue/internal/store"
 )
 
@@ -37,9 +36,6 @@ func env(t *testing.T) string {
 	oldSplit := splitFn
 	splitFn = func(string) (splitReply, error) { return splitReply{}, nil }
 	t.Cleanup(func() { splitFn = oldSplit })
-	oldExpand := expandFn
-	expandFn = func(string) (extract.ExpandResult, error) { return extract.ExpandResult{}, nil }
-	t.Cleanup(func() { expandFn = oldExpand })
 	// A background dream (#569) has its own tests; elsewhere the machine's claude must not decide whether the session
 	// start says a dream is due, and a session start must not start a process.
 	t.Setenv("MEMCUE_DREAM_BACKGROUND", "")
@@ -60,7 +56,7 @@ func seed(t *testing.T) {
 	}
 	defer func() { _ = s.Close() }()
 	if _, err := s.AddWith("Gradle вне make требует JAVA_HOME=/opt/homebrew/opt/openjdk@21, иначе сборка не находит JDK.",
-		[]string{"gradle", "jdk"}, "lists 2026-10-09 (lists/android.md)", "", store.Meta{}); err != nil {
+		"lists 2026-10-09 (lists/android.md)", "", store.Meta{}); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -87,7 +83,7 @@ func TestAddNamesWorkingRepositoryByDefault(t *testing.T) {
 	key := gitRepo(t, repo)
 	t.Chdir(repo)
 	var out bytes.Buffer
-	if err := runAdd([]string{"-keywords", "k", "факт без origin"}, &out); err != nil {
+	if err := runAdd([]string{"факт без origin"}, &out); err != nil {
 		t.Fatal(err)
 	}
 	if err := runAdd([]string{"-origin", "x 2026-01-01", "факт с origin"}, &bytes.Buffer{}); err != nil {
@@ -151,9 +147,6 @@ func TestSearchJSONCarriesIDAndContent(t *testing.T) {
 	}
 	if len(facts) != 1 || len(facts[0].ID) != 26 || !strings.Contains(facts[0].Content, "openjdk@21") {
 		t.Errorf("got %+v", facts)
-	}
-	if len(facts[0].Keywords) != 2 {
-		t.Errorf("keywords %v", facts[0].Keywords)
 	}
 }
 

@@ -12,7 +12,7 @@ Hook child environment does not propagate to later shell calls. Run commands fro
   Skip it when the user's message and the repository's files hold everything the task needs. Search in English first;
   retry with synonyms, exact identifiers and legacy-language words when needed. Keep replies in the user's requested language.
 - Search returns an object with `facts` and optional `hints`, not a bare list. Read both. Facts include `id`, `content`,
-  `keywords` (optional), `origin` (optional), `scope` (optional), `created` and `expires` (optional).
+  `origin` (optional), `scope` (optional), `created` and `expires` (optional).
   Do not invent source or kind fields in that response. Inspect the configured base history when persisted metadata is needed.
   Default search includes the repository, host and global facts in a repository; outside a project it searches all
   off-shelf facts. Use `-in project`, `-in host`, `-in global`, `-in repo:KEY` or `-in all` deliberately.
@@ -23,11 +23,11 @@ Hook child environment does not propagate to later shell calls. Run commands fro
   progress, what the repository shows, credentials, or procedures the user did not ask to remember.
 - Write new and corrected fact content in English. Preserve exact identifiers, commands, paths, versions, values and
   verbatim quotations. This is an instruction to the model, not automatic translation or a storage language restriction.
-  Never correct a fact solely to change its language. Existing facts and indexed translations remain as stored.
+  Never correct a fact solely to change its language. Existing fact content remains as stored.
   Name provenance with `-source user` for the user's words, `-source tool` for observed evidence, `-source agent` for conclusions.
 - Search the research shelf explicitly when returning to a researched subject: `@MEMCUE@ search -json -in shelf:research "<words>"`.
   Ordinary search excludes shelves. Before storing an external finding, search there first and use `add -shelf research
-  -source tool -keywords "<words>" -- "<finding>. Source: <document, version or date>."`. Store the source's claim and limits;
+  -source tool -- "<finding>. Source: <document, version or date>."`. Store the source's claim and limits;
   mark inference, verify dates/versions before relying on old findings, and correct or retire stale ones.
 - When maintenance hints say a dream is due, use the memcue-dream skill at a natural pause. The working model answers
   `dream -prepare` and applies its answer with `dream -apply FILE`; the launcher starts no background model.

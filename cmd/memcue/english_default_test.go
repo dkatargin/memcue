@@ -101,15 +101,15 @@ func TestEnglishDefaultLegacyTranslationAnswersAreInert(t *testing.T) {
 				if err := writeJSONFile(path, a); err != nil {
 					t.Fatal(err)
 				}
-				if err := runDream([]string{"-apply", path}, &out); err != nil {
-					t.Fatal(err)
+				if err := runDream([]string{"-apply", path}, &out); err == nil {
+					t.Fatal("legacy auxiliary work accepted")
 				}
 			} else {
 				plan := dreamPlan{Start: time.Now(), Seen: map[string]int{}, Translations: []dreamPlanTranslation{
 					{ID: first, Version: 2, Translation: "new ongoing translation"},
 					{ID: legacy, Version: 2, Translation: "replacement"}}}
-				if _, err := applyPlan(dir, plan, dreamRecord{}, &out); err != nil {
-					t.Fatal(err)
+				if _, err := applyPlan(dir, plan, dreamRecord{}, &out); err == nil {
+					t.Fatal("legacy auxiliary plan accepted")
 				}
 			}
 			if !reflect.DeepEqual(before, factHistory(t, first)) || !reflect.DeepEqual(oldLegacy, factHistory(t, legacy)) {
@@ -129,9 +129,9 @@ func TestEnglishDefaultNoTranslationOnlyDebtOrCalls(t *testing.T) {
 			first, _, legacy := translateBase(t)
 			before := factHistory(t, first)
 			dir := markPastDream(t)
-			fresh, pending, _, err := dreamDue(dir, dreamEvery)
-			if err != nil || fresh != 0 || pending != 0 {
-				t.Errorf("translation debt: fresh=%d pending=%d err=%v", fresh, pending, err)
+			fresh, _, err := dreamDue(dir, dreamEvery)
+			if err != nil || fresh != 0 {
+				t.Errorf("unexpected maintenance debt: fresh=%d err=%v", fresh, err)
 			}
 			for _, hint := range []string{dreamHint(), dreamToolsHint()} {
 				if hint != "" {
@@ -159,49 +159,15 @@ func TestEnglishDefaultNoTranslationOnlyDebtOrCalls(t *testing.T) {
 			if !reflect.DeepEqual(before, factHistory(t, first)) {
 				t.Error("translation-only run rewrote history")
 			}
-			// The indexed English translation of the Russian legacy fact remains searchable.
+			// Only the Russian legacy content is searchable; auxiliary translations are removed.
 			out.Reset()
-			if err := runSearch([]string{"-in", "all", "-json", "proxies"}, &out); err != nil {
+			if err := runSearch([]string{"-in", "all", "-json", "проксирует"}, &out); err != nil {
 				t.Fatal(err)
 			}
 			if !strings.Contains(out.String(), legacy) {
 				t.Errorf("legacy translation lost from index: %s", out.String())
 			}
 		})
-	}
-}
-
-func TestEnglishDefaultQueryDebtSurvivesWithoutTranslationDebt(t *testing.T) {
-	env(t)
-	id := addFact(t, "Сервис Caddy отдаёт статику.")
-	s, err := store.Open(factsPath())
-	if err != nil {
-		t.Fatal(err)
-	}
-	_, err = s.SetQueries(id, 1, []string{"= Caddy serves static assets."})
-	_ = s.Close()
-	if err != nil {
-		t.Fatal(err)
-	}
-	dir := markPastDream(t)
-	fresh, pending, _, err := dreamDue(dir, dreamEvery)
-	if err != nil || fresh != 0 || pending != 1 {
-		t.Errorf("fresh=%d pending=%d err=%v", fresh, pending, err)
-	}
-	if hint := dreamHint(); !strings.Contains(hint, "1 facts need search queries") || strings.Contains(hint, "translation") {
-		t.Errorf("hint: %s", hint)
-	}
-	fakeExpand(t, nil)
-	fakeDreamRun(t, nil)
-	withAPI(t, "https://api.example.test")
-	if err := runDream([]string{"-run", "-j", "1"}, &bytes.Buffer{}); err != nil {
-		t.Fatal(err)
-	}
-	if len(extract.SearchQueries(storedFact(t, id).Queries)) == 0 {
-		t.Fatal("pending expansion not run")
-	}
-	if tr, ok := extract.Translation(storedFact(t, id).Queries); !ok || tr != "Caddy serves static assets." {
-		t.Fatal("expansion lost legacy translation")
 	}
 }
 
@@ -212,7 +178,7 @@ func TestEnglishDefaultRunMaintenanceTerminatesWithoutTranslations(t *testing.T)
 			_, duplicate, kept, _ := dreamBase(t)
 			compound, _ := splitBase(t)
 			fakeSplit(t, splitByText)
-			fakeExpand(t, nil)
+
 			acted := false
 			fakeDream(t, func(string) []extract.Action {
 				if acted {
@@ -264,7 +230,7 @@ func TestEnglishDefaultRunMaintenanceTerminatesWithoutTranslations(t *testing.T)
 			if storedFact(t, compound).Status != store.Retired || storedFact(t, duplicate).Status != store.Retired {
 				t.Error("split/duplicate maintenance failed")
 			}
-			if f := storedFact(t, kept); !strings.HasPrefix(f.Content, "The nightly") || len(extract.SearchQueries(f.Queries)) == 0 {
+			if f := storedFact(t, kept); !strings.HasPrefix(f.Content, "The nightly") {
 				t.Errorf("corrected fact not expanded: %+v", f)
 			}
 			for _, r := range readDreamLog(t, dir) {
@@ -327,68 +293,6 @@ func TestEnglishDefaultSavedPacketHasNoTranslationWork(t *testing.T) {
 	}
 }
 
-func TestEnglishDefaultLegacyInlineTranslationsCannotRestartTask(t *testing.T) {
-	for _, action := range []string{"expand", "correct"} {
-		t.Run(action, func(t *testing.T) {
-			env(t)
-			_, duplicate, kept, _ := dreamBase(t)
-			fakeExpandOf(t, map[string][]string{kept: {"ordinary query", "= unsolicited full translation"}})
-			if action == "correct" {
-				fakeDream(t, func(string) []extract.Action {
-					return []extract.Action{{Op: "correct", ID: kept, Content: "Исправленный факт.", Queries: []string{"ordinary query", "= unsolicited full translation"}},
-						{Op: "retire", ID: duplicate, By: kept, Kind: "duplicate"}}
-				})
-			}
-			if err := dreamModel([]string{"-all"}, &bytes.Buffer{}); err != nil {
-				t.Fatal(err)
-			}
-			if q := storedFact(t, kept).Queries; len(q) != 1 || q[0] != "ordinary query" {
-				t.Errorf("dream wrote translation from %s: %q", action, q)
-			}
-		})
-	}
-}
-
-func TestEnglishDefaultExpansionPreservesEveryLegacyTranslation(t *testing.T) {
-	env(t)
-	id := addFact(t, "Синтетический двуязычный факт.")
-	legacy := []string{"= Synthetic bilingual fact.", "= An older alternative rendering."}
-	s, err := store.Open(factsPath())
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, err := s.SetQueries(id, 1, legacy); err != nil {
-		t.Fatal(err)
-	}
-	_ = s.Close()
-	before := factHistory(t, id)
-	fakeExpandOf(t, map[string][]string{id: {"ordinary query"}})
-	if err := dreamModel([]string{"-all"}, &bytes.Buffer{}); err != nil {
-		t.Fatal(err)
-	}
-	after := factHistory(t, id)
-	if !reflect.DeepEqual(before, after[:len(before)]) {
-		t.Error("expansion rewrote old history")
-	}
-	want := append([]string{"ordinary query"}, legacy...)
-	if !reflect.DeepEqual(storedFact(t, id).Queries, want) {
-		t.Errorf("legacy queries changed: %q", storedFact(t, id).Queries)
-	}
-}
-
-func TestEnglishDefaultUnansweredQueryWorkStopsWithPendingStatus(t *testing.T) {
-	env(t)
-	addFact(t, "Синтетический факт без запросов.")
-	fakeDreamRun(t, nil) // The model gives no expansion: stop at the existing stall bound.
-	var out bytes.Buffer
-	if err := runDream([]string{"-run", "-all", "-j", "1"}, &out); err != nil {
-		t.Fatal(err)
-	}
-	if !strings.Contains(out.String(), "stopped after 3 passes that changed nothing; 1 facts still need search queries") || strings.Contains(out.String(), "translation") {
-		t.Errorf("status: %s", out.String())
-	}
-}
-
 func TestEnglishDefaultCJKHintStartsWithEnglish(t *testing.T) {
 	env(t)
 	addFact(t, "The synthetic service supports Unicode.")
@@ -401,7 +305,7 @@ func TestEnglishDefaultCJKHintStartsWithEnglish(t *testing.T) {
 	}
 }
 
-func TestEnglishDefaultJoinedAnswerOmitsLegacyTranslationField(t *testing.T) {
+func TestEnglishDefaultJoinedAnswerRejectsLegacyTranslationField(t *testing.T) {
 	env(t)
 	old := dreamRunFn
 	dreamRunFn = func(string) (extract.DreamReply, error) {
@@ -409,15 +313,11 @@ func TestEnglishDefaultJoinedAnswerOmitsLegacyTranslationField(t *testing.T) {
 	}
 	t.Cleanup(func() { dreamRunFn = old })
 	r, recs, err := askAll([]dreamCall{{text: "synthetic packet", rec: dreamCallRecord{Task: taskReview}}})
-	if err != nil {
-		t.Fatal(err)
+	if err == nil {
+		t.Fatal("legacy translation reply was silently normalized instead of refused")
 	}
-	var answer map[string]json.RawMessage
-	if err := json.Unmarshal(r.Answer, &answer); err != nil {
-		t.Fatal(err)
-	}
-	if _, exists := answer["translations"]; exists {
-		t.Errorf("new joined answer carries legacy task: %s", r.Answer)
+	if len(r.Answer) != 0 || len(recs) != 1 || recs[0].Error == "" {
+		t.Fatalf("refused reply produced an applicable answer or lost failure evidence: %s %+v", r.Answer, recs)
 	}
 	if recs[0].Proposed != 0 {
 		t.Errorf("legacy translation counted as work: %+v", recs[0])

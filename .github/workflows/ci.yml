@@ -56,7 +56,7 @@ jobs:
         run: go build -p 2 -o bin/memcue ./cmd/memcue
 
       - name: test plugins
-        run: node --test --test-concurrency=2 plugins/deepseek-harness/test/*.test.mjs plugins/claude-code/test/*.test.mjs
+        run: MEMCUE_BIN="$PWD/bin/memcue" node --test --test-concurrency=2 plugins/deepseek-harness/test/*.test.mjs plugins/claude-code/test/*.test.mjs
 
   card-research:
     name: card research contracts

@@ -95,8 +95,8 @@ commands:
   observe-problem record an evidenced occurrence: -fact ID -incident STABLE_ID
   search    find the facts that fit the words, with their IDs: memcue search [-n N] [-min-score F] [-in WHERE] [-kind K] [-since DAY] [-expired] [-all-words] [-json] [-cwd DIR] [-session ID] TEXT
   sessions  passages of earlier Claude Code sessions that hold the words, newest first, when search finds nothing: memcue sessions [-n N] [-before TIME] [-cwd DIR] [-session IDS] [-json] TEXT
-  add       store a fact, indexed at once: memcue add [-cwd DIR] [-keywords K1,K2] [-origin O] [-expires YYYY-MM-DD] [-source S] [-kind K] [-scope S | -shelf SLUG] -- TEXT
-  correct   new version of a fact: memcue correct [-keywords K] [-expires YYYY-MM-DD|-no-expires] ID [--] TEXT
+  add       store a fact, indexed at once: memcue add [-cwd DIR] [-origin O] [-expires YYYY-MM-DD] [-source S] [-kind K] [-scope S | -shelf SLUG] -- TEXT
+  correct   new version of a fact: memcue correct [-expires YYYY-MM-DD|-no-expires] ID [--] TEXT
   retire    take a fact out of recall: memcue retire ID
   reopen    bring a retired fact back as it was before the retire: memcue reopen ID
   facts     list the active facts
@@ -113,9 +113,8 @@ commands:
 environment:
   MEMCUE_FACTS    fact base (default $CLAUDE_CONFIG_DIR/memory/facts.db or ~/.claude/memory/facts.db)
   MEMCUE_STATE_DIR  state directory; default $XDG_STATE_HOME/memcue, with a per-base subdirectory for a non-default base
-  MEMCUE_MODEL    model of migrate, dream -run and the search queries add asks for (default claude-opus-5-5)
-  MEMCUE_API_URL  OpenAI-compatible endpoint for those calls instead of claude -p (with MEMCUE_API_KEY); add asks
-                  for search queries only when it is set
+  MEMCUE_MODEL    model of migrate and dream -run (default claude-opus-5-5)
+  MEMCUE_API_URL  OpenAI-compatible endpoint for migrate and dream instead of claude -p (with MEMCUE_API_KEY)
   MEMCUE_API_KEY  key for MEMCUE_API_URL
   MEMCUE_CLAUDE_TOKEN_FILE  file of a Claude Code OAuth token (claude setup-token) claude -p runs with; ~/ is the
                   home directory, and a missing file leaves claude -p on its own login

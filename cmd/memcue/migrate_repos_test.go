@@ -30,7 +30,7 @@ func TestMigrateReposMovesFactsOntoKeys(t *testing.T) {
 		t.Fatal(err)
 	}
 	add := func(content, origin, scope string) store.Fact {
-		f, err := s.AddWith(content, nil, origin, "", store.Meta{Kind: "decision", Scope: scope})
+		f, err := s.AddWith(content, origin, "", store.Meta{Kind: "decision", Scope: scope})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -124,7 +124,7 @@ func TestMigrateReposLeavesAnAmbiguousName(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	f, _ := s.AddWith("Решение одного из двух.", nil, "same 2026-10-01", "", store.Meta{Kind: "decision"})
+	f, _ := s.AddWith("Решение одного из двух.", "same 2026-10-01", "", store.Meta{Kind: "decision"})
 	_ = s.Close()
 	var out bytes.Buffer
 	if err := runMigrate([]string{"-repos", "-apply", "-root", filepath.Join(dir, "a"), "-root", filepath.Join(dir, "b")},
@@ -153,7 +153,7 @@ func TestMigrateReposReportsKeysWithNoClone(t *testing.T) {
 		t.Fatal(err)
 	}
 	add := func(origin string) store.Fact {
-		f, err := s.AddWith("Факт под "+origin, nil, origin, "", store.Meta{Kind: "decision"})
+		f, err := s.AddWith("Факт под "+origin, origin, "", store.Meta{Kind: "decision"})
 		if err != nil {
 			t.Fatal(err)
 		}

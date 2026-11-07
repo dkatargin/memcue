@@ -34,15 +34,15 @@ func seedHistory(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer func() { _ = s.Close() }()
-	f, err := s.AddWith("Hermes держит базу в /opt/data/memcue.", []string{"hermes"}, "memcue 2026-10-28", "",
+	f, err := s.AddWith("Hermes держит базу в /opt/data/memcue.", "memcue 2026-10-28", "",
 		store.Meta{Kind: "environment", Scope: "host:hermes"})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := s.Correct(f.ID, "Hermes держит базу в /opt/data/memcue/facts.", []string{"hermes", "facts"}); err != nil {
+	if _, err := s.Correct(f.ID, "Hermes держит базу в /opt/data/memcue/facts."); err != nil {
 		t.Fatal(err)
 	}
-	g, err := s.AddWith("Старое правило.", nil, "", "", store.Meta{Kind: "rule"})
+	g, err := s.AddWith("Старое правило.", "", "", store.Meta{Kind: "rule"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -131,7 +131,7 @@ func TestMigrateTextAgain(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := left.AddWith("Факт из забытой копии.", []string{"копия"}, "", "", store.Meta{}); err != nil {
+	if _, err := left.AddWith("Факт из забытой копии.", "", "", store.Meta{}); err != nil {
 		t.Fatal(err)
 	}
 	_ = left.Close()
