@@ -7,6 +7,7 @@ from normalize import Normalizer
 from stand import Stand
 from api import service
 from outputs import new_output_directory
+from source_identity import verify_source,verify_bridge
 HERE=Path(__file__).resolve().parent
 
 def save(path,value):
@@ -135,10 +136,9 @@ def main():
 def run(args,out):
     bridge=Path(args.bridge).resolve()
     fixture=json.loads((HERE/'fixture.json').read_text());declaration=json.loads((HERE/'declaration.json').read_text())
-    actual_source=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
-    assert actual_source==declaration['source'],'research requires pinned source revision'
-    subprocess.run(['git','diff','--exit-code','HEAD','--','internal','cmd','plugins','go.mod','go.sum'],check=True,capture_output=True)
-    frozen=dict(source=actual_source,inputs={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(HERE.iterdir()) if p.is_file()},bridge_sha256=hashlib.sha256(bridge.read_bytes()).hexdigest(),started_utc=time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()))
+    identity=verify_source(HERE.parents[3],declaration['source'])
+    native=verify_bridge(bridge,identity,HERE/'sqlite_bridge.go')
+    frozen=dict(source=identity['evaluated_revision'],source_identity=identity,native_bridge=native,inputs={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(HERE.iterdir()) if p.is_file()},bridge_sha256=hashlib.sha256(bridge.read_bytes()).hexdigest(),started_utc=time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()))
     save(out/'freeze.json',frozen)
     commands=[]
     def run(argv):

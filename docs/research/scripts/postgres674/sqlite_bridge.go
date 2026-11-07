@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
@@ -15,6 +16,9 @@ import (
 	"github.com/juev/memcue/internal/store"
 	"github.com/juev/memcue/internal/text"
 )
+
+// Bound at build time by build_bridge.py, verified before any replay.
+var productionIdentity, bridgeSourceSHA256 string
 
 type Case struct {
 	ID    string       `json:"id"`
@@ -37,6 +41,26 @@ func must(err error) {
 	}
 }
 func main() {
+	if len(os.Args) == 2 && os.Args[1] == "identity" {
+		must(json.NewEncoder(os.Stdout).Encode(map[string]string{"production_digest": productionIdentity, "bridge_source_sha256": bridgeSourceSHA256}))
+		return
+	}
+	if len(os.Args) == 5 && os.Args[1] == "corpus" {
+		corpus(os.Args[2], os.Args[3], os.Args[4])
+		return
+	}
+	if len(os.Args) == 3 && os.Args[1] == "search-db" {
+		s, err := store.OpenReadOnly(os.Args[2])
+		must(err)
+		defer func() { must(s.Close()) }()
+		var q recall.Query
+		must(json.NewDecoder(os.Stdin).Decode(&q))
+		start := time.Now()
+		hits, err := recall.Search(s, q)
+		must(err)
+		must(json.NewEncoder(os.Stdout).Encode(map[string]any{"hits": hits, "ms": time.Since(start).Seconds() * 1000}))
+		return
+	}
 	if len(os.Args) == 3 && os.Args[1] == "normalize" {
 		raw, e := io.ReadAll(os.Stdin)
 		must(e)
@@ -115,15 +139,18 @@ func main() {
 		db, e := sql.Open("sqlite", path)
 		must(e)
 		// Insert the same frozen history, including auxiliary fields, into both arms.
+		tx, e := db.Begin()
+		must(e)
 		for _, f := range input.Facts {
 			var vals []any
 			cols := []string{"id", "version", "content", "keywords", "origin", "created", "status", "author", "expires", "kind", "scope", "source", "evidence", "review", "prompt_version", "queries", "channel"}
 			for _, c := range cols {
 				vals = append(vals, f[c])
 			}
-			_, e = db.Exec("INSERT INTO facts("+strings.Join(cols, ",")+") VALUES ("+strings.TrimSuffix(strings.Repeat("?,", len(cols)), ",")+")", vals...)
+			_, e = tx.Exec("INSERT INTO facts("+strings.Join(cols, ",")+") VALUES ("+strings.TrimSuffix(strings.Repeat("?,", len(cols)), ",")+")", vals...)
 			must(e)
 		}
+		must(tx.Commit())
 		must(db.Close())
 		s, e = store.Open(path)
 		must(e)
@@ -185,6 +212,62 @@ func main() {
 	write(filepath.Join(out, "sqlite-results.json"), results)
 	fmt.Printf("SQLite controls complete: %d requests\n", len(results))
 }
+
+// Only reads the explicitly supplied immutable copy. OpenText is deliberately
+// avoided: its reconciliation can export missing cache rows back to text.
+func corpus(factsDir, casesFile, output string) {
+	var cases []Case
+	raw, err := os.ReadFile(casesFile)
+	must(err)
+	must(json.Unmarshal(raw, &cases))
+	var facts []map[string]any
+	seen := map[string]bool{}
+	err = filepath.WalkDir(factsDir, func(path string, entry os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if entry.Type()&os.ModeSymlink != 0 {
+			return fmt.Errorf("symlink in frozen input")
+		}
+		if entry.IsDir() {
+			return nil
+		}
+		if !strings.HasSuffix(path, ".jsonl") {
+			return fmt.Errorf("unexpected frozen input file")
+		}
+		rows, err := store.ReadFactFile(path)
+		if err != nil {
+			return err
+		}
+		if len(rows) == 0 {
+			return fmt.Errorf("empty fact file")
+		}
+		if filepath.Clean(path) != filepath.Clean(store.FactPath(factsDir, rows[0].ID)) || seen[rows[0].ID] {
+			return fmt.Errorf("fact identity/path collision")
+		}
+		seen[rows[0].ID] = true
+		for _, f := range rows {
+			facts = append(facts, map[string]any{"id": f.ID, "version": f.Version, "content": f.Content,
+				"keywords": strings.Join(f.Keywords, ", "), "queries": strings.Join(f.Queries, ", "),
+				"origin": f.Origin, "created": f.Created.Format(time.RFC3339Nano), "status": f.Status,
+				"author": f.Author, "expires": f.Expires, "kind": f.Kind, "scope": f.Scope,
+				"source": f.Source, "evidence": f.Evidence, "review": f.Review,
+				"prompt_version": f.PromptVersion, "channel": f.Channel})
+		}
+		return nil
+	})
+	must(err)
+	sort.Slice(facts, func(i, j int) bool {
+		if facts[i]["id"] != facts[j]["id"] {
+			return facts[i]["id"].(string) < facts[j]["id"].(string)
+		}
+		return facts[i]["version"].(int) < facts[j]["version"].(int)
+	})
+	out := outputPath(output)
+	must(os.Mkdir(out, 0700))
+	write(filepath.Join(out, "fixture.json"), Fixture{Facts: facts, Cases: cases})
+	fmt.Printf("Native frozen history: %d unique versions, %d IDs\n", len(facts), len(seen))
+}
 func outputPath(path string) string {
 	absolute, e := filepath.Abs(path)
 	must(e)
@@ -207,7 +290,7 @@ func write(path string, v any) {
 	must(e)
 	file, e := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0600)
 	must(e)
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 	_, e = file.Write(b)
 	must(e)
 	must(file.Close())

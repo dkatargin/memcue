@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"io"
 	"os"
 	"os/exec"
@@ -48,7 +49,11 @@ func sentinel(t *testing.T, path string) (string, syscall.Stat_t) {
 		t.Fatal(err)
 	}
 	file := os.NewFile(uintptr(fd), path)
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			t.Error(err)
+		}
+	}()
 	data, err := io.ReadAll(file)
 	if err != nil {
 		t.Fatal(err)
@@ -63,6 +68,14 @@ func sentinel(t *testing.T, path string) (string, syscall.Stat_t) {
 func scratchFixture(t *testing.T) (string, string) {
 	t.Helper()
 	root := t.TempDir() // The gate sets TMPDIR to owned scratch outside Git discovery.
+	if destination := os.Getenv("PG674_FIXTURE_ARCHIVES"); destination != "" {
+		t.Cleanup(func() {
+			command := exec.Command("python3", "-B", "archive_fixtures.py", root, destination)
+			if output, err := command.CombinedOutput(); err != nil {
+				t.Errorf("archive fixtures: %v: %s", err, output)
+			}
+		})
+	}
 	cmd := exec.Command("git", "-C", root, "rev-parse", "--show-toplevel")
 	if err := cmd.Run(); err == nil {
 		t.Fatal("scratch must be outside Git discovery")
@@ -253,5 +266,40 @@ func TestBridgeRefusesExistingEmptyDirectoryAndFile(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+// The adapter preserves native deduplication, history, primary text and metadata.
+func TestCorpusNativeHistory(t *testing.T) {
+	root := t.TempDir()
+	facts := filepath.Join(root, "facts")
+	if err := os.MkdirAll(filepath.Join(facts, "V"), 0700); err != nil {
+		t.Fatal(err)
+	}
+	id := "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+	one := `{"id":"` + id + `","version":1,"created":"2026-01-01T00:00:00Z","status":"active","content":"Original primary text","keywords":["auxiliarytoken"],"queries":["querytoken"],"channel":"legacy","scope":"global","prompt_version":3}`
+	two := `{"id":"` + id + `","version":2,"created":"2026-01-02T00:00:00Z","status":"retired","content":"Latest primary text","source":"user","evidence":"verbatim"}`
+	if err := os.WriteFile(filepath.Join(facts, "V", id+".jsonl"), []byte(two+"\n"+one+"\n"+one+"\n"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	cases := filepath.Join(root, "cases.json")
+	if err := os.WriteFile(cases, []byte(`[]`), 0600); err != nil {
+		t.Fatal(err)
+	}
+	output := filepath.Join(root, "output")
+	corpus(facts, cases, output)
+	raw, err := os.ReadFile(filepath.Join(output, "fixture.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var fixture Fixture
+	if err := json.Unmarshal(raw, &fixture); err != nil {
+		t.Fatal(err)
+	}
+	if len(fixture.Facts) != 2 {
+		t.Fatalf("history length %d", len(fixture.Facts))
+	}
+	if fixture.Facts[0]["content"] != "Original primary text" || fixture.Facts[0]["keywords"] != "auxiliarytoken" || fixture.Facts[0]["queries"] != "querytoken" || fixture.Facts[0]["channel"] != "legacy" || fixture.Facts[1]["status"] != "retired" || fixture.Facts[1]["evidence"] != "verbatim" {
+		t.Fatal("native metadata changed")
 	}
 }

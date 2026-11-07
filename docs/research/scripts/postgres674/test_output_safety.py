@@ -27,6 +27,9 @@ class OutputSafety(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(prefix='pg674-output-', dir=os.environ['TMPDIR'])
         self.addCleanup(self.temp.cleanup)
+        if os.environ.get("PG674_FIXTURE_ARCHIVES"):
+            from archive_fixtures import archive
+            self.addCleanup(archive, self.temp.name, os.environ["PG674_FIXTURE_ARCHIVES"])
         self.root = Path(self.temp.name)
         discovery = subprocess.run(['git', '-C', str(self.root), 'rev-parse', '--show-toplevel'],
                                    capture_output=True)
