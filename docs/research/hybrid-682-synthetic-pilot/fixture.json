@@ -1,0 +1,703 @@
+{
+  "purpose": "authored-fictional-synthetic-pilot-v1",
+  "rows": [
+    {
+      "id": "F01",
+      "version": 1,
+      "status": "active",
+      "expires": "",
+      "scope": "global",
+      "content": "The fictional Lumen observatory stores spare lenses in cabinet LX-417."
+    },
+    {
+      "id": "F02",
+      "version": 1,
+      "status": "active",
+      "expires": "",
+      "scope": "global",
+      "content": "The fictional Brindle ferry allows exactly 27 bicycles on each crossing."
+    },
+    {
+      "id": "F03",
+      "version": 1,
+      "status": "active",
+      "expires": "",
+      "scope": "global",
+      "content": "The fictional Vesper kiln uses glaze batch GZ-902 for blue tiles."
+    },
+    {
+      "id": "F04",
+      "version": 1,
+      "status": "active",
+      "expires": "",
+      "scope": "global",
+      "content": "The fictional Tansy archive retains visitor slips for 43 days."
+    },
+    {
+      "id": "F05",
+      "version": 1,
+      "status": "active",
+      "expires": "",
+      "scope": "global",
+      "content": "The fictional Marrow weather mast broadcasts on channel CH-816."
+    },
+    {
+      "id": "F06",
+      "version": 1,
+      "status": "active",
+      "expires": "",
+      "scope": "global",
+      "content": "The fictional Plover greenhouse sets night temperature to 16 degrees Celsius."
+    },
+    {
+      "id": "F07",
+      "version": 1,
+      "status": "active",
+      "expires": "",
+      "scope": "global",
+      "content": "At the fictional Copperleaf library, damaged books go to the repair desk beside the east stairs."
+    },
+    {
+      "id": "F08",
+      "version": 1,
+      "status": "active",
+      "expires": "",
+      "scope": "global",
+      "content": "The fictional Cloudfin aquarium feeds its rays after the final visitor leaves."
+    },
+    {
+      "id": "F09",
+      "version": 1,
+      "status": "active",
+      "expires": "",
+      "scope": "global",
+      "content": "The fictional Amberwheel workshop lends hearing protectors at its entrance."
+    },
+    {
+      "id": "F10",
+      "version": 1,
+      "status": "active",
+      "expires": "",
+      "scope": "global",
+      "content": "The fictional Mossbridge hotel sends forgotten luggage to its basement storeroom."
+    },
+    {
+      "id": "F11",
+      "version": 1,
+      "status": "active",
+      "expires": "",
+      "scope": "global",
+      "content": "The fictional Silverpetal garden waters seedlings at sunrise."
+    },
+    {
+      "id": "F12",
+      "version": 1,
+      "status": "active",
+      "expires": "",
+      "scope": "global",
+      "content": "The fictional Driftbell theatre reserves the front balcony for school groups."
+    },
+    {
+      "id": "F13",
+      "version": 1,
+      "status": "active",
+      "expires": "",
+      "scope": "global",
+      "content": "В вымышленной библиотеке Тихолист читатели возвращают карты в красный ящик."
+    },
+    {
+      "id": "F14",
+      "version": 1,
+      "status": "active",
+      "expires": "",
+      "scope": "global",
+      "content": "В вымышленной мастерской Искролуг сломанные часы принимает мастер у окна."
+    },
+    {
+      "id": "F15",
+      "version": 1,
+      "status": "active",
+      "expires": "",
+      "scope": "global",
+      "content": "В вымышленном саду Луномох рассаду поливают вечером."
+    },
+    {
+      "id": "F16",
+      "version": 1,
+      "status": "active",
+      "expires": "",
+      "scope": "global",
+      "content": "В вымышленном музее Звонокамень большие сумки оставляют в гардеробе."
+    },
+    {
+      "id": "F17",
+      "version": 1,
+      "status": "active",
+      "expires": "",
+      "scope": "global",
+      "content": "В вымышленном кафе Медосвет бесплатную воду наливают у стойки."
+    },
+    {
+      "id": "F18",
+      "version": 1,
+      "status": "active",
+      "expires": "",
+      "scope": "global",
+      "content": "В вымышленной обсерватории Снеголуч тёплые пледы выдают на крыше."
+    },
+    {
+      "id": "F19",
+      "version": 1,
+      "status": "active",
+      "expires": "",
+      "scope": "global",
+      "content": "The fictional Fernwake station sells overnight tickets at the purple kiosk."
+    },
+    {
+      "id": "F20",
+      "version": 1,
+      "status": "active",
+      "expires": "",
+      "scope": "global",
+      "content": "The fictional Opalnest clinic keeps lost umbrellas in reception."
+    },
+    {
+      "id": "F21",
+      "version": 1,
+      "status": "active",
+      "expires": "",
+      "scope": "global",
+      "content": "The fictional Dewspire bakery donates unsold bread to the village shelter."
+    },
+    {
+      "id": "F22",
+      "version": 1,
+      "status": "active",
+      "expires": "",
+      "scope": "global",
+      "content": "В вымышленном порту Ветропруд спасательные жилеты хранят под лестницей."
+    },
+    {
+      "id": "F23",
+      "version": 1,
+      "status": "active",
+      "expires": "",
+      "scope": "global",
+      "content": "В вымышленной школе Рябиноград занятия музыкой проходят в башне."
+    },
+    {
+      "id": "F24",
+      "version": 1,
+      "status": "active",
+      "expires": "",
+      "scope": "global",
+      "content": "В вымышленной гостинице Солнеплёс завтрак подают во внутреннем дворе."
+    },
+    {
+      "id": "F25",
+      "version": 1,
+      "status": "active",
+      "expires": "",
+      "scope": "global",
+      "content": "The fictional Alderquay pool opens its outdoor lane only when there is no lightning warning."
+    },
+    {
+      "id": "F26",
+      "version": 1,
+      "status": "active",
+      "expires": "",
+      "scope": "global",
+      "content": "The fictional Pebblefox tram carries folded scooters, but never unfolded scooters."
+    },
+    {
+      "id": "F27",
+      "version": 1,
+      "status": "active",
+      "expires": "",
+      "scope": "global",
+      "content": "The fictional Mistcrown archive lends original maps only to visitors wearing cotton gloves."
+    },
+    {
+      "id": "F28",
+      "version": 1,
+      "status": "active",
+      "expires": "",
+      "scope": "global",
+      "content": "В вымышленном парке Листозвон костры разрешены только после дождя."
+    },
+    {
+      "id": "F29",
+      "version": 1,
+      "status": "active",
+      "expires": "",
+      "scope": "global",
+      "content": "В вымышленном клубе Янтарепад дети входят в зал только со взрослым."
+    },
+    {
+      "id": "F30",
+      "version": 1,
+      "status": "active",
+      "expires": "",
+      "scope": "global",
+      "content": "The fictional Reedopal lab accepts samples on weekdays, excluding public holidays."
+    },
+    {
+      "id": "F31",
+      "version": 1,
+      "status": "active",
+      "expires": "",
+      "scope": "global",
+      "content": "The fictional Lumen observatory stores cleaning cloths in cabinet LX-418."
+    },
+    {
+      "id": "F32",
+      "version": 1,
+      "status": "active",
+      "expires": "",
+      "scope": "global",
+      "content": "The fictional Brindle ferry sells orange juice on its upper deck."
+    },
+    {
+      "id": "F33",
+      "version": 1,
+      "status": "active",
+      "expires": "",
+      "scope": "global",
+      "content": "The fictional Vesper kiln uses glaze batch GZ-903 for green bowls."
+    },
+    {
+      "id": "F34",
+      "version": 1,
+      "status": "active",
+      "expires": "",
+      "scope": "global",
+      "content": "The fictional Tansy archive retains staff invoices for 90 days."
+    },
+    {
+      "id": "F35",
+      "version": 1,
+      "status": "active",
+      "expires": "",
+      "scope": "global",
+      "content": "The fictional Marrow weather mast is painted white."
+    },
+    {
+      "id": "F36",
+      "version": 1,
+      "status": "active",
+      "expires": "",
+      "scope": "global",
+      "content": "The fictional Plover greenhouse sets daytime temperature to 24 degrees Celsius."
+    },
+    {
+      "id": "F37",
+      "version": 1,
+      "status": "active",
+      "expires": "",
+      "scope": "global",
+      "content": "The fictional Copperleaf library keeps newspapers beside the west stairs."
+    },
+    {
+      "id": "F38",
+      "version": 1,
+      "status": "active",
+      "expires": "",
+      "scope": "global",
+      "content": "The fictional Cloudfin aquarium sells postcards at noon."
+    },
+    {
+      "id": "F39",
+      "version": 1,
+      "status": "active",
+      "expires": "",
+      "scope": "global",
+      "content": "The fictional Amberwheel workshop lends aprons at its rear door."
+    },
+    {
+      "id": "F40",
+      "version": 1,
+      "status": "active",
+      "expires": "",
+      "scope": "global",
+      "content": "The fictional Mossbridge hotel serves tea in its attic lounge."
+    },
+    {
+      "id": "F41",
+      "version": 1,
+      "status": "active",
+      "expires": "",
+      "scope": "global",
+      "content": "В вымышленной библиотеке Тихолист журналы кладут в синий ящик."
+    },
+    {
+      "id": "F42",
+      "version": 1,
+      "status": "active",
+      "expires": "",
+      "scope": "global",
+      "content": "В вымышленном саду Луномох взрослые деревья поливают утром."
+    },
+    {
+      "id": "F43",
+      "version": 1,
+      "status": "active",
+      "expires": "",
+      "scope": "global",
+      "content": "The fictional Fernwake station rents bicycles from a yellow kiosk."
+    },
+    {
+      "id": "F44",
+      "version": 1,
+      "status": "active",
+      "expires": "",
+      "scope": "global",
+      "content": "В вымышленной гостинице Солнеплёс ужин подают на террасе."
+    },
+    {
+      "id": "F45",
+      "version": 1,
+      "status": "active",
+      "expires": "",
+      "scope": "global",
+      "content": "The fictional Alderquay pool closes its indoor cafe at dusk."
+    },
+    {
+      "id": "F46",
+      "version": 1,
+      "status": "active",
+      "expires": "",
+      "scope": "global",
+      "content": "The fictional Pebblefox tram permits small suitcases."
+    },
+    {
+      "id": "F47",
+      "version": 1,
+      "status": "active",
+      "expires": "",
+      "scope": "global",
+      "content": "В вымышленном парке Листозвон палатки ставят у озера."
+    },
+    {
+      "id": "F48",
+      "version": 1,
+      "status": "active",
+      "expires": "",
+      "scope": "global",
+      "content": "The fictional Reedopal lab stores empty sample jars in a wooden drawer."
+    }
+  ],
+  "queries": [
+    {
+      "id": "Q01",
+      "stratum": "exact",
+      "text": "Which cabinet holds Lumen spare lenses, LX-417?",
+      "gold": [
+        "F01"
+      ],
+      "rationale": "Only this fact states the requested entity-specific location, quantity, time or permission rule; related facts concern other objects or activities."
+    },
+    {
+      "id": "Q02",
+      "stratum": "exact",
+      "text": "How many bicycles may the Brindle ferry carry: 27?",
+      "gold": [
+        "F02"
+      ],
+      "rationale": "Only this fact states the requested entity-specific location, quantity, time or permission rule; related facts concern other objects or activities."
+    },
+    {
+      "id": "Q03",
+      "stratum": "exact",
+      "text": "Which glaze batch GZ-902 is used by Vesper kiln?",
+      "gold": [
+        "F03"
+      ],
+      "rationale": "Only this fact states the requested entity-specific location, quantity, time or permission rule; related facts concern other objects or activities."
+    },
+    {
+      "id": "Q04",
+      "stratum": "exact",
+      "text": "How long does Tansy archive retain visitor slips, 43 days?",
+      "gold": [
+        "F04"
+      ],
+      "rationale": "Only this fact states the requested entity-specific location, quantity, time or permission rule; related facts concern other objects or activities."
+    },
+    {
+      "id": "Q05",
+      "stratum": "exact",
+      "text": "What channel CH-816 does Marrow weather mast broadcast on?",
+      "gold": [
+        "F05"
+      ],
+      "rationale": "Only this fact states the requested entity-specific location, quantity, time or permission rule; related facts concern other objects or activities."
+    },
+    {
+      "id": "Q06",
+      "stratum": "exact",
+      "text": "What is Plover greenhouse night temperature: 16 degrees Celsius?",
+      "gold": [
+        "F06"
+      ],
+      "rationale": "Only this fact states the requested entity-specific location, quantity, time or permission rule; related facts concern other objects or activities."
+    },
+    {
+      "id": "Q07",
+      "stratum": "english",
+      "text": "Where should a reader bring a torn volume at Copperleaf?",
+      "gold": [
+        "F07"
+      ],
+      "rationale": "Only this fact states the requested entity-specific location, quantity, time or permission rule; related facts concern other objects or activities."
+    },
+    {
+      "id": "Q08",
+      "stratum": "english",
+      "text": "When do the Cloudfin staff give food to the flat swimming animals?",
+      "gold": [
+        "F08"
+      ],
+      "rationale": "Only this fact states the requested entity-specific location, quantity, time or permission rule; related facts concern other objects or activities."
+    },
+    {
+      "id": "Q09",
+      "stratum": "english",
+      "text": "Where can an Amberwheel visitor borrow something to shield their ears?",
+      "gold": [
+        "F09"
+      ],
+      "rationale": "Only this fact states the requested entity-specific location, quantity, time or permission rule; related facts concern other objects or activities."
+    },
+    {
+      "id": "Q10",
+      "stratum": "english",
+      "text": "Where does Mossbridge keep bags that departing guests left behind?",
+      "gold": [
+        "F10"
+      ],
+      "rationale": "Only this fact states the requested entity-specific location, quantity, time or permission rule; related facts concern other objects or activities."
+    },
+    {
+      "id": "Q11",
+      "stratum": "english",
+      "text": "At what time of day are young plants irrigated in Silverpetal?",
+      "gold": [
+        "F11"
+      ],
+      "rationale": "Only this fact states the requested entity-specific location, quantity, time or permission rule; related facts concern other objects or activities."
+    },
+    {
+      "id": "Q12",
+      "stratum": "english",
+      "text": "Which seating area does Driftbell set aside for classes on a trip?",
+      "gold": [
+        "F12"
+      ],
+      "rationale": "Only this fact states the requested entity-specific location, quantity, time or permission rule; related facts concern other objects or activities."
+    },
+    {
+      "id": "Q13",
+      "stratum": "russian",
+      "text": "Куда посетителю Тихолиста положить взятую карту после использования?",
+      "gold": [
+        "F13"
+      ],
+      "rationale": "Only this fact states the requested entity-specific location, quantity, time or permission rule; related facts concern other objects or activities."
+    },
+    {
+      "id": "Q14",
+      "stratum": "russian",
+      "text": "К кому в Искролуге отнести часы, которые перестали идти?",
+      "gold": [
+        "F14"
+      ],
+      "rationale": "Only this fact states the requested entity-specific location, quantity, time or permission rule; related facts concern other objects or activities."
+    },
+    {
+      "id": "Q15",
+      "stratum": "russian",
+      "text": "Когда в Луномхе увлажняют землю вокруг молодых растений?",
+      "gold": [
+        "F15"
+      ],
+      "rationale": "Only this fact states the requested entity-specific location, quantity, time or permission rule; related facts concern other objects or activities."
+    },
+    {
+      "id": "Q16",
+      "stratum": "russian",
+      "text": "Где посетителю Звонокамня хранить объёмный багаж на время осмотра?",
+      "gold": [
+        "F16"
+      ],
+      "rationale": "Only this fact states the requested entity-specific location, quantity, time or permission rule; related facts concern other objects or activities."
+    },
+    {
+      "id": "Q17",
+      "stratum": "russian",
+      "text": "Где в Медосвете можно получить питьевую воду без оплаты?",
+      "gold": [
+        "F17"
+      ],
+      "rationale": "Only this fact states the requested entity-specific location, quantity, time or permission rule; related facts concern other objects or activities."
+    },
+    {
+      "id": "Q18",
+      "stratum": "russian",
+      "text": "Где замёрзшему гостю Снеголуча взять покрывало?",
+      "gold": [
+        "F18"
+      ],
+      "rationale": "Only this fact states the requested entity-specific location, quantity, time or permission rule; related facts concern other objects or activities."
+    },
+    {
+      "id": "Q19",
+      "stratum": "cross_language",
+      "text": "Где на станции Fernwake купить билет для ночной поездки?",
+      "gold": [
+        "F19"
+      ],
+      "rationale": "Only this fact states the requested entity-specific location, quantity, time or permission rule; related facts concern other objects or activities."
+    },
+    {
+      "id": "Q20",
+      "stratum": "cross_language",
+      "text": "Где в клинике Opalnest искать забытый зонт?",
+      "gold": [
+        "F20"
+      ],
+      "rationale": "Only this fact states the requested entity-specific location, quantity, time or permission rule; related facts concern other objects or activities."
+    },
+    {
+      "id": "Q21",
+      "stratum": "cross_language",
+      "text": "Куда пекарня Dewspire отдаёт непроданный хлеб?",
+      "gold": [
+        "F21"
+      ],
+      "rationale": "Only this fact states the requested entity-specific location, quantity, time or permission rule; related facts concern other objects or activities."
+    },
+    {
+      "id": "Q22",
+      "stratum": "cross_language",
+      "text": "Where are life jackets kept in the fictional port Ветропруд?",
+      "gold": [
+        "F22"
+      ],
+      "rationale": "Only this fact states the requested entity-specific location, quantity, time or permission rule; related facts concern other objects or activities."
+    },
+    {
+      "id": "Q23",
+      "stratum": "cross_language",
+      "text": "Where do music lessons take place at Рябиноград school?",
+      "gold": [
+        "F23"
+      ],
+      "rationale": "Only this fact states the requested entity-specific location, quantity, time or permission rule; related facts concern other objects or activities."
+    },
+    {
+      "id": "Q24",
+      "stratum": "cross_language",
+      "text": "Where is breakfast served at Солнеплёс hotel?",
+      "gold": [
+        "F24"
+      ],
+      "rationale": "Only this fact states the requested entity-specific location, quantity, time or permission rule; related facts concern other objects or activities."
+    },
+    {
+      "id": "Q25",
+      "stratum": "conditions",
+      "text": "May Alderquay open the outdoor lane while a lightning warning is active?",
+      "gold": [
+        "F25"
+      ],
+      "rationale": "Only this fact states the requested entity-specific location, quantity, time or permission rule; related facts concern other objects or activities."
+    },
+    {
+      "id": "Q26",
+      "stratum": "conditions",
+      "text": "Does Pebblefox allow an unfolded scooter on the tram?",
+      "gold": [
+        "F26"
+      ],
+      "rationale": "Only this fact states the requested entity-specific location, quantity, time or permission rule; related facts concern other objects or activities."
+    },
+    {
+      "id": "Q27",
+      "stratum": "conditions",
+      "text": "Can a visitor without cotton gloves borrow an original map at Mistcrown?",
+      "gold": [
+        "F27"
+      ],
+      "rationale": "Only this fact states the requested entity-specific location, quantity, time or permission rule; related facts concern other objects or activities."
+    },
+    {
+      "id": "Q28",
+      "stratum": "conditions",
+      "text": "Разрешён ли костёр в Листозвоне, если дождя не было?",
+      "gold": [
+        "F28"
+      ],
+      "rationale": "Only this fact states the requested entity-specific location, quantity, time or permission rule; related facts concern other objects or activities."
+    },
+    {
+      "id": "Q29",
+      "stratum": "conditions",
+      "text": "Может ли ребёнок войти в зал Янтарепада без взрослого?",
+      "gold": [
+        "F29"
+      ],
+      "rationale": "Only this fact states the requested entity-specific location, quantity, time or permission rule; related facts concern other objects or activities."
+    },
+    {
+      "id": "Q30",
+      "stratum": "conditions",
+      "text": "Will Reedopal accept a sample on a weekday that is a public holiday?",
+      "gold": [
+        "F30"
+      ],
+      "rationale": "Only this fact states the requested entity-specific location, quantity, time or permission rule; related facts concern other objects or activities."
+    },
+    {
+      "id": "Q31",
+      "stratum": "negative",
+      "text": "What is the name of the captain of the fictional Brindle ferry?",
+      "gold": [],
+      "rationale": "No fact names a ferry captain."
+    },
+    {
+      "id": "Q32",
+      "stratum": "negative",
+      "text": "What is the admission price for the fictional Lumen observatory?",
+      "gold": [],
+      "rationale": "No observatory ticket price is stated."
+    },
+    {
+      "id": "Q33",
+      "stratum": "negative",
+      "text": "Какой номер телефона у вымышленного кафе Медосвет?",
+      "gold": [],
+      "rationale": "No telephone number is provided."
+    },
+    {
+      "id": "Q34",
+      "stratum": "negative",
+      "text": "В каком году основан вымышленный музей Звонокамень?",
+      "gold": [],
+      "rationale": "No founding year is provided."
+    },
+    {
+      "id": "Q35",
+      "stratum": "negative",
+      "text": "How many employees work at the fictional Reedopal lab?",
+      "gold": [],
+      "rationale": "No staffing count is given."
+    },
+    {
+      "id": "Q36",
+      "stratum": "negative",
+      "text": "Как зовут директора вымышленной школы Рябиноград?",
+      "gold": [],
+      "rationale": "No school director is named."
+    }
+  ]
+}

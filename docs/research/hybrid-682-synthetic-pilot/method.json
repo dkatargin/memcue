@@ -1,0 +1,19 @@
+{
+  "kind": "authored-synthetic-pilot-method-v1",
+  "top_k": 5,
+  "content_byte_bound": 4096,
+  "harness_unicode_scalar_bound": 4096,
+  "scope": ["global"],
+  "number_terms": "1",
+  "warm_repetitions": 20,
+  "first_pass": "one first observed search per query and arm; shared DB and OS caches, not independent cold machines",
+  "order": "arm index (position + query_index + repetition) modulo 3; repetition zero is first pass",
+  "arms": ["lexical", "vector", "hybrid"],
+  "candidate_depth": "native SearchFiltered count+1=49; exact cosine over all 48 eligible rows; positive cosine only; lists trimmed to 100; equal-weight RRF k=60",
+  "ties": "score descending, ID ascending, version ascending",
+  "clipping": "Harness whole facts, stop at first Unicode-scalar overflow after top5; caller verifies UTF-8 content bytes <=4096. Fixture guarantees any five facts fit both bounds.",
+  "embedding": "one session, one mixed 84-text forward; CPU intra2 inter1 sequential; passage/query prefixes; right truncate512; preload actual max tokens<=128; dynamic longest padding actual pad ID; float32 attention-mask mean and L2",
+  "quality": "author-labelled development gold; positive Hit@5, gold count/150 fixed-slot Precision@5, returned non-gold count/share, negatives with any result; no abstention tuning",
+  "timing": "perf wall clock search-only; saved query vectors; median and nearest-rank p95; first and warm separate; stable IDs/scores checked; repetitions are not quality samples",
+  "limits": {"neural_process_seconds":30,"pilot_execution_seconds":600,"task_ram_bytes":4294967296,"task_disk_bytes":2147483648,"inference_retries":0}
+}

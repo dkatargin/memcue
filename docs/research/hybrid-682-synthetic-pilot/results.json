@@ -1,0 +1,245 @@
+{
+  "kind": "authored-synthetic-pilot-result-v1",
+  "fixture_sha256": "2fdb3907ab719fb5dcb5baf48766df9c24fb99566a19e4a731bd22160fdecd98",
+  "method_sha256": "3473dc432c61307b5dbfdbb2c90656fd4624fd43a7f289d42f19dbd6acb18556",
+  "vectors_sha256": "722f8438a31b885712c3f164d356beeeedb0c626465ce70ddb2cbc6de0374023",
+  "search_sha256": "da65c74c5174e372665f4a679c1570902b59ed1f6bc03e7b8663c600fac055ea",
+  "stable": true,
+  "arms": {
+    "lexical": {
+      "quality": {
+        "hit_n": 30,
+        "positive_n": 30,
+        "hit_percent": 100.0,
+        "gold_n": 30,
+        "precision_slots": 150,
+        "precision_at_5": 0.2,
+        "non_gold_n": 44,
+        "returned_positive_n": 74,
+        "non_gold_share": 0.5945945945945946,
+        "negative_any_n": 6,
+        "negative_n": 6,
+        "strata": {
+          "exact": {
+            "hit_n": 6,
+            "n": 6
+          },
+          "english": {
+            "hit_n": 6,
+            "n": 6
+          },
+          "russian": {
+            "hit_n": 6,
+            "n": 6
+          },
+          "cross_language": {
+            "hit_n": 6,
+            "n": 6
+          },
+          "conditions": {
+            "hit_n": 6,
+            "n": 6
+          }
+        }
+      },
+      "first_pass": {
+        "n": 36,
+        "median_ms": 0.810437,
+        "p95_ms": 1.54081
+      },
+      "warm": {
+        "n": 720,
+        "median_ms": 0.7467335,
+        "p95_ms": 1.260566
+      },
+      "exploratory_posthoc_hit1": {
+        "n": 25,
+        "denominator": 30,
+        "prespecified": false
+      }
+    },
+    "vector": {
+      "quality": {
+        "hit_n": 30,
+        "positive_n": 30,
+        "hit_percent": 100.0,
+        "gold_n": 30,
+        "precision_slots": 150,
+        "precision_at_5": 0.2,
+        "non_gold_n": 120,
+        "returned_positive_n": 150,
+        "non_gold_share": 0.8,
+        "negative_any_n": 6,
+        "negative_n": 6,
+        "strata": {
+          "exact": {
+            "hit_n": 6,
+            "n": 6
+          },
+          "english": {
+            "hit_n": 6,
+            "n": 6
+          },
+          "russian": {
+            "hit_n": 6,
+            "n": 6
+          },
+          "cross_language": {
+            "hit_n": 6,
+            "n": 6
+          },
+          "conditions": {
+            "hit_n": 6,
+            "n": 6
+          }
+        }
+      },
+      "first_pass": {
+        "n": 36,
+        "median_ms": 5.9503535,
+        "p95_ms": 8.831402
+      },
+      "warm": {
+        "n": 720,
+        "median_ms": 5.8154705,
+        "p95_ms": 7.760088
+      },
+      "exploratory_posthoc_hit1": {
+        "n": 29,
+        "denominator": 30,
+        "prespecified": false
+      }
+    },
+    "hybrid": {
+      "quality": {
+        "hit_n": 30,
+        "positive_n": 30,
+        "hit_percent": 100.0,
+        "gold_n": 30,
+        "precision_slots": 150,
+        "precision_at_5": 0.2,
+        "non_gold_n": 120,
+        "returned_positive_n": 150,
+        "non_gold_share": 0.8,
+        "negative_any_n": 6,
+        "negative_n": 6,
+        "strata": {
+          "exact": {
+            "hit_n": 6,
+            "n": 6
+          },
+          "english": {
+            "hit_n": 6,
+            "n": 6
+          },
+          "russian": {
+            "hit_n": 6,
+            "n": 6
+          },
+          "cross_language": {
+            "hit_n": 6,
+            "n": 6
+          },
+          "conditions": {
+            "hit_n": 6,
+            "n": 6
+          }
+        }
+      },
+      "first_pass": {
+        "n": 36,
+        "median_ms": 6.4332975,
+        "p95_ms": 10.024168
+      },
+      "warm": {
+        "n": 720,
+        "median_ms": 6.318714,
+        "p95_ms": 8.549925
+      },
+      "exploratory_posthoc_hit1": {
+        "n": 30,
+        "denominator": 30,
+        "prespecified": false
+      }
+    }
+  },
+  "parent_verification": "accepted as authored synthetic pilot only; independent arithmetic and cosine audit, no new encoding",
+  "encoding": {
+    "python": "3.13.5",
+    "runtime": {
+      "numpy": "2.5.4",
+      "onnxruntime": "1.23.2",
+      "tokenizers": "0.22.1"
+    },
+    "assets": {
+      "ok": true,
+      "files": [
+        {
+          "file": "model.onnx",
+          "bytes": 470268510,
+          "sha256": "ca456c06b3a9505ddfd9131408916dd79290368331e7d76bb621f1cba6bc8665"
+        },
+        {
+          "file": "tokenizer.json",
+          "bytes": 17082730,
+          "sha256": "0b44a9d7b51c3c62626640cda0e2c2f70fdacdc25bbbd68038369d14ebdf4c39"
+        },
+        {
+          "file": "config.json",
+          "bytes": 655,
+          "sha256": "69137736cab8b8903a07fe8afaafdda25aac55415a12a55d1bffa9f581abf959"
+        },
+        {
+          "file": "tokenizer_config.json",
+          "bytes": 443,
+          "sha256": "a1d6bc8734a6f635dc158508bef000f8e2e5a759c7d92f984b2c86e5ff53425b"
+        }
+      ],
+      "model": "intfloat/multilingual-e5-small",
+      "revision": "614241f622f53c4eeff9890bdc4f31cfecc418b3"
+    },
+    "session_load_attempts": 1,
+    "forward_attempts": 1,
+    "texts_submitted": 84,
+    "max_tokens": 32,
+    "pad_id": 1,
+    "batch_shape": [
+      84,
+      32
+    ],
+    "load_seconds": 0.827414614148438,
+    "forward_seconds": 0.7077566655352712,
+    "worker_wall_seconds": 3.4487881986424327,
+    "maxrss_kib": 1188092,
+    "device": "CPU",
+    "dtype": "float32",
+    "dimensions": 384,
+    "prefixes": [
+      "query:",
+      "passage:"
+    ],
+    "pooling": "attention-mask mean then L2",
+    "max_length": 512,
+    "padding": "dynamic longest; tokenizer pad ID 1",
+    "intra_threads": 2,
+    "inter_threads": 1,
+    "execution": "sequential",
+    "external_process_wall_seconds": 3.817051189020276,
+    "rss_scope": "whole successful worker high-water RSS; not isolated model RAM or per-query latency"
+  },
+  "pilot_accounting": {
+    "worker_process_invocations": 2,
+    "preload_validation_failures": 1,
+    "session_loads": 1,
+    "forwards": 1,
+    "texts": 84,
+    "inference_retries": 0,
+    "subject_judge_api_calls": 0
+  },
+  "limitations": [
+    "authored fictional development data; no blind or representative sample",
+    "Hit5 primary; Hit1 exploratory posthoc; no significance or agent benefit claim",
+    "search-only cached query vectors; SQL full scan; first pass shares caches",
+    "non-gold is author relevance nonmembership, not blinded harmfulness"
+  ]
+}
