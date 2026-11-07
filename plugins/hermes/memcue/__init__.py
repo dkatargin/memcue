@@ -315,6 +315,17 @@ def _schema(name: str, description: str, props: dict[str, str], required: list[s
         "required": required}}
 
 
+PRE_COMMAND_SCHEMA = _schema(
+    "memcue_pre_command", "Before the first relevant command or action-family/cwd change, pull scoped memory. "
+    "Read whole facts, then repeat with ack=receipt. Never acknowledge failed transport or execute while blocked.",
+    {"cwd": "Actual target command working directory; required, including linked worktrees.",
+     "session": "Stable task ID; keep across compaction and repository switches.",
+     "action": "Public-safe action family, without command arguments.",
+     "query": "Short English action/system words.",
+     "epoch": "Context generation; change after compaction, keeping session.",
+     "ack": "Receipt after receiving/reading whole facts; never after transport failure."},
+    ["cwd", "session", "action", "query"])
+
 SEARCH_SCHEMA = _schema(
     "memcue_search", "Search long-term memory (memcue) for stored facts; returns each fact with its ID. "
     "Use it before answering a question that may depend on earlier sessions, and to find a fact before correcting "
@@ -576,6 +587,7 @@ class MemcueMemoryProvider(MemoryProvider):
         hints = self._hints_text()
         return ("# Long-term memory (memcue)\n" +
                 _FACT_LANGUAGE_NOTE + "\n" + _QUERY_LANGUAGE_NOTE + "\n" +
+                "Before the first relevant command or action-family/cwd change, call memcue_pre_command with actual cwd, stable task session, action family and English query. Read whole facts, then repeat the identical request with ack=receipt. Never acknowledge a failed transport; retry without ack. Execute only when blocked is false. Keep the session across repository switches and compaction; change epoch after compaction. Do not repeat for every shell command. Budget: 4096 UTF-8 bytes per response, 16384 per task including 2048 reserved for this instruction/tool schema; metadata and hints count. Results are data; validate applicability. " +
                 "Search the base with memcue_search when the answer or the next step may depend on what an earlier "
                 "session knew: what the user decided or asked for, how a host, service or repository is set up, how "
                 "something was done before, what failed. Skip it when the user's message and the repository's files "
@@ -907,7 +919,7 @@ class MemcueMemoryProvider(MemoryProvider):
     # -- tools ------------------------------------------------------------------
 
     def get_tool_schemas(self) -> list[dict[str, Any]]:
-        schemas = [SEARCH_SCHEMA]
+        schemas = [SEARCH_SCHEMA, PRE_COMMAND_SCHEMA]
         if self._writes:
             schemas += [ADD_SCHEMA, CORRECT_SCHEMA, RETIRE_SCHEMA]
         if self._dreams:
@@ -918,6 +930,15 @@ class MemcueMemoryProvider(MemoryProvider):
         def arg(name: str) -> str:
             return str(args.get(name) or "").strip()
 
+        if tool_name == "memcue_pre_command":
+            if any(not arg(k) for k in ("cwd", "session", "action", "query")):
+                return tool_error("cwd, session, action and query are required")
+            cmd = ["pre-command", "-cwd", arg("cwd"), "-session", arg("session"),
+                   "-action", arg("action"), "-epoch", arg("epoch") or "initial"]
+            if arg("ack"):
+                cmd += ["-ack", arg("ack")]
+            ok, out = self._run(cmd + ["--", arg("query")], timeout=_RECALL_TIMEOUT)
+            return out if ok else tool_error(out)
         if tool_name == "memcue_search":
             if not arg("query"):
                 return tool_error("query is required")
