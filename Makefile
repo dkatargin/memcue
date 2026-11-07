@@ -9,6 +9,7 @@ build:
 test: build test-codex
 	go test -race ./...
 	MEMCUE_BIN=$(CURDIR)/bin/memcue python3 -I plugins/hermes/memcue/tests/test_provider.py
+	MEMCUE_BIN=$(CURDIR)/bin/memcue python3 -I plugins/test_pre_command.py
 	python3 -I plugins/test_cross_harness.py
 	MEMCUE_BIN=$(CURDIR)/bin/memcue python3 -I docs/research/scripts/test_search_stand.py
 	$(MAKE) test-plugins

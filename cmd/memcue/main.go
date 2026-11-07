@@ -91,6 +91,8 @@ const usage = `usage: memcue <command>
 commands:
   session-start   SessionStart hook: tells the agent where its memory is and how to search it: memcue session-start [-part N] (part 1 carries the text; 2 and 3 print nothing, for an older plugin)
   session-card    session-start without the note: the upgrade and dream hints for a host that has its own instructions: memcue session-card [-dream-tools]
+  pre-command bounded scoped pull: -cwd DIR -session TASK -action FAMILY [-epoch GENERATION] [-ack RECEIPT] WORDS
+  observe-problem record an evidenced occurrence: -fact ID -incident STABLE_ID
   search    find the facts that fit the words, with their IDs: memcue search [-n N] [-min-score F] [-in WHERE] [-kind K] [-since DAY] [-expired] [-all-words] [-json] [-cwd DIR] [-session ID] TEXT
   sessions  passages of earlier Claude Code sessions that hold the words, newest first, when search finds nothing: memcue sessions [-n N] [-before TIME] [-cwd DIR] [-session IDS] [-json] TEXT
   add       store a fact, indexed at once: memcue add [-cwd DIR] [-keywords K1,K2] [-origin O] [-expires YYYY-MM-DD] [-source S] [-kind K] [-scope S | -shelf SLUG] -- TEXT
@@ -154,6 +156,10 @@ func main() {
 		// Nothing is extracted any more (#494), but a plugin older than that still calls these after a turn or at
 		// the end of a session: take its input and exit 0, so it logs no failure for every turn.
 		_, _ = io.Copy(io.Discard, os.Stdin)
+	case "pre-command":
+		err = runPreCommand(os.Args[2:], os.Stdout)
+	case "observe-problem":
+		err = runObserveProblem(os.Args[2:], os.Stdout)
 	case "search":
 		err = runSearch(os.Args[2:], os.Stdout)
 	case "sessions":

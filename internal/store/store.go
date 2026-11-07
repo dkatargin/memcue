@@ -1219,10 +1219,12 @@ type Hit struct {
 
 // Filter narrows Search (#409). Its zero value keeps every active fact that holds any of the terms.
 type Filter struct {
-	AllTerms bool     // a fact must hold every term, not any of them
-	Kinds    []string // only facts of these kinds
-	Since    string   // only facts created at or after this UTC instant, "2006-01-02T15:04:05"
-	Today    string   // leaves out facts that expired before this day; empty keeps them
+	// OriginOnlyUnscoped restricts the origin fallback to facts without an explicit scope.
+	OriginOnlyUnscoped bool
+	AllTerms           bool     // a fact must hold every term, not any of them
+	Kinds              []string // only facts of these kinds
+	Since              string   // only facts created at or after this UTC instant, "2006-01-02T15:04:05"
+	Today              string   // leaves out facts that expired before this day; empty keeps them
 	// Scopes, ScopePrefixes and Origins keep a fact whose scope is one of Scopes or starts with one of ScopePrefixes
 	// (case aside), or whose origin starts with one of Origins and a space; all empty keep every fact.
 	Scopes        []string
@@ -1265,7 +1267,11 @@ func (s *Store) where(alias string, f Filter) (string, []any) {
 			args = append(args, utf8.RuneCountInString(p), strings.ToLower(p))
 		}
 		for _, o := range f.Origins {
-			or = append(or, "substr("+alias+".origin, 1, ?) = ?")
+			origin := "substr(" + alias + ".origin, 1, ?) = ?"
+			if f.OriginOnlyUnscoped {
+				origin = "(" + scope + " = '' AND " + origin + ")"
+			}
+			or = append(or, origin)
 			args = append(args, utf8.RuneCountInString(o)+1, o+" ")
 		}
 		conds = append(conds, "("+strings.Join(or, " OR ")+")")

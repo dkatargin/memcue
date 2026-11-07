@@ -5,6 +5,8 @@ through hooks:
 
 Codex CLI users: see the [local pull-mode integration](plugins/codex/README.md) for setup, hook review, skills and verification limits.
 
+Before command execution, use the [bounded scoped pull](docs/pre-command-memory.md) for applicable pitfalls and operating constraints; it includes all four integrations, context budgets and observation-based recurrence.
+
 - **At session start, and again after a compaction or `/clear`** it tells the agent when to search memcue: when the
   answer or the next step may depend on what an earlier session knew, and not when the message and the files hold
   everything. No card of rules comes with it (#656): the agent searches your rules and decisions itself, with
