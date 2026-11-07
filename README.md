@@ -58,14 +58,15 @@ not yet run for long in daily work.
 
 ## Compatibility
 
-This release is `0.30.0`; the fact-base schema is 7 (see [Upgrade](#upgrade)). An older memcue sets a version-7 cache
-of a text history aside and builds its own from the text; a version-6 base does not open in 0.20.0
-or older, so stop every older memcue and back the base up before the first open. A text history (0.22.0) is not read
-by 0.21.2 or older, so upgrade every machine that syncs the base before the move. The three plugin manifests carry the
-same version, and a release bumps all of them together.
+This release candidate is `0.31.0`; the fact-base schema is **9**. Content-only storage is an incompatible
+upgrade: stop every consumer on every sharing machine and pause sync before opening a base. Make a full verified
+backup and test isolated copies first. Old JSONL consumers are not blocked by the SQLite schema number.
+See [Upgrade](#upgrade) for coordinated rollout and rollback data risks. All versioned plugin manifests carry
+the same release version. Publication and live deployment are separate steps; neither is claimed here.
 
 | memcue | schema | Claude Code plugin | DSH plugin | Hermes plugin |
 |---|---|---|---|---|
+| 0.31.0 | 9 | 0.31.0 | 0.31.0 (`dsh >=0.2.0-rc.2 <0.3.0`) | 0.31.0 (`hermes-agent` >=0.17.0) |
 | 0.30.0 | 7 | 0.30.0 | 0.30.0 (`dsh >=0.2.0-rc.2 <0.3.0`) | 0.30.0 (`hermes-agent` 0.15.2) |
 | 0.29.0 | 7 | 0.29.0 | 0.29.0 (`dsh >=0.2.0-rc.2 <0.3.0`) | 0.29.0 (`hermes-agent` 0.15.2) |
 | 0.28.0 | 7 | 0.28.0 | 0.28.0 (`dsh >=0.2.0-rc.2 <0.3.0`) | 0.28.0 (`hermes-agent` 0.15.2) |
@@ -273,14 +274,21 @@ included (#453); the Hermes and DSH plugins read both it and the bare array of a
 
 ## Upgrade
 
-### Content-only storage (#678; unreleased)
+### 0.31.0: content-only storage and pull integrations
 
-Schema 9 removes auxiliary fields, preserves legacy write identity and rebuilds search from literal content. Stop every old consumer before opening
-a shared base. This is a compatibility break, not a release or retrieval-equivalence claim. Read the
-[backup, coordinated upgrade and rollback procedure](docs/content-only-upgrade.md). The versioned notes below
-describe historical releases; their auxiliary-field behavior no longer applies to the current implementation.
+- **Schema 9 is an incompatible content-only upgrade** (#678): auxiliary keywords/translations are removed;
+  literal content is indexed and legacy write identity is preserved. Stop all consumers and pause sync together,
+  make a full verified backup, and test isolated copies before rollout. Rollback requires restoring the complete
+  pre-upgrade backup everywhere and reconciling later writes to avoid losing them. Follow the
+  [coordinated upgrade and rollback procedure](docs/content-only-upgrade.md). No retrieval-equivalence claim is made.
+- **English-first integration instructions, without automatic translation**: keep literal stored content;
+  legacy-language searches may need an explicit retry. Codex uses a local CLI pull integration. Pre-command pull is
+  bounded; all applicable current-repository pitfalls are delivered whole, including after actual cwd changes
+  through the supported integrations (#684, #686).
+  See the [Codex integration](plugins/codex/README.md) and [Hermes integration](plugins/hermes/README.md).
 
 These notes describe behaviour at each release. See [Use](#use) for the current language and dream policy.
+Historical auxiliary-field behavior below no longer applies to the current implementation.
 
 ### 0.30.0: a dream a day, and its calls cost less (#665, #660, #643)
 
