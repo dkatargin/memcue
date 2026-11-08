@@ -176,7 +176,13 @@ type dreamPlanGroup struct {
 	Actions []extract.Action `json:"actions"`
 }
 
-func runDream(args []string, out io.Writer) error {
+func (inv *invocation) runDream(args []string, out io.Writer) (err error) {
+	defer func() {
+		if err != nil && inv.effect {
+			err = mutationResponseError("", err)
+		}
+	}()
+	out = inv.writer(out)
 	fs := flag.NewFlagSet("dream", flag.ContinueOnError)
 	since := fs.String("since", "", "review facts written since this date or RFC 3339 time (default: since the last dream)")
 	all := fs.Bool("all", false, "review every active fact")
@@ -200,7 +206,7 @@ func runDream(args []string, out io.Writer) error {
 		if *jobs < 1 {
 			return fmt.Errorf("-j %d: at least one packet", *jobs)
 		}
-		return runDreamOnce(out, *all, *background, *jobs)
+		return inv.runDreamOnce(out, *all, *background, *jobs)
 	}
 	if jSet || *background {
 		return errors.New("-j and -background go with -run")
@@ -221,7 +227,7 @@ func runDream(args []string, out io.Writer) error {
 	}
 	defer unlock()
 	if *applyFile != "" {
-		rec, err := applyAnswer(dir, *applyFile, out)
+		rec, err := inv.applyAnswer(dir, *applyFile, out)
 		if err != nil {
 			rec.Error = err.Error()
 		}
@@ -244,7 +250,7 @@ func runDream(args []string, out io.Writer) error {
 			return err
 		}
 	}
-	rec, _, err := prepare(dir, from, seen, *list, 1, out)
+	rec, _, err := inv.prepare(dir, from, seen, *list, 1, out)
 	switch {
 	case *list:
 		return err
@@ -293,7 +299,7 @@ func freshFacts(s *store.Store, active []store.Fact, from time.Time, seen map[st
 
 // dreamDue counts fresh facts after the interval has passed. The first call on a machine only marks the base, so
 // the facts it already had are not swept by surprise (memcue dream -prepare -all does that).
-func dreamDue(dir string, every time.Duration) (fresh int, last time.Time, err error) {
+func (inv *invocation) dreamDue(dir string, every time.Duration) (fresh int, last time.Time, err error) {
 	last, ok := lastDream(dir)
 	if !ok {
 		unlock, err := lockDream(dir)
@@ -304,7 +310,7 @@ func dreamDue(dir string, every time.Duration) (fresh int, last time.Time, err e
 		if _, ok := lastDream(dir); ok {
 			return 0, time.Time{}, nil
 		}
-		return 0, time.Time{}, markBase(dir)
+		return 0, time.Time{}, inv.markBase(dir)
 	}
 	if time.Since(last) < every {
 		return 0, last, nil
@@ -313,7 +319,7 @@ func dreamDue(dir string, every time.Duration) (fresh int, last time.Time, err e
 	if err != nil {
 		return 0, last, err
 	}
-	s, err := openBase()
+	s, err := inv.openBase()
 	if err != nil {
 		return 0, last, err
 	}
@@ -392,18 +398,19 @@ const packetFile = "dream.packet.json"
 //
 // packets (#471) scales every bound: dream -run sends the work of that many packets at once, cut back into packets of
 // the usual bounds, so a pass of a base far behind does the work of several. The session's model gets one.
-func prepare(dir string, from time.Time, seen map[string]int, list bool, packets int, out io.Writer) (dreamRecord, dreamWork, error) {
+func (inv *invocation) prepare(dir string, from time.Time, seen map[string]int, list bool, packets int, out io.Writer) (dreamRecord, dreamWork, error) {
+	out = inv.writer(out)
 	var work dreamWork
 	maxFresh, maxGroups := packets*packetFresh, packets*packetGroups
 	start := time.Now()
 	rec := dreamRecord{Time: start.UTC().Format(time.RFC3339), Since: from.UTC().Format(time.RFC3339)}
-	s, err := openBase()
+	s, err := inv.openBase()
 	if err != nil {
 		return rec, work, err
 	}
 	defer func() { _ = s.Close() }()
 	if !list {
-		if err := unpromote(dir, s); err != nil {
+		if err := unpromote(dir, s, func() { inv.effect = true }); err != nil {
 			return rec, work, err
 		}
 	}
@@ -563,7 +570,8 @@ func renderPacket(id string, split, scope []store.Fact, projects []string, group
 // applyAnswer checks the model's answer against the packet it was given and carries it out the way a plan is. An
 // answer to another packet is refused whole; an answer about a fact the packet did not give for that part, a second
 // answer about one fact or a split into fewer than two parts is refused alone.
-func applyAnswer(dir, path string, out io.Writer) (dreamRecord, error) {
+func (inv *invocation) applyAnswer(dir, path string, out io.Writer) (dreamRecord, error) {
+	out = inv.writer(out)
 	rec := dreamRecord{Time: time.Now().UTC().Format(time.RFC3339)}
 	var p dreamPacket
 	b, err := os.ReadFile(filepath.Join(dir, packetFile))
@@ -649,7 +657,7 @@ func applyAnswer(dir, path string, out io.Writer) (dreamRecord, error) {
 	rec.Refused = append(rec.Refused, refused...)
 	plan.Groups = planGroups(groups, ok)
 	rec.Fresh = len(p.Split)
-	applied, err := applyPlan(dir, plan, rec, out)
+	applied, err := inv.applyPlan(dir, plan, rec, out)
 	applied.Groups = len(p.Groups) // the groups the model reviewed, not only those it acted on
 	applied.Grouped = groupRecords(p, a.Actions, applied.Actions)
 	if err == nil {
@@ -724,13 +732,14 @@ func groupsOf(groups [][]store.Fact) map[string]int {
 // applyPlan carries out a checked answer. A group whose facts changed since the packet (a new version, or retired) is
 // refused whole, since its actions were decided on the old text; the rest apply, and the dream is marked as of the
 // packet, with what it saw. rec carries what the checks before already refused.
-func applyPlan(dir string, plan dreamPlan, rec dreamRecord, out io.Writer) (dreamRecord, error) {
+func (inv *invocation) applyPlan(dir string, plan dreamPlan, rec dreamRecord, out io.Writer) (dreamRecord, error) {
+	out = inv.writer(out)
 	if len(plan.Expansions) != 0 || len(plan.Translations) != 0 {
 		return rec, errors.New("dream: legacy auxiliary plan is unsupported; prepare a new packet")
 	}
 	rec.Since = plan.Start.UTC().Format(time.RFC3339)
 	rec.Groups = len(plan.Groups)
-	s, err := openBase()
+	s, err := inv.openBase()
 	if err != nil {
 		return rec, err
 	}
@@ -740,6 +749,7 @@ func applyPlan(dir string, plan dreamPlan, rec dreamRecord, out io.Writer) (drea
 	// Splits go first, so a group the model saw with the compound fact in it is refused below as changed. The parts
 	// are not marked seen: the next dream groups them with their neighbours, which this plan never did.
 	for _, sp := range plan.Splits {
+		inv.effect = true // A local write error need not prove that no version was appended.
 		parts, err := s.SplitFact(sp.ID, sp.Version, sp.Parts)
 		switch {
 		case errors.Is(err, store.ErrChanged) || errors.Is(err, store.ErrRetired) || errors.Is(err, store.ErrNotFound):
@@ -804,6 +814,7 @@ func applyPlan(dir string, plan dreamPlan, rec dreamRecord, out io.Writer) (drea
 				rec.Refused = append(rec.Refused, a.Op+" "+a.ID+": "+why)
 				continue
 			}
+			inv.effect = true
 			f, err := apply(s, a)
 			if err != nil {
 				return rec, err
@@ -815,7 +826,7 @@ func applyPlan(dir string, plan dreamPlan, rec dreamRecord, out io.Writer) (drea
 			}
 		}
 	}
-	changedFirst, err := applyRescopes(s, plan.Rescopes, saw, &rec, out)
+	changedFirst, err := applyRescopes(s, plan.Rescopes, saw, &rec, out, func() { inv.effect = true })
 	if err != nil {
 		return rec, err
 	}
@@ -919,8 +930,8 @@ func versions(facts []store.Fact) map[string]int {
 }
 
 // markBase marks a first dream on this machine: from now on, and with every fact the base holds already seen.
-func markBase(dir string) error {
-	s, err := openBase()
+func (inv *invocation) markBase(dir string) error {
+	s, err := inv.openBase()
 	if err != nil {
 		return err
 	}
@@ -1233,4 +1244,22 @@ func appendJSON(path string, v any) error {
 		err = cerr
 	}
 	return err
+}
+
+func dreamDue(dir string, every time.Duration) (fresh int, last time.Time, err error) {
+	inv := newInvocation()
+	defer inv.close()
+	return inv.dreamDue(dir, every)
+}
+func runDream(args []string, out io.Writer) error {
+	inv := newInvocation()
+	defer inv.close()
+	return inv.runDream(args, out)
+}
+
+func markBase(dir string) error { inv := newInvocation(); defer inv.close(); return inv.markBase(dir) }
+func applyPlan(dir string, plan dreamPlan, rec dreamRecord, out io.Writer) (dreamRecord, error) {
+	inv := newInvocation()
+	defer inv.close()
+	return inv.applyPlan(dir, plan, rec, out)
 }

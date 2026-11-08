@@ -3,7 +3,6 @@ package main
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -14,6 +13,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/juev/memcue/internal/jsonctx"
 	"github.com/juev/memcue/internal/recall"
 	"github.com/juev/memcue/internal/store"
 	"github.com/juev/memcue/internal/tier"
@@ -62,7 +62,7 @@ func pullHash(s string) string {
 }
 
 // Serializes counters across CLI processes. Save and sync the reservation before exposing a packet.
-func withPullState(fn func(*pullState) error) error {
+func (inv *invocation) withPullState(fn func(*pullState) error) error {
 	dir, err := stateDir()
 	if err != nil {
 		return err
@@ -72,15 +72,26 @@ func withPullState(fn func(*pullState) error) error {
 		return err
 	}
 	defer func() { _ = f.Close() }()
-	if err := syscall.Flock(int(f.Fd()), syscall.LOCK_EX); err != nil {
-		return err
+	for {
+		err := syscall.Flock(int(f.Fd()), syscall.LOCK_EX|syscall.LOCK_NB)
+		if err == nil {
+			break
+		}
+		if err != syscall.EWOULDBLOCK && err != syscall.EAGAIN {
+			return err
+		}
+		select {
+		case <-inv.ctx.Done():
+			return inv.ctx.Err()
+		case <-time.After(10 * time.Millisecond):
+		}
 	}
 	defer func() { _ = syscall.Flock(int(f.Fd()), syscall.LOCK_UN) }()
 	path := filepath.Join(dir, "pre-command.json")
 	st := pullState{Tasks: map[string]*pullTask{}, Incidents: map[string]problemIncident{}}
-	data, err := os.ReadFile(path)
+	data, err := inv.readFile(path)
 	if err == nil {
-		if err := json.Unmarshal(data, &st); err != nil {
+		if err := jsonctx.Unmarshal(inv.ctx, data, &st); err != nil {
 			return err
 		}
 	} else if !os.IsNotExist(err) {
@@ -121,7 +132,13 @@ func withPullState(fn func(*pullState) error) error {
 	if err := fn(&st); err != nil {
 		return err
 	}
-	data, err = json.Marshal(st)
+	if err := inv.ctx.Err(); err != nil {
+		return err
+	}
+	data, err = jsonctx.Marshal(inv.ctx, st)
+	if e := inv.ctx.Err(); e != nil {
+		return e
+	}
 	if err != nil {
 		return err
 	}
@@ -151,7 +168,8 @@ func withPullState(fn func(*pullState) error) error {
 }
 
 // runPreCommand is an explicit pull, independent of adapters' general search defaults.
-func runPreCommand(args []string, out io.Writer) error {
+func (inv *invocation) runPreCommand(args []string, out io.Writer) error {
+	out = inv.writer(out)
 	fs := flag.NewFlagSet("pre-command", flag.ContinueOnError)
 	cwd := fs.String("cwd", "", "actual command working directory (required)")
 	session := fs.String("session", "", "stable task ID (required; do not change after compaction)")
@@ -176,12 +194,12 @@ func runPreCommand(args []string, out io.Writer) error {
 	if info, err := os.Stat(abs); err != nil || !info.IsDir() {
 		return errors.New("pre-command cwd must be a directory")
 	}
-	keys := tier.Keys(abs, claudeDir())
+	keys := tier.Keys(abs, claudeDir(), inv.ctx)
 	if len(keys) == 0 {
 		return errors.New("pre-command: no project identity; resolve the target repository first")
 	}
 	var packet []byte
-	err = withPullState(func(st *pullState) error {
+	err = inv.withPullState(func(st *pullState) error {
 		key := pullHash(*session)
 		task := st.Tasks[key]
 		if task == nil {
@@ -208,7 +226,7 @@ func runPreCommand(args []string, out io.Writer) error {
 				q.Recurrence[v.Fact]++
 			}
 		}
-		return withStore(func(s *store.Store) error {
+		return inv.withStore(func(s *store.Store) error {
 			hits, err := recall.Search(s, q)
 			if err != nil {
 				return err
@@ -222,7 +240,7 @@ func runPreCommand(args []string, out io.Writer) error {
 			present := map[string]bool{}
 			for _, h := range hits {
 				fact := searchJSON([]store.Hit{h})[0]
-				fingerprint, err := json.Marshal(fact)
+				fingerprint, err := jsonctx.Marshal(inv.ctx, fact)
 				if err != nil {
 					return err
 				}
@@ -265,7 +283,7 @@ func runPreCommand(args []string, out io.Writer) error {
 					continue
 				}
 				answer.Facts = append(answer.Facts, candidate.fact)
-				b, _ := json.Marshal(answer)
+				b, _ := jsonctx.Marshal(inv.ctx, answer)
 				// Reserve room for overflow diagnostics and all numeric fields.
 				if len(b)+512 > pullResponseBytes || len(b)+512 > answer.Remaining || len(task.Seen)+len(delivered) >= 256 {
 					answer.Facts = answer.Facts[:len(answer.Facts)-1]
@@ -287,14 +305,14 @@ func runPreCommand(args []string, out io.Writer) error {
 				answer.Blocked = true
 				answer.Hint = "Incomplete pull: do not execute. Read and acknowledge any received facts using receipt, then narrow words with the same session. Whole facts are never truncated. If a fact cannot fit or budget runs out, request explicit review outside this budget."
 			}
-			b, _ := json.Marshal(answer)
+			b, _ := jsonctx.Marshal(inv.ctx, answer)
 			if len(b)+1 > answer.Remaining {
 				return errors.New("pre-command: accumulated context budget exhausted; do not execute; request explicit review")
 			}
 			answer.Remaining -= len(b) + 1
 			// Remaining has at most the original width; charge the conservative encoded size.
 			task.Spent += len(b) + 1
-			b, err = json.Marshal(answer)
+			b, err = jsonctx.Marshal(inv.ctx, answer)
 			if err != nil {
 				return err
 			}
@@ -314,7 +332,8 @@ func runPreCommand(args []string, out io.Writer) error {
 
 // Only callers with command evidence should record an occurrence. Reusing the incident
 // ID across retries/sessions deduplicates it; retrieval never calls this function.
-func runObserveProblem(args []string, out io.Writer) error {
+func (inv *invocation) runObserveProblem(args []string, out io.Writer) error {
+	out = inv.writer(out)
 	fs := flag.NewFlagSet("observe-problem", flag.ContinueOnError)
 	fact := fs.String("fact", "", "fact ID whose problem actually occurred")
 	incident := fs.String("incident", "", "stable public-safe incident ID, reused across retries")
@@ -324,7 +343,7 @@ func runObserveProblem(args []string, out io.Writer) error {
 	if *fact == "" || *incident == "" || fs.NArg() != 0 {
 		return errors.New("observe-problem requires -fact and -incident")
 	}
-	return withStore(func(s *store.Store) error {
+	return inv.withStore(func(s *store.Store) error {
 		f, err := s.Get(*fact)
 		if err != nil {
 			return err
@@ -332,7 +351,7 @@ func runObserveProblem(args []string, out io.Writer) error {
 		if f.ID == "" {
 			return fmt.Errorf("unknown fact %s", *fact)
 		}
-		return withPullState(func(st *pullState) error {
+		return inv.withPullState(func(st *pullState) error {
 			k := pullHash(*fact + "\x00" + *incident)
 			if _, ok := st.Incidents[k]; !ok {
 				if len(st.Incidents) >= 4096 {
@@ -344,4 +363,10 @@ func runObserveProblem(args []string, out io.Writer) error {
 			return err
 		})
 	})
+}
+
+func runPreCommand(args []string, out io.Writer) error {
+	inv := newInvocation()
+	defer inv.close()
+	return inv.runPreCommand(args, out)
 }

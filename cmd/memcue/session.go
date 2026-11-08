@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/juev/memcue/internal/jsonctx"
 	"github.com/juev/memcue/internal/store"
 	"github.com/juev/memcue/internal/tier"
 )
@@ -55,35 +56,43 @@ const startParts = 3
 
 // runSessionStartPart is the native SessionStart hook: repository pitfalls, the note and hints. It runs again after a
 // compaction or /clear. part 0 and part 1 print the text; parts 2 to startParts print nothing.
-func runSessionStartPart(in io.Reader, out io.Writer, part int) error {
-	return runSessionStartWith(in, out, part, true)
+func (inv *invocation) runSessionStartPart(in io.Reader, out io.Writer, part int) error {
+	out = inv.writer(out)
+	return inv.runSessionStartWith(in, out, part, true)
 }
 
-func runSessionStartWith(in io.Reader, out io.Writer, part int, pitfalls bool) error {
+func (inv *invocation) runSessionStartWith(in io.Reader, out io.Writer, part int, pitfalls bool) error {
+	out = inv.writer(out)
 	if part < 0 || part > startParts {
 		return fmt.Errorf("session-start: -part must be 0 to %d", startParts)
 	}
 	var h sessionStartInput
-	_ = json.NewDecoder(in).Decode(&h) // the note does not depend on the input; the hints take its cwd
+	if e := inv.decodeInput(in, &h); e != nil {
+		if inv.ctx.Err() != nil {
+			return e
+		}
+		// Optional malformed input must not select a repository through partial fields.
+		h = sessionStartInput{}
+	} // the note does not depend on the input; only valid input supplies hints
 	if part > 1 {
 		return nil
 	}
-	startDream()
+	inv.startDream()
 	context := sessionNote + "\n- " + preCommandNote
 	var automatic string
 	if pitfalls {
-		automatic = repositoryPitfalls(h.CWD)
+		automatic = inv.repositoryPitfalls(h.CWD)
 	}
-	for _, hint := range []string{automatic, autoMemoryHint(), dreamHint(), upkeepHint(h.CWD)} {
+	for _, hint := range []string{automatic, inv.autoMemoryHint(), inv.dreamHint(), inv.upkeepHint(h.CWD)} {
 		if hint != "" {
 			context += "\n\n" + hint
 		}
 	}
-	return writeContext(out, "SessionStart", context)
+	return inv.writeContext(out, "SessionStart", context)
 }
 
 // writeContext prints text as the additional context of a hook event.
-func writeContext(out io.Writer, event, text string) error {
+func (inv *invocation) writeContext(out io.Writer, event, text string) error {
 	var resp struct {
 		HookSpecificOutput struct {
 			HookEventName     string `json:"hookEventName"`
@@ -92,22 +101,22 @@ func writeContext(out io.Writer, event, text string) error {
 	}
 	resp.HookSpecificOutput.HookEventName = event
 	resp.HookSpecificOutput.AdditionalContext = text
-	return json.NewEncoder(out).Encode(resp)
+	return inv.encoder(out).Encode(resp)
 }
 
 // autoMemoryHint is the line the Claude Code session start adds while the host's built-in memory is on: the model
 // then keeps notes in files next to memcue, a second memory the user turns off, not memcue (#494). It is off when
 // CLAUDE_CODE_DISABLE_AUTO_MEMORY is set to a true value or the user settings say "autoMemoryEnabled": false; project
 // settings are not read.
-func autoMemoryHint() string {
+func (inv *invocation) autoMemoryHint() string {
 	if on, err := strconv.ParseBool(strings.TrimSpace(os.Getenv("CLAUDE_CODE_DISABLE_AUTO_MEMORY"))); err == nil && on {
 		return ""
 	}
-	if data, err := os.ReadFile(filepath.Join(claudeDir(), "settings.json")); err == nil {
+	if data, err := inv.readFile(filepath.Join(claudeDir(), "settings.json")); err == nil {
 		var settings struct {
 			AutoMemoryEnabled *bool `json:"autoMemoryEnabled"`
 		}
-		if json.Unmarshal(data, &settings) == nil && settings.AutoMemoryEnabled != nil && !*settings.AutoMemoryEnabled {
+		if jsonctx.Unmarshal(inv.ctx, data, &settings) == nil && settings.AutoMemoryEnabled != nil && !*settings.AutoMemoryEnabled {
 			return ""
 		}
 	}
@@ -118,19 +127,19 @@ func autoMemoryHint() string {
 
 // dreamHint is the line the session start adds when a dream is due: the session's model does it with the
 // memcue-dream skill when the user's task allows. A failure to tell says nothing; the session must start either way.
-func dreamHint() string {
-	return dreamHintTo("run the memcue-dream skill")
+func (inv *invocation) dreamHint() string {
+	return inv.dreamHintTo("run the memcue-dream skill")
 }
 
 // dreamToolsHint is dreamHint for a host whose model has the dream as two tools, Hermes (#494): with no extraction
 // left and no background dream (#569), the hint is the only thing that starts a dream there.
-func dreamToolsHint() string {
-	return dreamHintTo("call memcue_dream_prepare and answer its packet with memcue_dream_apply")
+func (inv *invocation) dreamToolsHint() string {
+	return inv.dreamHintTo("call memcue_dream_prepare and answer its packet with memcue_dream_apply")
 }
 
 // dreamHintTo is the dream hint that names how the model runs the dream. A dream the session start hands to the
 // background (#569) needs no hint.
-func dreamHintTo(how string) string {
+func (inv *invocation) dreamHintTo(how string) string {
 	if dreamBackground() || !factsBase().exists() {
 		return "" // no base yet: the hint must not create one
 	}
@@ -138,7 +147,7 @@ func dreamHintTo(how string) string {
 	if err != nil {
 		return ""
 	}
-	n, last, err := dreamDue(dir, dreamEveryFromEnv(dreamEvery))
+	n, last, err := inv.dreamDue(dir, dreamEveryFromEnv(dreamEvery))
 	if err != nil || n == 0 {
 		return ""
 	}
@@ -154,23 +163,25 @@ func dreamHintTo(how string) string {
 // what this machine still owes an upgrade, which such a host has no other way to hear, and with dreamTools when a
 // dream is due and how to run it with the dream tools (#494). It takes the same input as session-start and prints
 // repository pitfalls and maintenance hints, without the removed general rules card (#656).
-func runSessionCardWith(in io.Reader, out io.Writer, dreamTools bool) error {
-	return runSessionCardMode(in, out, dreamTools, true)
+func (inv *invocation) runSessionCardWith(in io.Reader, out io.Writer, dreamTools bool) error {
+	out = inv.writer(out)
+	return inv.runSessionCardMode(in, out, dreamTools, true)
 }
 
-func runSessionCardMode(in io.Reader, out io.Writer, dreamTools, pitfalls bool) error {
+func (inv *invocation) runSessionCardMode(in io.Reader, out io.Writer, dreamTools, pitfalls bool) error {
+	out = inv.writer(out)
 	var h sessionStartInput
-	if err := json.NewDecoder(in).Decode(&h); err != nil {
+	if err := inv.decodeInput(in, &h); err != nil {
 		return fmt.Errorf("session-card input: %w", err)
 	}
-	startDream()
+	inv.startDream()
 	var automatic string
 	if pitfalls {
-		automatic = repositoryPitfalls(h.CWD)
+		automatic = inv.repositoryPitfalls(h.CWD)
 	}
-	hints := []string{automatic, upkeepHint(h.CWD)}
+	hints := []string{automatic, inv.upkeepHint(h.CWD)}
 	if dreamTools {
-		hints = append(hints, dreamToolsHint())
+		hints = append(hints, inv.dreamToolsHint())
 	}
 	var text []string
 	for _, hint := range hints {
@@ -181,13 +192,22 @@ func runSessionCardMode(in io.Reader, out io.Writer, dreamTools, pitfalls bool) 
 	if len(text) == 0 {
 		return nil
 	}
-	return writeContext(out, "SessionCard", strings.Join(text, "\n\n"))
+	return inv.writeContext(out, "SessionCard", strings.Join(text, "\n\n"))
 }
 
 // stateDir holds memcue's logs (search, dream) and the dream's schedule. MEMCUE_STATE_DIR wins; otherwise the
 // default base keeps the historical $XDG_STATE_HOME/memcue, and any other base gets a subdirectory named after its
 // absolute path. Two bases on one machine must not share a dream schedule.
 func stateDir() (string, error) {
+	if dsn := os.Getenv("MEMCUE_POSTGRES_DSN"); dsn != "" && os.Getenv("MEMCUE_STATE_DIR") == "" {
+		cfg, err := store.PostgresConfig(dsn)
+		if err != nil {
+			return "", err
+		}
+		identity, _ := json.Marshal([]string{cfg.Host, strconv.Itoa(int(cfg.Port)), cfg.Database, cfg.User, os.Getenv("MEMCUE_TAILSCALE_MODE"), os.Getenv("MEMCUE_TAILSCALE_CONTROL_URL")})
+		sum := sha256.Sum256(identity)
+		return stateDirOf(factBase{path: filepath.Join(string(filepath.Separator), "memcue-postgres", hex.EncodeToString(sum[:]))})
+	}
 	return stateDirOf(factsBase())
 }
 
@@ -259,10 +279,10 @@ func clip(s string, n int) string {
 }
 
 // repositoryPitfalls is automatic repository context, independent of ranked search and pre-command receipts.
-func repositoryPitfalls(cwd string) string {
-	header, lines := repositoryPitfallParts(cwd)
-	if header == "" {
-		return ""
+func (inv *invocation) repositoryPitfalls(cwd string) string {
+	header, lines := inv.repositoryPitfallParts(cwd)
+	if header == "" || header == repositoryPitfallsUnavailable {
+		return header
 	}
 	if len(lines) == 0 {
 		return header + "No active repository pitfalls."
@@ -272,15 +292,18 @@ func repositoryPitfalls(cwd string) string {
 
 const repositoryPitfallsUnavailable = "Repository pitfalls unavailable; earlier snapshots do not establish current applicability."
 
-func repositoryPitfallParts(cwd string) (string, []string) {
+func (inv *invocation) repositoryPitfallParts(cwd string) (string, []string) {
 	if !factsBase().exists() {
 		return "", nil
 	}
-	keys := tier.RepositoryKeys(cwd, claudeDir())
+	keys := tier.RepositoryKeys(cwd, claudeDir(), inv.ctx)
+	if inv.ctx.Err() != nil {
+		return repositoryPitfallsUnavailable, nil
+	}
 	if len(keys) == 0 {
 		return "", nil
 	}
-	s, err := openBase()
+	s, err := inv.openBase()
 	if err != nil {
 		return repositoryPitfallsUnavailable, nil
 	}
@@ -301,9 +324,10 @@ func repositoryPitfallParts(cwd string) (string, []string) {
 }
 
 // runSessionPitfalls serves the automatic channel on task entry, independently of maintenance hints.
-func runSessionPitfalls(in io.Reader, out io.Writer) error {
+func (inv *invocation) runSessionPitfalls(in io.Reader, out io.Writer) error {
+	out = inv.writer(out)
 	var h sessionStartInput
-	if err := json.NewDecoder(in).Decode(&h); err != nil {
+	if err := inv.decodeInput(in, &h); err != nil {
 		return fmt.Errorf("session-card input: %w", err)
 	}
 	cwd := h.CWD
@@ -315,7 +339,7 @@ func runSessionPitfalls(in io.Reader, out io.Writer) error {
 	if cwd != "" && !filepath.IsAbs(cwd) {
 		cwd = filepath.Join(h.CWD, cwd)
 	}
-	header, lines := repositoryPitfallParts(cwd)
+	header, lines := inv.repositoryPitfallParts(cwd)
 	event := "SessionCard"
 	switch h.HookEventName {
 	case "SessionStart", "UserPromptSubmit", "PreToolUse":
@@ -327,13 +351,16 @@ func runSessionPitfalls(in io.Reader, out io.Writer) error {
 		}
 		header = "Repository pitfalls: no git repository or no fact base. This supersedes earlier repository-pitfall snapshots."
 	}
+	if header == repositoryPitfallsUnavailable {
+		return inv.encoder(out).Encode(map[string]any{"hookSpecificOutput": map[string]any{"hookEventName": event, "additionalContext": header}})
+	}
 	count := len(lines)
 	if count == 0 && header != "" {
 		lines = []string{"No active repository pitfalls."}
 	}
 	text := header + strings.Join(lines, "\n\n")
 
-	return json.NewEncoder(out).Encode(map[string]any{"hookSpecificOutput": map[string]any{"hookEventName": event, "additionalContext": text, "repositoryPitfallCount": count}})
+	return inv.encoder(out).Encode(map[string]any{"hookSpecificOutput": map[string]any{"hookEventName": event, "additionalContext": text, "repositoryPitfallCount": count}})
 }
 
 // repositoryVersions reads whole persisted histories as well as pending cache writes.
@@ -376,17 +403,57 @@ func repositoryVersions(s *store.Store) ([]store.Fact, error) {
 	return facts, nil
 }
 
-func runSessionPitfallsJSON(in io.Reader, out io.Writer) error {
+func (inv *invocation) runSessionPitfallsJSON(in io.Reader, out io.Writer) error {
+	out = inv.writer(out)
 	var h sessionStartInput
-	if err := json.NewDecoder(in).Decode(&h); err != nil {
+	if err := inv.decodeInput(in, &h); err != nil {
 		return err
 	}
-	header, facts := repositoryPitfallParts(h.CWD)
+	header, facts := inv.repositoryPitfallParts(h.CWD)
 	if header == repositoryPitfallsUnavailable {
 		return fmt.Errorf("%s", header)
 	}
 	if facts == nil {
 		facts = []string{}
 	}
-	return json.NewEncoder(out).Encode(map[string]any{"facts": facts, "context": header})
+	return inv.encoder(out).Encode(map[string]any{"facts": facts, "context": header})
+}
+
+func runSessionCardMode(in io.Reader, out io.Writer, dreamTools, pitfalls bool) error {
+	inv := newInvocation()
+	defer inv.close()
+	return inv.runSessionCardMode(in, out, dreamTools, pitfalls)
+}
+func dreamHint() string      { inv := newInvocation(); defer inv.close(); return inv.dreamHint() }
+func dreamToolsHint() string { inv := newInvocation(); defer inv.close(); return inv.dreamToolsHint() }
+func runSessionStartPart(in io.Reader, out io.Writer, part int) error {
+	inv := newInvocation()
+	defer inv.close()
+	return inv.runSessionStartPart(in, out, part)
+}
+func runSessionCardWith(in io.Reader, out io.Writer, dreamTools bool) error {
+	inv := newInvocation()
+	defer inv.close()
+	return inv.runSessionCardWith(in, out, dreamTools)
+}
+func repositoryPitfalls(cwd string) string {
+	inv := newInvocation()
+	defer inv.close()
+	return inv.repositoryPitfalls(cwd)
+}
+
+func repositoryPitfallParts(cwd string) (string, []string) {
+	inv := newInvocation()
+	defer inv.close()
+	return inv.repositoryPitfallParts(cwd)
+}
+func runSessionPitfalls(in io.Reader, out io.Writer) error {
+	inv := newInvocation()
+	defer inv.close()
+	return inv.runSessionPitfalls(in, out)
+}
+func runSessionPitfallsJSON(in io.Reader, out io.Writer) error {
+	inv := newInvocation()
+	defer inv.close()
+	return inv.runSessionPitfallsJSON(in, out)
 }

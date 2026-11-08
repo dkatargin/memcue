@@ -29,6 +29,9 @@ case "$1" in
   version)
     printf '{"version":"0.8.0"}\\n'
     ;;
+  add) printf '01J00000000000000000000000\\n' ;;
+  correct) printf 'f1 v2\\n' ;;
+  retire) printf 'f1 v2 retired\\n' ;;
   session-card)
     payload=$(cat)
     printf 'card-input: %s\\n' "$payload" >> "$MEMCUE_STUB_LOG"
@@ -48,7 +51,15 @@ before(async () => {
 	dir = await mkdtemp(join(tmpdir(), 'memcue-dsh-test-'))
 	binary = join(dir, 'memcue-stub.sh')
 	log = join(dir, 'calls.log')
-	await writeFile(binary, STUB)
+	await writeFile(binary+'.sh', STUB)
+ await writeFile(binary, `#!${process.execPath}
+const {spawnSync}=require('node:child_process');const {createHash}=require('node:crypto');const {readFileSync}=require('node:fs');
+const r=spawnSync('sh',[__filename+'.sh',...process.argv.slice(2)],{env:process.env,input:readFileSync(0)});
+process.stdout.write(r.stdout);process.stderr.write(r.stderr);
+if(process.env.MEMCUE_OUTCOME_NONCE){const hash=b=>createHash('sha256').update(b).digest('hex');process.stderr.write('\\nMEMCUE_OUTCOME_V1 '+JSON.stringify({version:1,nonce:process.env.MEMCUE_OUTCOME_NONCE,status:r.status===0?'success':'refused',bytes:r.stdout.length,sha256:hash(r.stdout),error_bytes:r.stderr.length,error_sha256:hash(r.stderr)})+'\\n')}
+process.exit(r.status??1);
+`)
+
 	await chmod(binary, 0o755)
 	process.env.MEMCUE_STUB_LOG = log
 })
@@ -570,17 +581,18 @@ test('memcue_correct and memcue_retire pass the id and text', async () => {
 	const { tools } = mount()
 	const corrected = await tools.get('memcue_correct').execute({
 		id: 'f1',
+		expected_version: 1,
 		text: 'Corrected fact.',
 		expires: '2026-10-21',
 	}, {})
 	assert.equal(corrected.stored, true)
 	let text = await waitForLog('arg: correct ')
-	assert.match(text, /arg: correct -expires 2026-10-21 -- f1 Corrected fact\./)
+	assert.match(text, /arg: correct -expected-version 1 -expires 2026-10-21 -- f1 Corrected fact\./)
 
-	const retired = await tools.get('memcue_retire').execute({ id: 'f1' }, {})
+	const retired = await tools.get('memcue_retire').execute({ id: 'f1', expected_version: 1 }, {})
 	assert.equal(retired.stored, true)
 	text = await waitForLog('arg: retire ')
-	assert.match(text, /arg: retire -- f1/)
+	assert.match(text, /arg: retire -expected-version 1 -- f1/)
 })
 
 test('model, endpoint and key from config reach the memcue child', async () => {
@@ -686,9 +698,31 @@ test('content-only tools reject obsolete fields before invoking the binary', asy
   const tool = tools.get(name)
   for (const field of ['keywords', 'queries', 'translation']) {
    assert.equal(Object.hasOwn(tool.parameters.properties, field), false, `${name} exposes ${field}`)
-   const result = await tool.execute({text:'Cobalt observatory.', id:'f1', [field]:'saffron'}, {})
+   const result = await tool.execute({text:'Cobalt observatory.', id:'f1', expected_version:1, [field]:'saffron'}, {})
    assert.equal(result.stored, false)
    assert.match(result.message, /no longer supported|content.only/)
   }
  }
+})
+
+
+test('a non-object completion frame remains explicit uncertainty', async()=>{
+ const broken=join(dir,'invalid-frame.sh')
+ await writeFile(broken, '#!/bin/sh\nprintf "\\nMEMCUE_OUTCOME_V1 null\\n" >&2\nexit 1\n')
+ await chmod(broken,0o700)
+ const {tools}=mount({binary:broken})
+ const result=await tools.get('memcue_add').execute({text:'Synthetic protocol control.',source:'user'}, {})
+ assert.equal(result.stored,null)
+ assert.equal(result.outcome,'unknown')
+ assert.match(result.message,/UNKNOWN OUTCOME/)
+})
+
+
+test('recovery never identifies correction content as its durable target', async()=>{
+ const broken=join(dir,'no-frame.sh')
+ await writeFile(broken,'#!/bin/sh\nexit 1\n');await chmod(broken,0o700)
+ const {tools}=mount({binary:broken});const payload='01J00000000000000000000000'
+ const result=await tools.get('memcue_correct').execute({id:'legacy-target',expected_version:1,text:payload},{})
+ assert.equal(result.outcome,'unknown');assert.equal(result.stored,null)
+ assert.ok(!result.message.includes(payload),'fact body must not become recovery target')
 })

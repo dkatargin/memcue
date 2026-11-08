@@ -1,11 +1,12 @@
 package recall
 
 import (
+	"context"
 	"fmt"
 	"slices"
-	"sort"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/juev/memcue/internal/store"
 	"github.com/juev/memcue/internal/text"
@@ -232,7 +233,31 @@ func inRepo(project []string) bool {
 }
 
 // IsMessage reports whether the query reads as a message rather than as a search: more than messageWords words.
-func IsMessage(q Query) bool { return len(strings.Fields(q.Text)) > messageWords }
+func IsMessage(q Query) bool { v, _ := IsMessageContext(context.Background(), q); return v }
+
+// Only the first nine words can affect the classification. Check within long words too.
+func IsMessageContext(ctx context.Context, q Query) (bool, error) {
+	n, words := 0, 0
+	inside := false
+	for _, r := range q.Text {
+		n++
+		if n%256 == 0 {
+			if e := ctx.Err(); e != nil {
+				return false, e
+			}
+		}
+		if unicode.IsSpace(r) {
+			inside = false
+		} else if !inside {
+			words++
+			inside = true
+			if words > messageWords {
+				return true, ctx.Err()
+			}
+		}
+	}
+	return false, ctx.Err()
+}
 
 // floor is the share of the best fact's score a fact must reach: MinScore, or MessageFloor when the query is a
 // message and the caller asked for the default. An explicit -min-score is the caller's own choice and is kept as it is.
@@ -244,18 +269,6 @@ func (q Query) floor() float64 {
 }
 
 // holds counts how many of the query's terms a fact holds, by the same prefix rule the index matches with.
-func holds(terms, stems []string) int {
-	n := 0
-	for _, t := range terms {
-		for _, st := range stems {
-			if text.Covers(t, st) {
-				n++
-				break
-			}
-		}
-	}
-	return n
-}
 
 // Search finds the facts for a query the agent wrote itself (#361): FTS5 over the query's terms in BM25 order, with
 // none of the gates of Recall, because the agent reads what it asked for. It returns at most q.N facts and leaves out
@@ -270,19 +283,40 @@ func Search(s *store.Store, q Query) ([]store.Hit, error) {
 	if err != nil {
 		return nil, err
 	}
-	terms := text.Terms(q.Text)
-	message := q.floor() > 0 && IsMessage(q) && !q.AllWords
+	terms, err := text.TermsContext(s.RequestContext(), q.Text)
+	if err != nil {
+		return nil, err
+	}
+	isMessage, err := IsMessageContext(s.RequestContext(), q)
+	if err != nil {
+		return nil, err
+	}
+	floor := q.MinScore
+	if q.MinScore == MinScore && isMessage {
+		floor = MessageFloor
+	}
+	message := floor > 0 && isMessage && !q.AllWords
 	// The database cuts a run of equal scores in its own order, before the tie order could see it. While the last row
 	// it returned ties the fact that takes the N-th place, the run may go on past the cut and hide a fact the tie order
 	// puts ahead, so the room doubles until the run ends inside it or the matches run out.
 	var hits []store.Hit
 	for limit := 2 * q.N; ; limit *= 2 {
+		if err := s.RequestContext().Err(); err != nil {
+			return nil, err
+		}
 		if hits, err = s.SearchFiltered(terms, limit, f); err != nil {
 			return nil, err
 		}
 		last, kept := -1, 0
 		for i, h := range hits {
-			if !message || holds(terms, h.Stems) >= messageTerms {
+			if err := s.RequestContext().Err(); err != nil {
+				return nil, err
+			}
+			held, e := holdsContext(s.RequestContext(), terms, h.Stems)
+			if e != nil {
+				return nil, e
+			}
+			if !message || held >= messageTerms {
 				if kept++; kept == q.N {
 					last = i
 					break
@@ -293,25 +327,49 @@ func Search(s *store.Store, q Query) ([]store.Hit, error) {
 			break
 		}
 	}
-	sort.SliceStable(hits, func(i, j int) bool {
-		if hits[i].BM25 != hits[j].BM25 {
-			return hits[i].BM25 < hits[j].BM25
+	ranked := make([]struct {
+		hit        store.Hit
+		recurrence int
+	}, len(hits))
+	for i, h := range hits {
+		if e := s.RequestContext().Err(); e != nil {
+			return nil, e
 		}
-		if pi, pj := place(hits[i].Fact, q.Project, q.Host), place(hits[j].Fact, q.Project, q.Host); pi != pj {
+		ranked[i].hit = h
+		ranked[i].recurrence = min(3, max(0, q.Recurrence[h.ID]))
+	}
+	if err := sortStableContext(s.RequestContext(), ranked, func(i, j int) bool {
+		a, b := ranked[i].hit, ranked[j].hit
+		if a.BM25 != b.BM25 {
+			return a.BM25 < b.BM25
+		}
+		if pi, pj := mustPlace(s.RequestContext(), a.Fact, q.Project, q.Host), mustPlace(s.RequestContext(), b.Fact, q.Project, q.Host); pi != pj {
 			return pi < pj
 		}
 
-		if ri, rj := min(3, max(0, q.Recurrence[hits[i].ID])), min(3, max(0, q.Recurrence[hits[j].ID])); ri != rj {
+		if ri, rj := ranked[i].recurrence, ranked[j].recurrence; ri != rj {
 			return ri > rj
 		}
-		return newer(hits[i].Fact, hits[j].Fact)
-	})
+		return newerContext(s.RequestContext(), a.Fact, b.Fact)
+	}); err != nil {
+		return nil, err
+	}
+	for i := range ranked {
+		hits[i] = ranked[i].hit
+	}
 	// A message holds many common words, so a fact that shares only one of them with it is about something else
 	// (#417). The wide net of -min-score 0 keeps every fact the words fit, as before.
 	if message {
 		kept := hits[:0]
 		for _, h := range hits {
-			if holds(terms, h.Stems) >= messageTerms {
+			if err := s.RequestContext().Err(); err != nil {
+				return nil, err
+			}
+			held, e := holdsContext(s.RequestContext(), terms, h.Stems)
+			if e != nil {
+				return nil, e
+			}
+			if held >= messageTerms {
 				kept = append(kept, h)
 			}
 		}
@@ -319,10 +377,13 @@ func Search(s *store.Store, q Query) ([]store.Hit, error) {
 	}
 	// BM25 of FTS5 is negative, the best fact the lowest: a fact keeps its place while its score is at least
 	// the floor of the best one.
-	if floor := q.floor(); floor > 0 && len(hits) > 0 && hits[0].BM25 < 0 {
+	if floor > 0 && len(hits) > 0 && hits[0].BM25 < 0 {
 		best := hits[0].BM25
 		kept := hits[:0]
 		for _, h := range hits {
+			if err := s.RequestContext().Err(); err != nil {
+				return nil, err
+			}
 			if h.BM25/best >= floor {
 				kept = append(kept, h)
 			}
@@ -331,6 +392,9 @@ func Search(s *store.Store, q Query) ([]store.Hit, error) {
 	}
 	if len(hits) > q.N {
 		hits = hits[:q.N]
+	}
+	if err := s.RequestContext().Err(); err != nil {
+		return nil, err
 	}
 	return hits, nil
 }

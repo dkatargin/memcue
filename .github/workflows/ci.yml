@@ -64,7 +64,7 @@ jobs:
         run: go build -p 2 -o bin/memcue ./cmd/memcue
 
       - name: test plugins
-        run: MEMCUE_BIN="$PWD/bin/memcue" node --test --test-concurrency=2 plugins/deepseek-harness/test/*.test.mjs plugins/claude-code/test/*.test.mjs
+        run: MEMCUE_BIN="$PWD/bin/memcue" node --experimental-test-module-mocks --test --test-concurrency=2 plugins/deepseek-harness/test/*.test.mjs plugins/claude-code/test/*.test.mjs
 
   card-research:
     name: card research contracts
@@ -111,6 +111,9 @@ jobs:
         run: |
           MEMCUE_REQUIRE_HERMES=1 MEMCUE_BIN="$PWD/bin/memcue" \
             /tmp/hermes-venv/bin/python plugins/hermes/memcue/tests/test_provider.py
+
+      - name: test native local outcome and lifecycle contracts
+        run: MEMCUE_BIN="$PWD/bin/memcue" /tmp/hermes-venv/bin/python -I -m unittest discover -s plugins/hermes -p 'test_*.py' -v
 
       - name: test released normal-plugin request bridge
         run: |

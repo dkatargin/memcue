@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
@@ -44,7 +43,8 @@ var noteWord = regexp.MustCompile(`[0-9A-Za-zА-Яа-яЁё]+`)
 // runNotes reports which entries of the built-in memory note files are already facts of the base (#489): the mirror
 // copies every note, so an entry the base holds is a second copy in the block the harness injects at every turn. It
 // never writes the base and calls no model.
-func runNotes(args []string, out io.Writer) error {
+func (inv *invocation) runNotes(args []string, out io.Writer) error {
+	out = inv.writer(out)
 	fs := flag.NewFlagSet("notes", flag.ContinueOnError)
 	dir := fs.String("dir", "", "directory of the note files (default MEMCUE_MEMORY_DIR, else the memory directory of the Claude config)")
 	asJSON := fs.Bool("json", false, "print one JSON object instead of lines")
@@ -62,7 +62,7 @@ func runNotes(args []string, out io.Writer) error {
 	if err != nil {
 		return err
 	}
-	facts, err := liveFacts()
+	facts, err := inv.liveFacts()
 	if err != nil {
 		return err
 	}
@@ -93,7 +93,7 @@ func runNotes(args []string, out io.Writer) error {
 		r.CharsAlready += e.Chars
 	}
 	if *asJSON {
-		return json.NewEncoder(out).Encode(r)
+		return inv.encoder(out).Encode(r)
 	}
 	return printNotes(out, r)
 }
@@ -164,11 +164,11 @@ func readNoteEntries(dir string) ([]noteEntry, error) {
 
 // liveFacts are the facts recall uses: the newest approved version of each, expired ones left out. A base that does
 // not exist yet has none; it is not opened, so the report does not create it.
-func liveFacts() ([]store.Fact, error) {
+func (inv *invocation) liveFacts() ([]store.Fact, error) {
 	if !factsBase().exists() {
 		return nil, nil
 	}
-	s, err := openBaseReadOnly()
+	s, err := inv.openBaseReadOnly()
 	if err != nil {
 		return nil, err
 	}
@@ -230,4 +230,9 @@ func truncateRunes(s string, n int) string {
 		return s
 	}
 	return string([]rune(s)[:n])
+}
+func runNotes(args []string, out io.Writer) error {
+	inv := newInvocation()
+	defer inv.close()
+	return inv.runNotes(args, out)
 }

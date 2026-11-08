@@ -8,6 +8,7 @@
 package store
 
 import (
+	"context"
 	"crypto/rand"
 	"database/sql"
 	"errors"
@@ -162,6 +163,9 @@ var ErrChanged = errors.New("fact changed since it was read")
 
 // Store is an open fact base.
 type Store struct {
+	remote *postgresStore
+	native *postgresTransaction
+	ctx    context.Context
 	db     *sql.DB
 	author string
 	now    func() time.Time
@@ -440,7 +444,7 @@ func (s *Store) ensureIndex() error {
 		return err
 	}
 	var saved string
-	if err := s.db.QueryRow(`SELECT value FROM stamps WHERE name = ?`, indexStampName).Scan(&saved); err != nil &&
+	if err := s.db.QueryRowContext(s.context(), `SELECT value FROM stamps WHERE name = ?`, indexStampName).Scan(&saved); err != nil &&
 		!errors.Is(err, sql.ErrNoRows) {
 		return err
 	}
@@ -450,21 +454,21 @@ func (s *Store) ensureIndex() error {
 	const active = `SELECT count(*) FROM facts f
 		WHERE f.version = (SELECT max(version) FROM facts WHERE id = f.id) AND f.status = ? `
 	var facts, indexed, fts, missing, stale int
-	if err := s.db.QueryRow(active, Active).Scan(&facts); err != nil {
+	if err := s.db.QueryRowContext(s.context(), active, Active).Scan(&facts); err != nil {
 		return err
 	}
-	if err := s.db.QueryRow(`SELECT count(*) FROM fact_index`).Scan(&indexed); err != nil {
+	if err := s.db.QueryRowContext(s.context(), `SELECT count(*) FROM fact_index`).Scan(&indexed); err != nil {
 		return err
 	}
-	if err := s.db.QueryRow(`SELECT count(*) FROM fact_fts`).Scan(&fts); err != nil {
+	if err := s.db.QueryRowContext(s.context(), `SELECT count(*) FROM fact_fts`).Scan(&fts); err != nil {
 		return err
 	}
 	if facts == indexed && indexed == fts {
-		if err := s.db.QueryRow(active+`AND NOT EXISTS (SELECT 1 FROM fact_index i WHERE i.id = f.id)`, Active).
+		if err := s.db.QueryRowContext(s.context(), active+`AND NOT EXISTS (SELECT 1 FROM fact_index i WHERE i.id = f.id)`, Active).
 			Scan(&missing); err != nil {
 			return err
 		}
-		if err := s.db.QueryRow(`SELECT count(*) FROM fact_index i WHERE NOT EXISTS (
+		if err := s.db.QueryRowContext(s.context(), `SELECT count(*) FROM fact_index i WHERE NOT EXISTS (
 			SELECT 1 FROM facts f WHERE f.id = i.id AND f.version = (SELECT max(version) FROM facts WHERE id = f.id)
 			AND f.status = ?)`, Active).Scan(&stale); err != nil {
 			return err
@@ -512,7 +516,7 @@ func (s *Store) restamp() error {
 	if !text.NumbersEnabled() {
 		return nil
 	}
-	rows, err := s.db.Query(`SELECT id FROM fact_index WHERE numbers < ?`, text.NumberTermsVersion)
+	rows, err := s.db.QueryContext(s.context(), `SELECT id FROM fact_index WHERE numbers < ?`, text.NumberTermsVersion)
 	if err != nil {
 		return err
 	}
@@ -549,7 +553,7 @@ func (s *Store) restamp() error {
 // lexer runs: opening a base does not stem every fact.
 func (s *Store) unnumbered() (int, error) {
 	// The latest version per id is a grouped join, not a correlated max(): the same rows in half the time.
-	rows, err := s.db.Query(`SELECT f.content, coalesce(i.stems, '') FROM facts f
+	rows, err := s.db.QueryContext(s.context(), `SELECT f.content, coalesce(i.stems, '') FROM facts f
 		JOIN (SELECT id, max(version) mv FROM facts GROUP BY id) m ON f.id = m.id AND f.version = m.mv
 		LEFT JOIN fact_index i ON i.id = f.id
 		WHERE f.status = ?
@@ -586,12 +590,15 @@ type IndexStats struct {
 // IndexStats counts the index against the live facts. It reads every index row, so it is for an explicit command,
 // not for Open.
 func (s *Store) IndexStats() (IndexStats, error) {
+	if s.remote != nil {
+		return remoteDo(s, false, func(local *Store) (IndexStats, error) { return local.IndexStats() })
+	}
 	var st IndexStats
-	if err := s.db.QueryRow(`SELECT count(*) FROM facts f
+	if err := s.db.QueryRowContext(s.context(), `SELECT count(*) FROM facts f
 		WHERE f.version = (SELECT max(version) FROM facts WHERE id = f.id) AND f.status = ?`, Active).Scan(&st.Live); err != nil {
 		return st, err
 	}
-	rows, err := s.db.Query(`SELECT stems FROM fact_index`)
+	rows, err := s.db.QueryContext(s.context(), `SELECT stems FROM fact_index`)
 	if err != nil {
 		return st, err
 	}
@@ -614,7 +621,22 @@ func (s *Store) IndexStats() (IndexStats, error) {
 }
 
 // Close closes the base.
-func (s *Store) Close() error { return s.db.Close() }
+func (s *Store) Close() error {
+	if s.remote != nil {
+		if s.remote.cancel != nil {
+			s.remote.cancel()
+		}
+		s.remote.mu.Lock()
+		defer s.remote.mu.Unlock()
+		if s.remote.projection != nil {
+			err := s.remote.projection.Close()
+			s.remote.projection = nil
+			return err
+		}
+		return nil
+	}
+	return s.db.Close()
+}
 
 func (s *Store) migrate() error {
 	tx, err := s.db.Begin()
@@ -690,6 +712,9 @@ var entropy io.Reader = &ulid.LockedMonotonicReader{MonotonicReader: ulid.Monoto
 // AddBatch stores several new facts in one transaction: either every fact is written and indexed, or none is. A
 // retry after a database error therefore sees the same base, not a half-applied extraction.
 func (s *Store) AddBatch(inputs []FactInput) ([]Fact, error) {
+	if s.remote != nil {
+		return remoteWrite(s, func(local *Store) ([]Fact, error) { return local.AddBatch(inputs) })
+	}
 	facts := make([]Fact, 0, len(inputs))
 	for _, in := range inputs {
 		content := strings.TrimSpace(in.Content)
@@ -707,6 +732,12 @@ func (s *Store) AddBatch(inputs []FactInput) ([]Fact, error) {
 			Meta: approved(in.Meta)})
 	}
 	if len(facts) == 0 {
+		return facts, nil
+	}
+	if s.native != nil {
+		if err := s.native.append(facts); err != nil {
+			return nil, err
+		}
 		return facts, nil
 	}
 	tx, err := s.db.Begin()
@@ -730,18 +761,33 @@ func (s *Store) AddBatch(inputs []FactInput) ([]Fact, error) {
 }
 
 // Correct adds a version with new content; the origin stays.
-func (s *Store) Correct(id, content string) (Fact, error) {
-	return s.CorrectExpiring(id, content, nil)
+func (s *Store) Correct(id, content string, expected ...int) (Fact, error) {
+	return s.CorrectExpiring(id, content, nil, expected...)
 }
 
 // CorrectExpiring adds a version with new content and optionally a new expiry: nil keeps the current one, a
 // pointer to "" clears it. A retired fact cannot be corrected: retirement is final, and bringing it back would undo a
 // decision (a vet verdict, a review rejection or an explicit retire) without review. Add a new fact instead.
-func (s *Store) CorrectExpiring(id, content string, expires *string) (Fact, error) {
+func (s *Store) CorrectExpiring(id, content string, expires *string, expected ...int) (Fact, error) {
+	if s.remote != nil {
+		if err := requiredVersion(expected); err != nil {
+			return Fact{}, err
+		}
+		return remoteWrite(s, func(local *Store) (Fact, error) { return local.CorrectExpiring(id, content, expires, expected...) })
+	}
 	cur, err := s.Get(id)
 	if err != nil {
 		return Fact{}, err
 	}
+	if len(expected) > 0 {
+		if err := requiredVersion(expected); err != nil {
+			return Fact{}, err
+		}
+		if cur.Version != expected[0] {
+			return Fact{}, ErrChanged
+		}
+	}
+
 	if cur.Status == Retired {
 		return Fact{}, fmt.Errorf("%w: %s; add a new fact instead", ErrRetired, id)
 	}
@@ -818,7 +864,7 @@ func approved(m Meta) Meta {
 // it, so they reach the files in order with what that open took in.
 func (s *Store) agentSources() ([]Fact, error) {
 	var n int
-	if err := s.db.QueryRow(`SELECT count(*) FROM facts`).Scan(&n); err != nil {
+	if err := s.db.QueryRowContext(s.context(), `SELECT count(*) FROM facts`).Scan(&n); err != nil {
 		return nil, fmt.Errorf("relabel facts without a source: %w", err)
 	}
 	if v, err := s.stamp(sourcesStamp); err != nil || v == strconv.Itoa(n) {
@@ -845,6 +891,9 @@ const sourcesStamp = "sources-rows" // versions of the base when agentSources la
 // card. version is the version the caller decided on: a fact edited since is refused with ErrChanged, so a label
 // never overwrites a later edit.
 func (s *Store) Relabel(id string, version int, kind, scope, expires string) (Fact, error) {
+	if s.remote != nil {
+		return remoteWrite(s, func(local *Store) (Fact, error) { return local.Relabel(id, version, kind, scope, expires) })
+	}
 	cur, err := s.Get(id)
 	if err != nil {
 		return Fact{}, err
@@ -868,6 +917,9 @@ func (s *Store) Relabel(id string, version int, kind, scope, expires string) (Fa
 // place, so a base merged from another machine sees the change instead of two copies that disagree. Like Relabel, it
 // refuses a fact edited since version (ErrChanged) and a retired fact.
 func (s *Store) Retag(id string, version int, origin, scope string) (Fact, error) {
+	if s.remote != nil {
+		return Fact{}, ErrRemoteUnsupported
+	}
 	cur, err := s.Get(id)
 	if err != nil {
 		return Fact{}, err
@@ -885,6 +937,9 @@ func (s *Store) Retag(id string, version int, origin, scope string) (Fact, error
 
 // Current returns the latest version of every fact that is not retired, whatever its review state.
 func (s *Store) Current() ([]Fact, error) {
+	if s.remote != nil {
+		return remoteDo(s, false, func(local *Store) ([]Fact, error) { return local.Current() })
+	}
 	return s.query(`SELECT `+s.cols("f")+` FROM facts f
 		WHERE f.version = (SELECT max(version) FROM facts WHERE id = f.id) AND f.status = ? ORDER BY f.id`, Active)
 }
@@ -893,8 +948,11 @@ func (s *Store) Current() ([]Fact, error) {
 // the facts still written under a name that is not a project key (#343). The filter on the text comes first, so only
 // the rows that carry the name look up their latest version.
 func (s *Store) CountNamed(name string) (int, error) {
+	if s.remote != nil {
+		return remoteDo(s, false, func(local *Store) (int, error) { return local.CountNamed(name) })
+	}
 	var n int
-	err := s.db.QueryRow(`SELECT count(*) FROM facts f
+	err := s.db.QueryRowContext(s.context(), `SELECT count(*) FROM facts f
 		WHERE ((length(f.origin) = length(?1) + 11 AND substr(f.origin, 1, length(?1) + 1) = ?1 || ' ')
 			OR f.scope = 'repo:' || ?1)
 			AND f.version = (SELECT max(version) FROM facts WHERE id = f.id) AND f.status = ?2`, name, Active).Scan(&n)
@@ -903,6 +961,9 @@ func (s *Store) CountNamed(name string) (int, error) {
 
 // Backup writes a consistent copy of the base to path, which must not exist.
 func (s *Store) Backup(path string) error {
+	if s.remote != nil {
+		return ErrRemoteUnsupported
+	}
 	_, err := s.db.Exec(`VACUUM INTO ?`, path)
 	return err
 }
@@ -914,6 +975,9 @@ var ErrNotRetired = errors.New("fact is not retired")
 // candidate or provisional fact retired before #514 comes back approved; it is the undo of a retire made by a person,
 // a vet verdict or a dream.
 func (s *Store) Restore(id string) (Fact, error) {
+	if s.remote != nil {
+		return remoteWrite(s, func(local *Store) (Fact, error) { return local.Restore(id) })
+	}
 	cur, err := s.Get(id)
 	if err != nil {
 		return Fact{}, err
@@ -927,11 +991,26 @@ func (s *Store) Restore(id string) (Fact, error) {
 }
 
 // Retire adds a version that takes the fact out of recall; its content stays readable in the history.
-func (s *Store) Retire(id string) (Fact, error) {
+func (s *Store) Retire(id string, expected ...int) (Fact, error) {
+	if s.remote != nil {
+		if err := requiredVersion(expected); err != nil {
+			return Fact{}, err
+		}
+		return remoteWrite(s, func(local *Store) (Fact, error) { return local.Retire(id, expected...) })
+	}
 	cur, err := s.Get(id)
 	if err != nil {
 		return Fact{}, err
 	}
+	if len(expected) > 0 {
+		if err := requiredVersion(expected); err != nil {
+			return Fact{}, err
+		}
+		if cur.Version != expected[0] {
+			return Fact{}, ErrChanged
+		}
+	}
+
 	f := cur
 	f.Version, f.Created, f.Status, f.Author = cur.Version+1, s.now().UTC(), Retired, s.author
 	return s.write(f)
@@ -941,6 +1020,9 @@ func (s *Store) Retire(id string) (Fact, error) {
 // approved like every version this memcue writes. It refuses a fact that got a new version
 // since the caller read it (ErrChanged) and a retired fact.
 func (s *Store) SplitFact(id string, version int, parts []string) ([]Fact, error) {
+	if s.remote != nil {
+		return nil, ErrRemoteUnsupported
+	}
 	cur, err := s.Get(id)
 	if err != nil {
 		return nil, err
@@ -1001,6 +1083,12 @@ func (s *Store) write(f Fact) (Fact, error) {
 	if f.WriteID != "" {
 		f.WriteID = projectedWriteID(f, "", "")
 	}
+	if s.native != nil {
+		if err := s.native.append([]Fact{f}); err != nil {
+			return Fact{}, err
+		}
+		return f, nil
+	}
 	tx, err := s.db.Begin()
 	if err != nil {
 		return Fact{}, err
@@ -1020,8 +1108,9 @@ func (s *Store) write(f Fact) (Fact, error) {
 }
 
 // insert writes one version as it is.
-func insert(tx *sql.Tx, f Fact) error {
-	_, err := tx.Exec(`INSERT INTO facts(`+columns+`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, f.ID, f.Version,
+func insert(tx *sql.Tx, f Fact) error { return insertContext(context.Background(), tx, f) }
+func insertContext(ctx context.Context, tx *sql.Tx, f Fact) error {
+	_, err := tx.ExecContext(ctx, `INSERT INTO facts(`+columns+`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, f.ID, f.Version,
 		f.Content, f.Origin, f.Created.Format(time.RFC3339Nano), f.Status, f.Author,
 		f.Expires, f.Kind, f.Scope, f.Source, f.Evidence, f.Review, f.PromptVersion,
 		f.Channel, f.WriteID)
@@ -1030,16 +1119,17 @@ func insert(tx *sql.Tx, f Fact) error {
 
 // reindex puts the latest version of id into the FTS index, or takes it out when that version is retired. The review
 // state does not matter: a candidate of an older base is live (#514).
-func reindex(tx *sql.Tx, id string) error {
-	if _, err := tx.Exec(`INSERT INTO fact_fts(fact_fts, rowid, stems) SELECT 'delete', rid, stems FROM fact_index
+func reindex(tx *sql.Tx, id string) error { return reindexContext(context.Background(), tx, id) }
+func reindexContext(ctx context.Context, tx *sql.Tx, id string) error {
+	if _, err := tx.ExecContext(ctx, `INSERT INTO fact_fts(fact_fts, rowid, stems) SELECT 'delete', rid, stems FROM fact_index
 		WHERE id = ?`, id); err != nil {
 		return err
 	}
-	if _, err := tx.Exec(`DELETE FROM fact_index WHERE id = ?`, id); err != nil {
+	if _, err := tx.ExecContext(ctx, `DELETE FROM fact_index WHERE id = ?`, id); err != nil {
 		return err
 	}
 	var content, status string
-	err := tx.QueryRow(`SELECT content, status FROM facts WHERE id = ? ORDER BY version DESC
+	err := tx.QueryRowContext(ctx, `SELECT content, status FROM facts WHERE id = ? ORDER BY version DESC
 		LIMIT 1`, id).Scan(&content, &status)
 	if errors.Is(err, sql.ErrNoRows) || status == Retired {
 		return nil
@@ -1047,12 +1137,16 @@ func reindex(tx *sql.Tx, id string) error {
 	if err != nil {
 		return err
 	}
-	stems := strings.Join(text.Stems(content), " ")
+	tokens, err := text.StemsContext(ctx, content)
+	if err != nil {
+		return err
+	}
+	stems := strings.Join(tokens, " ")
 	numbers := 0
 	if text.NumbersEnabled() {
 		numbers = text.NumberTermsVersion
 	}
-	res, err := tx.Exec(`INSERT INTO fact_index(id, stems, numbers) VALUES (?, ?, ?)`, id, stems, numbers)
+	res, err := tx.ExecContext(ctx, `INSERT INTO fact_index(id, stems, numbers) VALUES (?, ?, ?)`, id, stems, numbers)
 	if err != nil {
 		return err
 	}
@@ -1060,12 +1154,15 @@ func reindex(tx *sql.Tx, id string) error {
 	if err != nil {
 		return err
 	}
-	_, err = tx.Exec(`INSERT INTO fact_fts(rowid, stems) VALUES (?, ?)`, rid, stems)
+	_, err = tx.ExecContext(ctx, `INSERT INTO fact_fts(rowid, stems) VALUES (?, ?)`, rid, stems)
 	return err
 }
 
 // Rebuild recreates the FTS index from the latest versions of all facts.
 func (s *Store) Rebuild() error {
+	if s.remote != nil {
+		return ErrRemoteUnsupported
+	}
 	tx, err := s.db.Begin()
 	if err != nil {
 		return err
@@ -1077,14 +1174,15 @@ func (s *Store) Rebuild() error {
 	return tx.Commit()
 }
 
-func rebuild(tx *sql.Tx) error {
-	if _, err := tx.Exec(`DELETE FROM fact_index`); err != nil {
+func rebuild(tx *sql.Tx) error { return rebuildContext(context.Background(), tx) }
+func rebuildContext(ctx context.Context, tx *sql.Tx) error {
+	if _, err := tx.ExecContext(ctx, `DELETE FROM fact_index`); err != nil {
 		return err
 	}
-	if _, err := tx.Exec(`INSERT INTO fact_fts(fact_fts) VALUES ('delete-all')`); err != nil {
+	if _, err := tx.ExecContext(ctx, `INSERT INTO fact_fts(fact_fts) VALUES ('delete-all')`); err != nil {
 		return err
 	}
-	rows, err := tx.Query(`SELECT DISTINCT id FROM facts`)
+	rows, err := tx.QueryContext(ctx, `SELECT DISTINCT id FROM facts`)
 	if err != nil {
 		return err
 	}
@@ -1101,7 +1199,7 @@ func rebuild(tx *sql.Tx) error {
 		return err
 	}
 	for _, id := range ids {
-		if err := reindex(tx, id); err != nil {
+		if err := reindexContext(ctx, tx, id); err != nil {
 			return err
 		}
 	}
@@ -1132,7 +1230,13 @@ func scan(row interface{ Scan(...any) error }, extra ...any) (Fact, error) {
 
 // Get returns the latest version of a fact, active or retired.
 func (s *Store) Get(id string) (Fact, error) {
-	f, err := s.scanLegacy(s.db.QueryRow(`SELECT `+s.cols("")+` FROM facts WHERE id = ? ORDER BY version DESC LIMIT 1`, id))
+	if s.remote != nil {
+		return remoteRead(s, id, true)
+	}
+	if s.native != nil {
+		return s.native.get(id)
+	}
+	f, err := s.scanLegacy(s.db.QueryRowContext(s.context(), `SELECT `+s.cols("")+` FROM facts WHERE id = ? ORDER BY version DESC LIMIT 1`, id))
 	if errors.Is(err, sql.ErrNoRows) {
 		return Fact{}, fmt.Errorf("%w: %s", ErrNotFound, id)
 	}
@@ -1141,11 +1245,17 @@ func (s *Store) Get(id string) (Fact, error) {
 
 // History returns every version of a fact, oldest first.
 func (s *Store) History(id string) ([]Fact, error) {
+	if s.remote != nil {
+		return remoteHistory(s, id)
+	}
 	return s.query(`SELECT `+s.cols("")+` FROM facts WHERE id = ? ORDER BY version`, id)
 }
 
 // Rows returns every version of every fact, ordered by id and version.
 func (s *Store) Rows() ([]Fact, error) {
+	if s.remote != nil {
+		return remoteRows(s)
+	}
 	return s.query(`SELECT ` + s.cols("") + ` FROM facts ORDER BY id, version`)
 }
 
@@ -1160,6 +1270,9 @@ func (s *Store) Active() ([]Fact, error) {
 // that is active — sorted and without duplicates. It is how a caller names a repository key it
 // does not know exactly.
 func (s *Store) RepoScopes() ([]string, error) {
+	if s.remote != nil {
+		return remoteDo(s, false, func(local *Store) ([]string, error) { return local.RepoScopes() })
+	}
 	scope := s.col("f", "scope")
 	return s.liveStrings(scope, "lower("+scope+") LIKE 'repo:%'")
 }
@@ -1167,13 +1280,16 @@ func (s *Store) RepoScopes() ([]string, error) {
 // OriginTiers returns the tiers the live facts were learnt in — the first word of an origin "<tier> <date>" — sorted and
 // without duplicates. A search by "-in repo:KEY" matches these as well as the repository scopes (#459).
 func (s *Store) OriginTiers() ([]string, error) {
+	if s.remote != nil {
+		return remoteDo(s, false, func(local *Store) ([]string, error) { return local.OriginTiers() })
+	}
 	return s.liveStrings("substr(f.origin, 1, instr(f.origin, ' ') - 1)", "instr(f.origin, ' ') > 1")
 }
 
 // liveStrings returns the distinct values of expr over the latest version of every fact that is active and that
 // meets cond, sorted.
 func (s *Store) liveStrings(expr, cond string) ([]string, error) {
-	rows, err := s.db.Query(`SELECT DISTINCT `+expr+` FROM facts f
+	rows, err := s.db.QueryContext(s.context(), `SELECT DISTINCT `+expr+` FROM facts f
 		WHERE f.version = (SELECT max(version) FROM facts WHERE id = f.id) AND f.status = ?
 		AND `+cond+` ORDER BY 1`, Active)
 	if err != nil {
@@ -1227,7 +1343,7 @@ func (s *Store) col(alias, c string) string {
 }
 
 func (s *Store) query(q string, args ...any) ([]Fact, error) {
-	return s.queryLegacy(s.db, q, args...)
+	return s.queryLegacy(contextQuery{s.context(), s.db}, q, args...)
 }
 
 // queryOn runs a query of facts on a *sql.DB or inside a *sql.Tx.
@@ -1344,6 +1460,9 @@ func (s *Store) Search(terms []string, limit int) ([]Hit, error) {
 // SearchFiltered is Search narrowed by f. The filter runs in the database, before the limit, so a narrow search
 // still gets limit facts when the base holds them.
 func (s *Store) SearchFiltered(terms []string, limit int, f Filter) ([]Hit, error) {
+	if s.remote != nil {
+		return remoteDo(s, false, func(local *Store) ([]Hit, error) { return local.SearchFiltered(terms, limit, f) })
+	}
 	if len(terms) == 0 {
 		return nil, nil
 	}
@@ -1356,7 +1475,7 @@ func (s *Store) SearchFiltered(terms []string, limit int, f Filter) ([]Hit, erro
 		join = " AND "
 	}
 	cond, args := s.where("f", f)
-	rows, err := s.db.Query(`SELECT i.stems, bm25(fact_fts), `+s.cols("f")+`
+	rows, err := s.db.QueryContext(s.context(), `SELECT i.stems, bm25(fact_fts), `+s.cols("f")+`
 		FROM fact_fts JOIN fact_index i ON i.rid = fact_fts.rowid
 		JOIN facts f ON f.id = i.id AND f.version = (SELECT max(version) FROM facts WHERE id = i.id)
 		WHERE fact_fts MATCH ?`+cond+` ORDER BY bm25(fact_fts) LIMIT ?`,
@@ -1396,6 +1515,14 @@ const docFreqChunk = 200
 // statements of UNION ALL rather than one query each: on a long prompt the counting was the largest step of recall,
 // and one statement of the same counts took 30-45% less on loffe (#337, docs/research/search-chain-2026-10.md).
 func (s *Store) DocFreq(terms []string) (map[string]int, int, error) {
+	if s.remote != nil {
+		type frequency struct {
+			df map[string]int
+			n  int
+		}
+		v, err := remoteDo(s, false, func(local *Store) (frequency, error) { df, n, e := local.DocFreq(terms); return frequency{df, n}, e })
+		return v.df, v.n, err
+	}
 	df := make(map[string]int, len(terms))
 	total := 0
 	for start := 0; start == 0 || start < len(terms); start += docFreqChunk {
@@ -1409,7 +1536,7 @@ func (s *Store) DocFreq(terms []string) (map[string]int, int, error) {
 			parts = append(parts, fmt.Sprintf(`SELECT %d, count(*) FROM fact_fts WHERE fact_fts MATCH ?`, start+i))
 			args = append(args, text.Query(t))
 		}
-		rows, err := s.db.Query(strings.Join(parts, " UNION ALL "), args...)
+		rows, err := s.db.QueryContext(s.context(), strings.Join(parts, " UNION ALL "), args...)
 		if err != nil {
 			return nil, 0, err
 		}
@@ -1433,3 +1560,41 @@ func (s *Store) DocFreq(terms []string) (map[string]int, int, error) {
 	}
 	return df, total, nil
 }
+
+func (s *Store) context() context.Context {
+	if s.ctx != nil {
+		return s.ctx
+	}
+	return context.Background()
+}
+
+type contextQuery struct {
+	ctx context.Context
+	db  *sql.DB
+}
+
+func (q contextQuery) Query(query string, args ...any) (*sql.Rows, error) {
+	return q.db.QueryContext(q.ctx, query, args...)
+}
+
+// ErrExpectedVersion asks remote callers to make the read/decision version explicit.
+var ErrExpectedVersion = errors.New("expected_version is required and must be positive; read/search the fact, then pass its observed version (CLI: -expected-version)")
+
+func requiredVersion(v []int) error {
+	if len(v) != 1 || v[0] < 1 {
+		return ErrExpectedVersion
+	}
+	return nil
+}
+
+// RequestContext is the explicit invocation/request lifetime; reusable library
+// handles without one retain their independent per-operation behavior.
+func (s *Store) RequestContext() context.Context {
+	if s.remote != nil && s.remote.request != nil {
+		return s.remote.request
+	}
+	return s.context()
+}
+
+// BindLocalContext opts an owned local handle into caller cancellation.
+func (s *Store) BindLocalContext(ctx context.Context) { s.ctx = ctx }

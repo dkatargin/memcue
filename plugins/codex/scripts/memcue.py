@@ -1,13 +1,107 @@
 #!/usr/bin/env python3
 """Run the existing memcue CLI with one explicit Codex configuration."""
 import argparse
+import hashlib
 import json
 import os
+import re
+import secrets
 from pathlib import Path
 import shlex
-import subprocess
+import subprocess as _subprocess
 import sys
 import tempfile
+
+
+class _ResponseTransportError(OSError):
+    attempted = True
+
+
+class _OwnedSubprocess:
+    """One POSIX session per invocation; keep its leader unreaped until cleanup.
+
+    Descendants that deliberately create another session (including the persistent
+    tsnet helper) are outside this invocation's group. No global reaper is used.
+    """
+    def __getattr__(self, name):
+        return getattr(_subprocess, name)
+
+    def run(self, args, *, input=None, capture_output=False, text=False,
+            encoding=None, errors=None, timeout=None, check=False, **kwargs):
+        if os.name != 'posix' or not hasattr(os, 'WNOWAIT'):
+            return _subprocess.run(args, input=input, capture_output=capture_output,
+                                   text=text, encoding=encoding, errors=errors,
+                                   timeout=timeout, check=check, **kwargs)
+        import signal
+        import time
+        from contextlib import ExitStack
+        attempted = False
+        try:
+            start = time.monotonic()
+            deadline = None if timeout is None else start + timeout
+            with ExitStack() as stack:
+                source = stack.enter_context(tempfile.TemporaryFile())
+                if input is not None:
+                    source.write(input.encode(encoding or 'utf-8', errors or 'strict') if isinstance(input, str) else input)
+                source.seek(0)
+                outputs = []
+                if capture_output:
+                    for key in ('stdout', 'stderr'):
+                        f = stack.enter_context(tempfile.TemporaryFile())
+                        kwargs[key] = f
+                        outputs.append(f)
+                if deadline is not None and time.monotonic() >= deadline:
+                    raise TimeoutError('memcue budget expired before executable start')
+                proc = _subprocess.Popen(args, stdin=source, start_new_session=True, **kwargs)
+                attempted = True
+                timed_out = False
+                try:
+                    while True:
+                        # WNOWAIT leaves the leader's PID reserved, even when it is
+                        # a zombie. Never signal a group after reaping its anchor.
+                        status = os.waitid(os.P_PID, proc.pid, os.WEXITED | os.WNOHANG | os.WNOWAIT)
+                        if status is not None:
+                            break
+                        if deadline is not None and time.monotonic() >= deadline - min(.02, timeout / 10):
+                            timed_out = True
+                            break
+                        time.sleep(.002)
+                finally:
+                    # Confirm that our child is still waitable before signalling.
+                    # If another component reaped it, do not signal a recycled PID.
+                    os.waitid(os.P_PID, proc.pid, os.WEXITED | os.WNOHANG | os.WNOWAIT)
+                    try:
+                        os.killpg(proc.pid, signal.SIGKILL)
+                    except ProcessLookupError:
+                        pass
+                    proc.wait(timeout=None if deadline is None else max(.001, deadline - time.monotonic()))
+                if timed_out:
+                    raise _subprocess.TimeoutExpired(args, timeout)
+                values = []
+                for f in outputs:
+                    f.seek(0)
+                    chunks = []
+                    while True:
+                        if deadline is not None and time.monotonic() >= deadline:
+                            raise _subprocess.TimeoutExpired(args, timeout)
+                        chunk = f.read(65536)
+                        if not chunk:
+                            break
+                        chunks.append(chunk)
+                    b = b''.join(chunks)
+                    values.append(b.decode(encoding or 'utf-8', errors or 'strict') if text or encoding else b)
+                    if deadline is not None and time.monotonic() >= deadline:
+                        raise _subprocess.TimeoutExpired(args, timeout)
+                result = _subprocess.CompletedProcess(args, proc.returncode, *(values or [None, None]))
+                if check:
+                    result.check_returncode()
+                return result
+        except OSError as exc:
+            if attempted:
+                raise _ResponseTransportError('memcue response transport unavailable') from exc
+            raise
+
+subprocess = _OwnedSubprocess()
 
 ROOT = Path(__file__).resolve().parents[1]
 LIMIT = 4 * 1024 * 1024
@@ -52,6 +146,14 @@ def load_config(path):
 
 def child_env(config):
     env = {k: v for k, v in os.environ.items() if not k.startswith('MEMCUE_')}
+    # Explicit backend/transport selection survives this boundary. Removing the
+    # DSN would silently redirect a remote invocation into the configured local base.
+    for key in ('MEMCUE_POSTGRES_DSN', 'MEMCUE_TAILSCALE_MODE',
+                'MEMCUE_TAILSCALE_STATE_DIR', 'MEMCUE_TAILSCALE_HOSTNAME',
+                'MEMCUE_TAILSCALE_CONTROL_URL', 'MEMCUE_TAILSCALE_ALLOW_LOOPBACK_CONTROL',
+                'MEMCUE_TAILSCALE_CONNECT_TIMEOUT'):
+        if key in os.environ:
+            env[key] = os.environ[key]
     env.update(MEMCUE_FACTS=config['facts'], MEMCUE_STATE_DIR=config['state_dir'],
                MEMCUE_HOST=config['host'], MEMCUE_DREAM_BACKGROUND='0')
     if 'dream_every' in config:
@@ -59,22 +161,106 @@ def child_env(config):
     return env
 
 
+def unknown_mutation(args):
+    dream = bool(args and args[0] == 'dream' and not any(v.lstrip('-').split('=', 1)[0] == 'list' for v in args[1:]))
+    if not args or args[0] not in ('add', 'correct', 'retire', 'reopen') and not dream:
+        return ''
+    batch = args[0] == 'add' and any(v.lstrip('-').split('=', 1)[0] == 'batch' for v in args[1:])
+    if batch:
+        return ('UNKNOWN OUTCOME for the entire batch; response incomplete. Inspect durable facts and history '
+                'for every batch row before deciding whether to retry; do not automatically replay the batch.')
+    if dream:
+        return ('UNKNOWN OUTCOME for the local plan; it may be partially applied. Inspect durable history '
+                'for every affected fact ID before deciding whether to retry; do not automatically replay the plan.')
+    fact_id = ''
+    if args[0] in ('correct', 'retire', 'reopen'):
+        i = 1
+        target = ''
+        while i < len(args):
+            value = args[i]
+            if value == '--':
+                target = args[i + 1] if i + 1 < len(args) else ''
+                break
+            if not value.startswith('-'):
+                target = value
+                break
+            flag = value.lstrip('-').split('=', 1)[0]
+            if flag in ('expected-version', 'expires'):
+                if '=' not in value:
+                    i += 1
+            elif flag != 'no-expires':
+                break
+            i += 1
+        if re.fullmatch(r'[0-9A-HJKMNP-TV-Z]{26}', target):
+            fact_id = ' for fact ' + target
+    return ('UNKNOWN OUTCOME' + fact_id + '; mutation response unavailable. Inspect durable ID/history '
+            'with memcue history before deciding whether to retry; do not automatically replay.')
+
+
+def classify_outcome(output, diagnostic, code, nonce):
+    marker = '\nMEMCUE_OUTCOME_V1 '
+    at = diagnostic.rfind(marker)
+    if at < 0 or not diagnostic.endswith('\n'):
+        return 'unknown', ''
+    try:
+        receipt = json.loads(diagnostic[at + len(marker):-1])
+    except (ValueError, TypeError):
+        return 'unknown', ''
+    if not isinstance(receipt, dict):
+        return 'unknown', ''
+    if (receipt.get('version') != 1 or receipt.get('nonce') != nonce or
+            receipt.get('bytes') != len(output.encode('utf-8')) or
+            receipt.get('sha256') != hashlib.sha256(output.encode('utf-8')).hexdigest()):
+        return 'unknown', ''
+    status = receipt.get('status')
+    if status == 'success' and code == 0:
+        return 'success', ''
+    if status == 'refused' and code > 0:
+        prelude = diagnostic[:at]
+        if (receipt.get('error_bytes') == len(prelude.encode('utf-8')) and
+                receipt.get('error_sha256') == hashlib.sha256(prelude.encode('utf-8')).hexdigest()):
+            return 'refused', prelude.strip()
+        return 'refused', 'memcue refused the operation before any fact change; check input, authentication and observed version'
+    return 'unknown', ''
+
+
+
+
+
+
 def call(config, args, cwd, data='', timeout=TIMEOUT):
+    nonce = secrets.token_hex(16) if unknown_mutation(args) else ''
+    env = child_env(config)
+    if nonce:
+        env['MEMCUE_OUTCOME_NONCE'] = nonce
     # Files avoid unbounded in-memory capture from a broken binary. Time and read size are bounded.
     with tempfile.TemporaryFile() as out, tempfile.TemporaryFile() as err:
         try:
             result = subprocess.run([config['binary'], *args], input=data.encode(), stdout=out, stderr=err,
-                                    cwd=cwd, env=child_env(config), timeout=timeout)
+                                    cwd=cwd, env=env, timeout=timeout)
         except subprocess.TimeoutExpired as exc:
-            raise AdapterError('memcue command timed out; check persisted state before retrying a write') from exc
-        out.seek(0)
-        output = out.read(LIMIT + 1)
-        err.seek(0)
-        diagnostic = err.read(2400).decode('utf-8', errors='replace')
-        if result.returncode:
+            raise AdapterError(unknown_mutation(args) or 'memcue command timed out; check persisted state before retrying a write') from exc
+        except OSError as exc:
+            if getattr(exc, 'attempted', False):
+                raise AdapterError(unknown_mutation(args) or 'memcue response transport unavailable') from exc
+            raise
+        try:
+            out.seek(0)
+            output = out.read(LIMIT + 1)
+            err.seek(0)
+            diagnostic = err.read(LIMIT + 1).decode('utf-8', errors='replace')
+        except OSError as exc:
+            raise AdapterError(unknown_mutation(args) or 'memcue response transport unavailable') from exc
+        if nonce:
+            status, refusal = classify_outcome(output.decode('utf-8', errors='replace'), diagnostic, result.returncode, nonce)
+            if status == 'unknown':
+                raise AdapterError(unknown_mutation(args))
+            if status == 'refused':
+                raise AdapterError('memcue command failed (exit ' + str(result.returncode) + '): ' + bounded(refusal))
+        elif result.returncode:
             raise AdapterError('memcue command failed (exit ' + str(result.returncode) + '): ' + bounded(diagnostic))
         if len(output) > LIMIT:
-            raise AdapterError('memcue output exceeds the supported 4 MiB transport; complete delivery is unsupported, no subset delivered')
+            raise AdapterError(unknown_mutation(args) or 'memcue output exceeds the supported 4 MiB transport; complete delivery is unsupported, no subset delivered')
         return output.decode('utf-8')
 
 

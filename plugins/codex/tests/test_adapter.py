@@ -28,6 +28,10 @@ with (p/'calls').open('a') as f:f.write(json.dumps({'args':sys.argv[1:],'cwd':os
 if sys.argv[1]=='session-card':
  print(json.dumps({'hookSpecificOutput':{'hookEventName':'SessionCard','additionalContext':'memcue: 2 facts wait for the dream. call memcue_dream_prepare and answer its packet with memcue_dream_apply'}}))
 elif sys.argv[1]=='search':print(json.dumps({'facts':[],'hints':['No facts; try -in all.']}))
+if os.environ.get('MEMCUE_OUTCOME_NONCE'):
+ import hashlib
+ sys.stderr.write('\\nMEMCUE_OUTCOME_V1 '+json.dumps({'version':1,'nonce':os.environ['MEMCUE_OUTCOME_NONCE'],'status':'success','bytes':0,'sha256':hashlib.sha256(b'').hexdigest(),'error_bytes':0,'error_sha256':hashlib.sha256(b'').hexdigest()})+'\\n')
+
 ''')
         self.binary.chmod(0o700)
         self.config = self.home / 'memcue.json'

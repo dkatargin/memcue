@@ -14,8 +14,8 @@ Run from the session's current working directory, including a nested or non-Git 
 ```text
 search -json -in all "<words of the fact>"
 add -kind rule -scope global -source user -- "<fact>"
-correct ID "<corrected fact>"
-retire ID
+correct -expected-version VERSION ID "<corrected fact>"
+retire -expected-version VERSION ID
 reopen ID
 ```
 
@@ -56,3 +56,5 @@ before relying on an old finding. Correct or retire stale findings. A repository
 
 On a failure or denied write, report the diagnostic and continue unrelated work. Inspect persisted state after a timeout
 before retrying a write. Request access only to the configured base and state directories when the sandbox needs it.
+
+Read `version` from the earlier `search -json` result and pass that caller-observed version to correct/retire. On conflict, read again and make a new decision; never fetch latest immediately before writing to conceal a stale decision, and never replay automatically. PostgreSQL requires the version; old local CLI calls remain compatible.

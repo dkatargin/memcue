@@ -8,10 +8,13 @@ package tier
 
 import (
 	"bufio"
+	"context"
+	"io"
 	"os"
 	"path/filepath"
 	"slices"
 	"strings"
+	"syscall"
 )
 
 // Global is the tier of notes every session sees.
@@ -24,8 +27,13 @@ const DirPrefix = "dir:"
 // remote; the path of the main worktree for a repository without one; the go.mod module or the path itself outside
 // git; "" for a temporary directory. claudeDir is the Claude config directory (~/.claude); since #617 it is named by
 // its remotes as any repository, and Legacy gives it no old name.
-func Of(dir, claudeDir string) string {
-	keys := Keys(dir, claudeDir)
+func Of(dir, claudeDir string, contexts ...context.Context) string {
+	ctx := tierContext(contexts)
+	if ctx.Err() != nil {
+		return ""
+	}
+
+	keys := Keys(dir, claudeDir, ctx)
 	if len(keys) == 0 {
 		return ""
 	}
@@ -36,7 +44,12 @@ func Of(dir, claudeDir string) string {
 // remotes (upstream, mirrors) in name order. A fact written in a fork's upstream or on a mirror's other host holds in
 // the fork and on every host of the mirror. An empty dir is a session with no working directory, such as a Hermes chat
 // or a Hermes session outside git (#347): it has no project, rather than the process's.
-func Keys(dir, claudeDir string) []string {
+func Keys(dir, claudeDir string, contexts ...context.Context) []string {
+	ctx := tierContext(contexts)
+	if ctx.Err() != nil {
+		return nil
+	}
+
 	if dir == "" {
 		return nil
 	}
@@ -44,9 +57,9 @@ func Keys(dir, claudeDir string) []string {
 	if err != nil {
 		return nil
 	}
-	repo, ok := locate(dir)
+	repo, ok := locate(dir, ctx)
 	if !ok {
-		return outside(dir)
+		return outside(dir, ctx)
 	}
 	remotes := repo.remotes()
 	names := make([]string, 0, len(remotes))
@@ -100,12 +113,17 @@ func Scope(key string) string {
 // dot-named one (forgekeep/.github → forgekeep-github), "" outside git and for the Claude config directory: the facts
 // learnt there before #617 carry Global and stay global, so it has no old name to move them from. The migration maps
 // the facts written under those names onto the keys.
-func Legacy(dir, claudeDir string) string {
+func Legacy(dir, claudeDir string, contexts ...context.Context) string {
+	ctx := tierContext(contexts)
+	if ctx.Err() != nil {
+		return ""
+	}
+
 	dir, err := filepath.Abs(dir)
 	if err != nil {
 		return ""
 	}
-	repo, ok := locate(dir)
+	repo, ok := locate(dir, ctx)
 	if !ok {
 		return ""
 	}
@@ -163,12 +181,20 @@ func Normalize(url string) string {
 
 // outside names a directory that is not in a git repository: the module of the nearest go.mod up the tree, else the
 // directory itself, unless it is temporary.
-func outside(dir string) []string {
+func outside(dir string, contexts ...context.Context) []string {
+	ctx := tierContext(contexts)
+	if ctx.Err() != nil {
+		return nil
+	}
+
 	if temporary(dir) {
 		return nil
 	}
 	for d := dir; ; {
-		if m := module(filepath.Join(d, "go.mod")); m != "" {
+		if ctx.Err() != nil {
+			return nil
+		}
+		if m := module(filepath.Join(d, "go.mod"), ctx); m != "" {
 			return []string{strings.ToLower(m)}
 		}
 		parent := filepath.Dir(d)
@@ -181,14 +207,22 @@ func outside(dir string) []string {
 }
 
 // module reads the module path of a go.mod, or "" when there is none.
-func module(path string) string {
-	f, err := os.Open(path)
+func module(path string, contexts ...context.Context) string {
+	ctx := tierContext(contexts)
+	if ctx.Err() != nil {
+		return ""
+	}
+
+	f, err := tierOpen(ctx, path)
 	if err != nil {
 		return ""
 	}
 	defer func() { _ = f.Close() }()
-	sc := bufio.NewScanner(f)
+	sc := bufio.NewScanner(tierReader{ctx, f})
 	for sc.Scan() {
+		if ctx.Err() != nil {
+			return ""
+		}
 		line := strings.TrimSpace(sc.Text())
 		if rest, ok := strings.CutPrefix(line, "module"); ok && (rest == "" || rest[0] == ' ' || rest[0] == '\t') {
 			return strings.Trim(strings.TrimSpace(rest), `"`)
@@ -217,20 +251,29 @@ func temporary(dir string) bool {
 // the common git directory that holds the config.
 type repository struct {
 	main, gitDir, common string
+	ctx                  context.Context
 }
 
 // locate finds the nearest .git above dir. A .git directory is its own common directory. A .git file of a linked
 // worktree names its git directory, whose commondir names the main repository's; a submodule's has no commondir, and
 // its git directory holds its own config.
-func locate(dir string) (repository, bool) {
+func locate(dir string, contexts ...context.Context) (repository, bool) {
+	ctx := tierContext(contexts)
+	if ctx.Err() != nil {
+		return repository{}, false
+	}
+
 	for {
+		if ctx.Err() != nil {
+			return repository{}, false
+		}
 		gitPath := filepath.Join(dir, ".git")
 		fi, err := os.Stat(gitPath)
 		if err == nil {
 			if fi.IsDir() {
-				return repository{main: dir, gitDir: gitPath, common: gitPath}, true
+				return repository{main: dir, gitDir: gitPath, common: gitPath, ctx: ctx}, true
 			}
-			return linked(gitPath, dir), true
+			return linked(gitPath, dir, ctx), true
 		}
 		parent := filepath.Dir(dir)
 		if parent == dir {
@@ -242,38 +285,43 @@ func locate(dir string) (repository, bool) {
 
 // linked reads "gitdir: <main>/.git/worktrees/<name>" from a .git file. When the git directory is gone the worktree
 // itself is the main one and has no config to read.
-func linked(gitFile, worktree string) repository {
-	b, err := os.ReadFile(gitFile)
+func linked(gitFile, worktree string, contexts ...context.Context) repository {
+	ctx := tierContext(contexts)
+	if ctx.Err() != nil {
+		return repository{ctx: ctx, main: worktree}
+	}
+
+	b, err := tierReadFile(ctx, gitFile)
 	if err != nil {
-		return repository{main: worktree}
+		return repository{ctx: ctx, main: worktree}
 	}
 	gitdir := strings.TrimSpace(strings.TrimPrefix(strings.TrimSpace(string(b)), "gitdir:"))
 	if !filepath.IsAbs(gitdir) {
 		gitdir = filepath.Join(worktree, gitdir)
 	}
-	c, err := os.ReadFile(filepath.Join(gitdir, "commondir"))
+	c, err := tierReadFile(ctx, filepath.Join(gitdir, "commondir"))
 	if err != nil {
-		return repository{main: worktree, gitDir: gitdir, common: gitdir}
+		return repository{ctx: ctx, main: worktree, gitDir: gitdir, common: gitdir}
 	}
 	common := strings.TrimSpace(string(c))
 	if !filepath.IsAbs(common) {
 		common = filepath.Join(gitdir, common)
 	}
 	common = filepath.Clean(common)
-	return repository{main: filepath.Dir(common), gitDir: gitdir, common: common}
+	return repository{ctx: ctx, main: filepath.Dir(common), gitDir: gitdir, common: common}
 }
 
 // remotes reads the URL of every remote, with the url.<base>.insteadOf rewrites of the repository's and the global
 // config applied the way git applies them: the longest matching prefix wins.
 func (r repository) remotes() map[string]string {
-	var local config
+	local := config{ctx: r.ctx}
 	if r.common != "" {
 		local.read(filepath.Join(r.common, "config"), 0)
 		if local.worktreeConfig && r.gitDir != "" {
 			local.read(filepath.Join(r.gitDir, "config.worktree"), 0)
 		}
 	}
-	var global config
+	global := config{ctx: r.ctx}
 	for _, p := range globalConfigs() {
 		global.read(p, 0)
 	}
@@ -321,6 +369,7 @@ func rewrite(url string, rules []insteadOf) string {
 // config is what memcue needs from a git config file: the remotes' URLs, the insteadOf rewrites, and whether the
 // worktree has its own config. [include] path is followed; includeIf is not.
 type config struct {
+	ctx            context.Context
 	remotes        map[string]string
 	insteadOf      []insteadOf
 	worktreeConfig bool
@@ -333,7 +382,7 @@ func (c *config) read(path string, depth int) {
 	if depth > maxIncludeDepth {
 		return
 	}
-	f, err := os.Open(path)
+	f, err := tierOpen(tierContext([]context.Context{c.ctx}), path)
 	if err != nil {
 		return
 	}
@@ -342,8 +391,11 @@ func (c *config) read(path string, depth int) {
 		c.remotes = map[string]string{}
 	}
 	var section, sub string
-	sc := bufio.NewScanner(f)
+	sc := bufio.NewScanner(tierReader{tierContext([]context.Context{c.ctx}), f})
 	for sc.Scan() {
+		if c.ctx != nil && c.ctx.Err() != nil {
+			return
+		}
 		line := strings.TrimSpace(sc.Text())
 		if line == "" || line[0] == '#' || line[0] == ';' {
 			continue
@@ -415,7 +467,12 @@ func resolve(p string) string {
 func sameDir(a, b string) bool { return resolve(a) == resolve(b) }
 
 // RepositoryKeys names only git repositories, without the non-git module/path fallback.
-func RepositoryKeys(dir, claudeDir string) []string {
+func RepositoryKeys(dir, claudeDir string, contexts ...context.Context) []string {
+	ctx := tierContext(contexts)
+	if ctx.Err() != nil {
+		return nil
+	}
+
 	if dir == "" {
 		return nil
 	}
@@ -423,13 +480,55 @@ func RepositoryKeys(dir, claudeDir string) []string {
 	if err != nil {
 		return nil
 	}
-	repo, ok := locate(abs)
+	repo, ok := locate(abs, ctx)
 	if !ok {
 		return nil
 	}
-	keys := Keys(abs, claudeDir)
+	keys := Keys(abs, claudeDir, ctx)
 	if len(keys) == 0 {
 		return []string{DirPrefix + repo.main}
 	}
 	return keys
+}
+
+func tierContext(v []context.Context) context.Context {
+	if len(v) > 0 && v[0] != nil {
+		return v[0]
+	}
+	return context.Background()
+}
+
+type tierReader struct {
+	ctx context.Context
+	r   io.Reader
+}
+
+func (r tierReader) Read(b []byte) (int, error) {
+	if e := r.ctx.Err(); e != nil {
+		return 0, e
+	}
+	return r.r.Read(b[:min(len(b), 4096)])
+}
+func tierOpen(ctx context.Context, path string) (*os.File, error) {
+	if e := ctx.Err(); e != nil {
+		return nil, e
+	}
+	f, e := os.OpenFile(path, os.O_RDONLY|syscall.O_NONBLOCK, 0)
+	if e != nil {
+		return nil, e
+	}
+	info, e := f.Stat()
+	if e != nil || !info.Mode().IsRegular() {
+		_ = f.Close()
+		return nil, os.ErrInvalid
+	}
+	return f, nil
+}
+func tierReadFile(ctx context.Context, path string) ([]byte, error) {
+	f, e := tierOpen(ctx, path)
+	if e != nil {
+		return nil, e
+	}
+	defer func() { _ = f.Close() }()
+	return io.ReadAll(tierReader{ctx, f})
 }

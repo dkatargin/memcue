@@ -33,7 +33,8 @@ type repoMap struct {
 // the working directories of the Claude Code transcripts and the repositories under each root, plus old=new pairs
 // for keys that changed, such as a renamed remote. A name it cannot map stays as it is and is reported. Without apply
 // it only reports; with apply it backs the base up first and writes one new version per fact it changes.
-func runMigrateRepos(roots, pairs []string, apply bool, out io.Writer) error {
+func (inv *invocation) runMigrateRepos(roots, pairs []string, apply bool, out io.Writer) error {
+	out = inv.writer(out)
 	m := repoMap{legacy: map[string][]string{}, pairs: map[string]string{}}
 	for _, p := range pairs {
 		old, key, ok := strings.Cut(p, "=")
@@ -45,7 +46,7 @@ func runMigrateRepos(roots, pairs []string, apply bool, out io.Writer) error {
 	for _, dir := range repoDirs(roots) {
 		m.learn(dir)
 	}
-	s, err := openBase()
+	s, err := inv.openBase()
 	if err != nil {
 		return err
 	}
@@ -323,3 +324,8 @@ type multiFlag []string
 
 func (f *multiFlag) String() string     { return strings.Join(*f, ",") }
 func (f *multiFlag) Set(v string) error { *f = append(*f, v); return nil }
+func runMigrateRepos(roots, pairs []string, apply bool, out io.Writer) error {
+	inv := newInvocation()
+	defer inv.close()
+	return inv.runMigrateRepos(roots, pairs, apply, out)
+}

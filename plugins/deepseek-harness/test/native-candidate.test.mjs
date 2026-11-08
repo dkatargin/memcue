@@ -26,15 +26,15 @@ test('native candidate: DSH content-only add/search/correct/retire and obsolete 
   for (const name of ['memcue_add', 'memcue_correct']) {
    for (const field of ['keywords', 'queries']) {
     assert.equal(Object.hasOwn(tools.get(name).parameters.properties, field), false)
-    assert.equal((await call(name, { id, text: 'Unwanted saffron marker.', [field]: ['saffron'] })).stored, false)
+    assert.equal((await call(name, { id, expected_version: result.facts[0].version, text: 'Unwanted saffron marker.', [field]: ['saffron'] })).stored, false)
    }
   }
   assert.equal((await call('memcue_search', { query: 'saffron', min_score: 0 })).facts.length, 0)
   const corrected = 'Обсерватория PROJ-1234 использует порт 7432.'
-  assert.equal((await call('memcue_correct', { id, text: corrected })).stored, true)
+  assert.equal((await call('memcue_correct', { id, expected_version: result.facts[0].version, text: corrected })).stored, true)
   result = await call('memcue_search', { query: 'PROJ-1234', min_score: 0 })
   assert.equal(result.facts[0].content, corrected)
-  assert.equal((await call('memcue_retire', { id })).stored, true)
+  assert.equal((await call('memcue_retire', { id, expected_version: result.facts[0].version })).stored, true)
   assert.equal((await call('memcue_search', { query: 'PROJ-1234', min_score: 0 })).facts.length, 0)
   const history = []
   for (const entry of await readdir(join(root, 'facts'), { withFileTypes: true })) {

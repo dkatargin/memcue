@@ -26,6 +26,9 @@ type MergeStats struct {
 //
 // Vectors are not merged: nothing reads them, and Open deletes the ones an older binary stored (#260).
 func (s *Store) Merge(otherPath string) (MergeStats, error) {
+	if s.remote != nil {
+		return MergeStats{}, ErrRemoteUnsupported
+	}
 	var st MergeStats
 	other, err := Open(otherPath)
 	if err != nil {

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -109,8 +108,8 @@ func validKindScope(kind, scope string) error {
 // migrated note may quote one.
 func hasSecret(content string) bool { return policy.Secret(content) }
 
-func withStore(fn func(*store.Store) error) error {
-	s, err := openBase()
+func (inv *invocation) withStore(fn func(*store.Store) error) error {
+	s, err := inv.openBase()
 	if err != nil {
 		return err
 	}
@@ -118,11 +117,13 @@ func withStore(fn func(*store.Store) error) error {
 	return fn(s)
 }
 
-func runAdd(args []string, out io.Writer) error {
+func (inv *invocation) runAdd(args []string, out io.Writer) error {
+	out = inv.writer(out)
 	if err := refuseAuxiliaryFlags(args); err != nil {
 		return err
 	}
 	fs := flag.NewFlagSet("add", flag.ContinueOnError)
+	batch := fs.String("batch", "", "atomically add a JSON array of FactInput objects from a regular file")
 	origin := fs.String("origin", "", "where it was learnt: repository and date (default: those of -cwd or the working directory, empty outside a repository)")
 	cwd := fs.String("cwd", "", "working directory for the default origin (default: the process working directory; an empty value is no project)")
 	expires := fs.String("expires", "", "last day the fact is worth recalling, YYYY-MM-DD (default: never)")
@@ -135,6 +136,18 @@ func runAdd(args []string, out io.Writer) error {
 	force := fs.Bool("force", false, "store it even when it looks like a secret")
 	if err := fs.Parse(args); err != nil {
 		return err
+	}
+	if *batch != "" {
+		invalidFlags := fs.NArg() != 0
+		fs.Visit(func(f *flag.Flag) {
+			if f.Name != "batch" && f.Name != "force" {
+				invalidFlags = true
+			}
+		})
+		if invalidFlags {
+			return errors.New("add -batch accepts only its file and optional -force")
+		}
+		return inv.runAddBatch(*batch, *force, out)
 	}
 	if !sources[*source] {
 		return fmt.Errorf("add: unknown -source %q", *source)
@@ -164,7 +177,7 @@ func runAdd(args []string, out io.Writer) error {
 		return errors.New("add: the fact looks like a secret; use a password manager, or pass -force to store it anyway")
 	}
 	if *origin == "" && !emptyFlag(fs, "cwd") {
-		*origin = defaultOriginAt(*cwd)
+		*origin = inv.defaultOriginAt(*cwd)
 	}
 	if *scope == "repo" {
 		if *scope = repoScope(*scope, *origin); *scope == "" {
@@ -172,13 +185,14 @@ func runAdd(args []string, out io.Writer) error {
 		}
 	}
 	m := store.Meta{Kind: *kind, Scope: defaultScope(*scope, *origin), Source: *source}
-	return withStore(func(s *store.Store) error {
+	return inv.withStore(func(s *store.Store) error {
 		f, err := s.AddWith(content, *origin, eventExpires(*kind, *expires), m)
 		if err != nil {
 			return err
 		}
+		inv.effect = true
 		_, err = fmt.Fprintln(out, f.ID)
-		return err
+		return mutationResponseError(f.ID, err)
 	})
 }
 
@@ -191,7 +205,7 @@ func errNoApproval(cmd string) error {
 
 // defaultOriginAt names the repository of dir and today, the way every fact of a session is named. An empty dir means
 // the process working directory; a caller that knows the session workspace passes it explicitly.
-func defaultOriginAt(dir string) string {
+func (inv *invocation) defaultOriginAt(dir string) string {
 	if dir == "" {
 		var err error
 		dir, err = os.Getwd()
@@ -199,7 +213,7 @@ func defaultOriginAt(dir string) string {
 			return ""
 		}
 	}
-	return originAt(dir, time.Now().Format(time.DateOnly))
+	return inv.originAt(dir, time.Now().Format(time.DateOnly))
 }
 
 // emptyFlag reports whether the flag name was passed with an empty value. A host that knows its session has no project
@@ -217,11 +231,11 @@ func emptyFlag(fs *flag.FlagSet, name string) bool {
 // originAt names a fact by where it was learnt: the project key (tier.Of: the remote, the go.mod module, or the
 // directory) and the date. In a temporary directory the origin stays empty: a scratch directory is a wrong answer, not
 // a weak one (#287, #343). A bare date would be just as wrong: it matches no project.
-func originAt(dir, date string) string {
+func (inv *invocation) originAt(dir, date string) string {
 	if dir == "" {
 		return ""
 	}
-	name := tier.Of(dir, claudeDir())
+	name := tier.Of(dir, claudeDir(), inv.ctx)
 	if name == "" {
 		return ""
 	}
@@ -301,7 +315,8 @@ func eventExpires(kind, expires string) string {
 	return time.Now().AddDate(0, 0, days).Format(time.DateOnly)
 }
 
-func runCorrect(args []string, out io.Writer) error {
+func (inv *invocation) runCorrect(args []string, out io.Writer) error {
+	out = inv.writer(out)
 	if err := refuseAuxiliaryFlags(args); err != nil {
 		return err
 	}
@@ -309,6 +324,7 @@ func runCorrect(args []string, out io.Writer) error {
 	expires := fs.String("expires", "", "new last day the fact is worth recalling, YYYY-MM-DD; empty keeps the current one")
 	noExpires := fs.Bool("no-expires", false, "drop the expiry: the fact is recalled from now on without end")
 	force := fs.Bool("force", false, "store it even when it looks like a secret")
+	expected := fs.Int("expected-version", 0, "version observed by the caller; required for PostgreSQL")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
@@ -325,7 +341,10 @@ func runCorrect(args []string, out io.Writer) error {
 		return errors.New("correct: -expires and -no-expires cannot be combined")
 	}
 	content := strings.Join(rest[1:], " ")
-	return withStore(func(s *store.Store) error {
+	if *expected < 0 || (os.Getenv("MEMCUE_POSTGRES_DSN") != "" && *expected == 0) {
+		return store.ErrExpectedVersion
+	}
+	return inv.withStore(func(s *store.Store) error {
 		if !*force && hasSecret(content) {
 			return errors.New("correct: the fact looks like a secret; use a password manager, or pass -force to store it anyway")
 		}
@@ -337,34 +356,42 @@ func runCorrect(args []string, out io.Writer) error {
 			empty := ""
 			exp = &empty
 		}
-		f, err := s.CorrectExpiring(fs.Arg(0), content, exp)
+		f, err := correctObserved(s, fs.Arg(0), content, exp, *expected)
 		if err != nil {
 			return err
 		}
+		inv.effect = true
 		_, err = fmt.Fprintf(out, "%s v%d\n", f.ID, f.Version)
-		return err
+		return mutationResponseError(f.ID, err)
 	})
 }
 
-func runRetire(args []string, out io.Writer) error {
+func (inv *invocation) runRetire(args []string, out io.Writer) error {
+	out = inv.writer(out)
 	fs := flag.NewFlagSet("retire", flag.ContinueOnError)
+	expected := fs.Int("expected-version", 0, "version observed by the caller; required for PostgreSQL")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
 	if fs.NArg() != 1 {
 		return errors.New("usage: memcue retire ID")
 	}
-	return withStore(func(s *store.Store) error {
-		f, err := s.Retire(fs.Arg(0))
+	if *expected < 0 || (os.Getenv("MEMCUE_POSTGRES_DSN") != "" && *expected == 0) {
+		return store.ErrExpectedVersion
+	}
+	return inv.withStore(func(s *store.Store) error {
+		f, err := retireObserved(s, fs.Arg(0), *expected)
 		if err != nil {
 			return err
 		}
+		inv.effect = true
 		_, err = fmt.Fprintf(out, "%s v%d retired\n", f.ID, f.Version)
-		return err
+		return mutationResponseError(f.ID, err)
 	})
 }
 
-func runReopen(args []string, out io.Writer) error {
+func (inv *invocation) runReopen(args []string, out io.Writer) error {
+	out = inv.writer(out)
 	fs := flag.NewFlagSet("reopen", flag.ContinueOnError)
 	if err := fs.Parse(args); err != nil {
 		return err
@@ -372,18 +399,20 @@ func runReopen(args []string, out io.Writer) error {
 	if fs.NArg() != 1 {
 		return errors.New("usage: memcue reopen ID")
 	}
-	return withStore(func(s *store.Store) error {
+	return inv.withStore(func(s *store.Store) error {
 		f, err := s.Restore(fs.Arg(0))
 		if err != nil {
 			return err
 		}
+		inv.effect = true
 		_, err = fmt.Fprintf(out, "%s v%d %s\n", f.ID, f.Version, f.Status)
-		return err
+		return mutationResponseError(f.ID, err)
 	})
 }
 
-func runFacts(out io.Writer) error {
-	return withStore(func(s *store.Store) error {
+func (inv *invocation) runFacts(out io.Writer) error {
+	out = inv.writer(out)
+	return inv.withStore(func(s *store.Store) error {
 		fs, err := s.Active()
 		if err != nil {
 			return err
@@ -419,14 +448,15 @@ type reindexReport struct {
 // runReindex rebuilds the index from the live facts and says what changed. The counts before are read without
 // Open, which repairs an index it finds incomplete: through it the report would show the repaired index, and
 // -dry-run would rebuild.
-func runReindex(args []string, out io.Writer) error {
+func (inv *invocation) runReindex(args []string, out io.Writer) error {
+	out = inv.writer(out)
 	fs := flag.NewFlagSet("reindex", flag.ContinueOnError)
 	dryRun := fs.Bool("dry-run", false, "print the counts and what a rebuild would fix, rebuilding nothing")
 	asJSON := fs.Bool("json", false, "print one JSON object instead of lines")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
-	ro, err := openBaseReadOnly()
+	ro, err := inv.openBaseReadOnly()
 	if err != nil {
 		return err
 	}
@@ -440,7 +470,7 @@ func runReindex(args []string, out io.Writer) error {
 	r := reindexReport{DryRun: *dryRun, Live: before.Live, RowsBefore: before.Rows, NumberedBefore: before.Numbered,
 		UnnumberedBefore: before.Unnumbered}
 	if !*dryRun {
-		err := withStore(func(s *store.Store) error {
+		err := inv.withStore(func(s *store.Store) error {
 			if err := s.Rebuild(); err != nil {
 				return err
 			}
@@ -457,7 +487,7 @@ func runReindex(args []string, out io.Writer) error {
 		}
 	}
 	if *asJSON {
-		return json.NewEncoder(out).Encode(r)
+		return inv.encoder(out).Encode(r)
 	}
 	if *dryRun {
 		_, err = fmt.Fprintf(out, "live facts: %d\nindex rows: %d\nrows with a number term: %d\n"+
@@ -511,7 +541,8 @@ func isBoolFlag(f *flag.Flag) bool {
 // runSearch lists the facts that fit the text, best first, with their IDs: how the agent reads its memory (#361), and
 // the way to find the fact to correct or retire. -n is the most it returns; a fact far below the best one does not fit
 // and is left out (#407), so one fitting fact comes alone and none says so.
-func runSearch(args []string, out io.Writer) error {
+func (inv *invocation) runSearch(args []string, out io.Writer) error {
+	out = inv.writer(out)
 	fs := flag.NewFlagSet("search", flag.ContinueOnError)
 	// Five is the measured point (#372, confirmed on a live base): ten facts halve the useful share and double the
 	// noise. Every surface hands over five unless the caller asks for more (#384).
@@ -537,13 +568,13 @@ func runSearch(args []string, out io.Writer) error {
 		return errors.New("search: -n must be >= 1")
 	}
 	q := recall.Query{Text: strings.Join(words, " "), N: *n, MinScore: *minScore,
-		Project: tier.Keys(*cwd, claudeDir()), Host: currentHost(), In: splitList(*in), Kinds: splitList(*kind), Since: *since,
+		Project: tier.Keys(*cwd, claudeDir(), inv.ctx), Host: currentHost(), In: splitList(*in), Kinds: splitList(*kind), Since: *since,
 		Expired: *expired, AllWords: *allWords}
 	f, err := q.Filter()
 	if err != nil {
 		return err
 	}
-	return withStore(func(s *store.Store) error {
+	return inv.withStore(func(s *store.Store) error {
 		// The stored keys are two scans of the base, a quarter of a search's time: read them only for a place that
 		// names a repository, the one ResolveRepos changes.
 		if q.NamesRepo() {
@@ -565,7 +596,7 @@ func runSearch(args []string, out io.Writer) error {
 			return err
 		}
 		query := q.Text
-		logSearch(*session, *cwd, query, hits, time.Since(start))
+		inv.logSearch(*session, *cwd, query, hits, time.Since(start))
 		// The lines that follow the facts, in the order the plain answer prints them; -json carries the same ones, so
 		// a host that parses the answer is told what a reader is (#453).
 		var hints []string
@@ -588,7 +619,7 @@ func runSearch(args []string, out io.Writer) error {
 			hints = append(hints, cjkHint)
 		}
 		if *asJSON {
-			return json.NewEncoder(out).Encode(searchAnswer{Facts: searchJSON(hits), Hints: hints})
+			return inv.encoder(out).Encode(searchAnswer{Facts: searchJSON(hits), Hints: hints})
 		}
 		if len(hits) == 0 && !q.NarrowByDefault() {
 			if _, err := fmt.Fprintln(out, "No stored facts match."); err != nil {
@@ -657,7 +688,11 @@ const logQuery = 500
 
 // logSearch appends a search to search.log in the state directory, searches that found nothing included. It keeps
 // the text of queries, so it is off unless MEMCUE_SEARCH_LOG=1. A failure to log never fails the search.
-func logSearch(session, cwd, query string, hits []store.Hit, took time.Duration) {
+func (inv *invocation) logSearch(session, cwd, query string, hits []store.Hit, took time.Duration) {
+	if inv.ctx.Err() != nil {
+		return
+	}
+
 	if os.Getenv("MEMCUE_SEARCH_LOG") != "1" {
 		return
 	}
@@ -665,7 +700,7 @@ func logSearch(session, cwd, query string, hits []store.Hit, took time.Duration)
 	if err != nil {
 		return
 	}
-	rec := searchRecord{Time: time.Now().UTC().Format(time.RFC3339), Session: session, Tier: tier.Of(cwd, claudeDir()),
+	rec := searchRecord{Time: time.Now().UTC().Format(time.RFC3339), Session: session, Tier: tier.Of(cwd, claudeDir(), inv.ctx),
 		Host: currentHost(), Query: clip(query, logQuery), Ms: float64(took.Microseconds()) / 1000}
 	for _, h := range hits {
 		rec.Facts = append(rec.Facts, h.ID)
@@ -676,6 +711,7 @@ func logSearch(session, cwd, query string, hits []store.Hit, took time.Duration)
 // searchFact is one fact as search -json prints it: what a caller needs to show, correct or retire it.
 type searchFact struct {
 	ID      string `json:"id"`
+	Version int    `json:"version"`
 	Content string `json:"content"`
 	Origin  string `json:"origin,omitempty"`
 	Scope   string `json:"scope,omitempty"`
@@ -692,7 +728,7 @@ type searchAnswer struct {
 func searchJSON(hits []store.Hit) []searchFact {
 	out := make([]searchFact, 0, len(hits))
 	for _, h := range hits {
-		out = append(out, searchFact{ID: h.ID, Content: h.Content, Origin: h.Origin, Scope: h.Scope,
+		out = append(out, searchFact{ID: h.ID, Version: h.Version, Content: h.Content, Origin: h.Origin, Scope: h.Scope,
 			Created: h.Created.UTC().Format(time.RFC3339), Expires: h.Expires})
 	}
 	return out
@@ -954,4 +990,68 @@ func refuseAuxiliaryFlags(args []string) error {
 		}
 	}
 	return nil
+}
+
+func correctObserved(s *store.Store, id, content string, expires *string, version int) (store.Fact, error) {
+	if version == 0 {
+		return s.CorrectExpiring(id, content, expires)
+	}
+	return s.CorrectExpiring(id, content, expires, version)
+}
+func retireObserved(s *store.Store, id string, version int) (store.Fact, error) {
+	if version == 0 {
+		return s.Retire(id)
+	}
+	return s.Retire(id, version)
+}
+func runRetire(args []string, out io.Writer) error {
+	inv := newInvocation()
+	defer inv.close()
+	return inv.runRetire(args, out)
+}
+func runAdd(args []string, out io.Writer) error {
+	inv := newInvocation()
+	defer inv.close()
+	return inv.runAdd(args, out)
+}
+func runFacts(out io.Writer) error {
+	inv := newInvocation()
+	defer inv.close()
+	return inv.runFacts(out)
+}
+func withStore(fn func(*store.Store) error) error {
+	inv := newInvocation()
+	defer inv.close()
+	return inv.withStore(fn)
+}
+func runReindex(args []string, out io.Writer) error {
+	inv := newInvocation()
+	defer inv.close()
+	return inv.runReindex(args, out)
+}
+func runCorrect(args []string, out io.Writer) error {
+	inv := newInvocation()
+	defer inv.close()
+	return inv.runCorrect(args, out)
+}
+func runReopen(args []string, out io.Writer) error {
+	inv := newInvocation()
+	defer inv.close()
+	return inv.runReopen(args, out)
+}
+func runSearch(args []string, out io.Writer) error {
+	inv := newInvocation()
+	defer inv.close()
+	return inv.runSearch(args, out)
+}
+func originAt(dir, date string) string {
+	inv := newInvocation()
+	defer inv.close()
+	return inv.originAt(dir, date)
+}
+
+func defaultOriginAt(dir string) string {
+	inv := newInvocation()
+	defer inv.close()
+	return inv.defaultOriginAt(dir)
 }
