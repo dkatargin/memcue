@@ -102,7 +102,7 @@ commands:
   correct   new version of a fact: memcue correct [-expires YYYY-MM-DD|-no-expires] ID [--] TEXT
   retire    take a fact out of recall: memcue retire ID
   reopen    bring a retired fact back as it was before the retire: memcue reopen ID
-  connect   explicit tailnet lifecycle: status | serve [-bootstrap] | login | off
+  connect   explicit tailnet lifecycle: up [-bootstrap] | status | serve [-bootstrap] | login | off
   history   immutable fact versions: memcue history [-json] ID
   facts     list the active facts
   reindex   rebuild the search index from the live facts: memcue reindex [-dry-run] [-json]
@@ -162,7 +162,11 @@ func runMain() (code int) {
 	extract.ClaudeTokenFile = os.Getenv("MEMCUE_CLAUDE_TOKEN_FILE")
 	switch os.Args[1] {
 	case "connect":
-		err = runConnect(os.Args[2:], out)
+		if len(os.Args) > 2 && os.Args[2] == "up" {
+			err = runConnectContext(inv.ctx, os.Args[2:], out)
+		} else {
+			err = runConnect(os.Args[2:], out)
+		}
 	case "session-start":
 		fs := flag.NewFlagSet("session-start", flag.ContinueOnError)
 		instructionsOnly := fs.Bool("instructions-only", false, "omit automatic pitfalls when separate whole-fact hooks deliver them")

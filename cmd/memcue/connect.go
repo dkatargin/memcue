@@ -17,8 +17,12 @@ import (
 )
 
 func runConnect(args []string, out io.Writer) error {
+	return runConnectContext(context.Background(), args, out)
+}
+
+func runConnectContext(parent context.Context, args []string, out io.Writer) error {
 	if len(args) == 0 {
-		return errors.New("usage: memcue connect status|serve [-bootstrap]|login|off")
+		return errors.New("usage: memcue connect up [-bootstrap]|status|serve [-bootstrap]|login|off")
 	}
 	mode, err := tailnet.Mode()
 	if err != nil {
@@ -29,7 +33,7 @@ func runConnect(args []string, out io.Writer) error {
 		return err
 	}
 	cfg := tailnet.Config{Dir: dir}
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	ctx, stop := signal.NotifyContext(parent, os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	if args[0] == "status" && len(args) == 1 {
 		state := tailnet.State{State: "Stopped"}
@@ -71,6 +75,16 @@ func runConnect(args []string, out io.Writer) error {
 		return err
 	}
 	switch args[0] {
+	case "up":
+		fs := flag.NewFlagSet("connect up", flag.ContinueOnError)
+		bootstrap := fs.Bool("bootstrap", false, "explicitly bootstrap from MEMCUE_TAILSCALE_AUTH_KEY_FILE")
+		if err := fs.Parse(args[1:]); err != nil {
+			return err
+		}
+		if fs.NArg() != 0 {
+			return errors.New("connect up accepts only -bootstrap")
+		}
+		return connectUp(ctx, cfg, *bootstrap, out)
 	case "serve":
 		fs := flag.NewFlagSet("connect serve", flag.ContinueOnError)
 		bootstrap := fs.Bool("bootstrap", false, "explicitly bootstrap from MEMCUE_TAILSCALE_AUTH_KEY_FILE")
@@ -80,7 +94,7 @@ func runConnect(args []string, out io.Writer) error {
 		if fs.NArg() != 0 {
 			return errors.New("connect serve accepts only -bootstrap")
 		}
-		return tailnet.Run(ctx, cfg, *bootstrap, make(chan struct{}))
+		return runConnectOwner(ctx, cfg, *bootstrap)
 	case "login":
 		if len(args) != 1 {
 			return errors.New("usage: memcue connect login")
@@ -96,6 +110,6 @@ func runConnect(args []string, out io.Writer) error {
 		_, err = fmt.Fprintln(out, "Node authorization state: "+state.State)
 		return err
 	default:
-		return errors.New("usage: memcue connect status|serve [-bootstrap]|login|off")
+		return errors.New("usage: memcue connect up [-bootstrap]|status|serve [-bootstrap]|login|off")
 	}
 }

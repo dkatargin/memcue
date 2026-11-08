@@ -27,7 +27,16 @@ func newInvocation() *invocation {
 	if os.Getenv("MEMCUE_POSTGRES_DSN") == "" {
 		return &invocation{ctx: signalCtx, stop: stopSignal}
 	}
-	ctx, cancel := context.WithTimeout(signalCtx, 4*time.Second)
+	budget := 4 * time.Second
+	// Explicit onboarding is not a fact operation. Its configured lifecycle
+	// budget must cover both startup and delivery of the authorization response.
+	if len(os.Args) > 2 && os.Args[1] == "connect" && os.Args[2] == "up" {
+		budget = 5 * time.Second
+		if value, err := time.ParseDuration(os.Getenv("MEMCUE_TAILSCALE_CONNECT_TIMEOUT")); err == nil && value >= time.Second && value <= 30*time.Second {
+			budget = value
+		}
+	}
+	ctx, cancel := context.WithTimeout(signalCtx, budget)
 	return &invocation{ctx: ctx, stop: func() { cancel(); stopSignal() }}
 }
 func (i *invocation) close() { i.stop() }
