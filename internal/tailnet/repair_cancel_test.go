@@ -29,7 +29,7 @@ func (n *cancelRepairNode) Dial(context.Context, string) (net.Conn, error) {
 			return
 		}
 		be.Send(&pgproto3.AuthenticationOk{})
-		be.Send(&pgproto3.BackendKeyData{ProcessID: 123, SecretKey: 456})
+		be.Send(&pgproto3.BackendKeyData{ProcessID: 123, SecretKey: []byte{0, 0, 1, 200}})
 		be.Send(&pgproto3.ReadyForQuery{TxStatus: 'I'})
 		if be.Flush() != nil {
 			return

@@ -1,5 +1,5 @@
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
-GOLANGCI_VERSION ?= v2.13.0
+GOLANGCI_VERSION ?= v2.14.0
 GOLANGCI_LINT ?= golangci-lint
 CLAUDE_BIN ?= claude
 HERMES_PYTHON ?= python3
