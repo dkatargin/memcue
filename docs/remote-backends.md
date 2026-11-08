@@ -31,43 +31,42 @@ Mutations acquire a database advisory transaction lock before reading, apply the
 
 ## Explicit embedded login and lifecycle
 
-The helper is a foreground Memcue process, owning one durable, non-ephemeral tsnet identity. It is not a host VPN daemon and requires no root, system `tailscaled`, service installation or host route changes. Subprocess tools connect to its private Unix socket; they never launch a node themselves. Keep `serve` running in a dedicated terminal or arrange supervision separately.
+The helper is a Memcue process owning one durable, non-ephemeral tsnet identity. It is not a host VPN daemon and requires no root, system `tailscaled`, service installation or host route changes. Subprocess tools connect to its private Unix socket; ordinary fact operations never launch a node themselves. `connect up` explicitly starts it in the background, so one terminal is enough. `connect serve` remains the foreground alternative for service managers.
 
 Use a separate private directory per profile/control server and backend. The stored profile binds the control URL, stable hostname and backend host/port. Reusing it with different settings fails; credentials can rotate without changing the identity. The entire identity directory is private node material, not a memory backup to copy to another machine.
 
 ```sh
 export MEMCUE_POSTGRES_DSN="$(cat "$HOME/.config/memcue/postgres.dsn")"
 export MEMCUE_TAILSCALE_MODE=embedded
-export MEMCUE_TAILSCALE_STATE_DIR="$HOME/.config/memcue/tailnet-work"
-export MEMCUE_TAILSCALE_HOSTNAME=memcue-work
-memcue connect serve
-```
-
-In a second terminal, repeat the same settings explicitly (exports do not cross between shells):
-
-```sh
-export MEMCUE_POSTGRES_DSN="$(cat "$HOME/.config/memcue/postgres.dsn")"
-export MEMCUE_TAILSCALE_MODE=embedded
-export MEMCUE_TAILSCALE_STATE_DIR="$HOME/.config/memcue/tailnet-work"
-export MEMCUE_TAILSCALE_HOSTNAME=memcue-work
-memcue connect login
-# Open the displayed authorization URL, sign into the intended tailnet,
-# and complete any operator/device approval required by that tailnet.
-memcue connect status
-# Wait for state=Running before issuing backend operations.
+memcue connect up
+# If a URL is displayed, open it and complete login/device approval.
+memcue connect up
+# Only "Tailnet ready" means authorization is complete.
 memcue search -json "$QUERY"
 ```
 
-There is no `connect on` command: `MEMCUE_TAILSCALE_MODE=embedded` enables routing for future Memcue calls, while `connect serve` owns the actual connection and `connect login` authorizes its node. After a restart, run `serve` again with the same settings and state directory; an approved identity normally needs no new login or bootstrap key. Tools/plugins must inherit these exports too. Merely starting the helper does not change another application's environment, host routes or VPN settings. For a custom control server, repeat `MEMCUE_TAILSCALE_CONTROL_URL` in both terminals as well.
+The default private identity directory and hostname need no extra settings. For separate profiles or a custom control server, set the overrides **before the first `up`**, and keep them for subsequent calls:
 
-`login` is the explicit browser flow. Ordinary search/add/hook calls never print an auth URL or prompt for login; they return a bounded login/helper error. `status` emits JSON with `mode`, `running`, `state` and, when available, `node_id`. It omits auth URLs and credentials. `running` describes the helper process; `state=Running` describes tailnet readiness. A missing helper with retained state can report `Unavailable`; status alone is not a database health check.
+```sh
+export MEMCUE_TAILSCALE_STATE_DIR="$HOME/.config/memcue/tailnet-work"
+export MEMCUE_TAILSCALE_HOSTNAME=memcue-work
+export MEMCUE_TAILSCALE_CONTROL_URL=https://control.example.test
+memcue connect up
+```
+
+`up` reuses a matching helper and does not reauthorize a ready node. Otherwise it starts the same executable as a detached `connect serve`, with private startup acknowledgement and no inherited terminal or consumer pipes. It prints a login URL only when necessary; pending authorization is not readiness. Startup has the configured connection deadline; failure before acknowledgement terminates only the newly launched process. If login/control access fails after startup, the error explicitly says the helper remains running: retry `up` or stop it with `off`. It never kills a pre-existing owner.
+
+`up` does not persist your DSN or exports, modify a shell/profile, install a service, automatically restart a crashed process, or start on system boot. After a crash/reboot, run `up` again with the same settings. An approved durable identity normally needs no new login or bootstrap key. Tools/plugins must inherit the exports too; launching the helper cannot enable routing in another application's environment. Keep the executable installed at a stable path. For service supervision, use `memcue connect serve` in the foreground; explicit `memcue connect login` remains available separately. Both commands use the same settings as `up`.
+
+`MEMCUE_TAILSCALE_MODE=embedded` still enables routing for future Memcue calls; `up` owns/authorizes the connection, not host routing. There is no `connect on` alias. `connect status` emits JSON with `mode`, `running`, `state` and, when available, `node_id`, without auth URLs or credentials. `running` describes the helper process; `state=Running` describes tailnet readiness, not database health. A missing helper with retained state can report `Unavailable`. Ordinary search/add/hook calls never print auth URLs or prompt; they return bounded login/helper errors.
 
 Unattended enrollment uses an explicit bootstrap action and a permission-checked file:
 
 ```sh
 export MEMCUE_TAILSCALE_AUTH_KEY_FILE="$HOME/.config/memcue/bootstrap.key"
 # Provision this file privately (0400 or 0600), without putting the key in argv or Git.
-memcue connect serve -bootstrap
+memcue connect up -bootstrap
+# Or: memcue connect serve -bootstrap, when foreground supervision is desired.
 ```
 
 A key setting alone never selects PostgreSQL, creates a helper or enrolls a local SQLite invocation. `serve` without `-bootstrap` does not read the bootstrap file. After enrollment, restart with `memcue connect serve` without the file/key. The approved node identity persists. Key revocation/expiry and node authorization are different: rotating or deleting a bootstrap key does not revoke an already enrolled node. Remove/revoke the node in the control plane when authorization must end.

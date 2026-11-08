@@ -89,6 +89,26 @@ func profileBytes(c Config) []byte {
 	data, _ := json.Marshal(profile)
 	return data
 }
+
+// ValidateExistingProfile refuses unsafe or mismatched retained identities before
+// a convenience launcher starts another process. An absent identity is allowed.
+func ValidateExistingProfile(c Config) error {
+	if _, err := os.Lstat(c.Dir); os.IsNotExist(err) {
+		return nil
+	} else if err != nil {
+		return errHelper
+	}
+	if err := privateDir(c.Dir); err != nil {
+		return err
+	}
+	if _, err := os.Lstat(filepath.Join(c.Dir, "profile.json")); os.IsNotExist(err) {
+		return nil
+	} else if err != nil {
+		return errHelper
+	}
+	return checkProfile(c)
+}
+
 func checkProfile(c Config) error {
 	if err := privateDir(c.Dir); err != nil {
 		return err
@@ -404,7 +424,7 @@ func Admin(ctx context.Context, c Config, op string) (State, error) {
 	if op != "status" && op != "login" && op != "off" {
 		return State{}, errors.New("unsupported administration operation")
 	}
-	if op == "login" && c.Host != "" {
+	if op != "off" && c.Host != "" {
 		if err := checkProfile(c); err != nil {
 			return State{}, err
 		}
