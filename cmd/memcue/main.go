@@ -8,10 +8,12 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"runtime/debug"
 	"strconv"
 	"strings"
+	"syscall"
 
 	"github.com/juev/memcue/internal/extract"
 )
@@ -96,9 +98,12 @@ commands:
   search    find the facts that fit the words, with their IDs: memcue search [-n N] [-min-score F] [-in WHERE] [-kind K] [-since DAY] [-expired] [-all-words] [-json] [-cwd DIR] [-session ID] TEXT
   sessions  passages of earlier Claude Code sessions that hold the words, newest first, when search finds nothing: memcue sessions [-n N] [-before TIME] [-cwd DIR] [-session IDS] [-json] TEXT
   add       store a fact, indexed at once: memcue add [-cwd DIR] [-origin O] [-expires YYYY-MM-DD] [-source S] [-kind K] [-scope S | -shelf SLUG] -- TEXT
+  # add -batch FILE [-force] atomically adds a content-only JSON FactInput array
   correct   new version of a fact: memcue correct [-expires YYYY-MM-DD|-no-expires] ID [--] TEXT
   retire    take a fact out of recall: memcue retire ID
   reopen    bring a retired fact back as it was before the retire: memcue reopen ID
+  connect   explicit tailnet lifecycle: status | serve [-bootstrap] | login | off
+  history   immutable fact versions: memcue history [-json] ID
   facts     list the active facts
   reindex   rebuild the search index from the live facts: memcue reindex [-dry-run] [-json]
   dream     the work of a dream for the session's model, and its answer: memcue dream -prepare [-since DATE|-all] | -list | -apply FILE | -run [-all|-background] [-j N]
@@ -111,6 +116,8 @@ commands:
   version   print the version: memcue version [-json] [-minimum X.Y.Z]
 
 environment:
+  MEMCUE_POSTGRES_DSN  explicit PostgreSQL backend; empty keeps SQLite/text history offline
+  MEMCUE_TAILSCALE_MODE  off (default) or embedded; see docs/remote-backends.md
   MEMCUE_FACTS    fact base (default $CLAUDE_CONFIG_DIR/memory/facts.db or ~/.claude/memory/facts.db)
   MEMCUE_STATE_DIR  state directory; default $XDG_STATE_HOME/memcue, with a per-base subdirectory for a non-default base
   MEMCUE_MODEL    model of migrate and dream -run (default claude-opus-5-5)
@@ -127,24 +134,41 @@ environment:
   MEMCUE_MEMORY_DIR  directory of the built-in memory notes memcue notes reads by default
 `
 
-func main() {
+func main() { os.Exit(runMain()) }
+
+func runMain() (code int) {
+	// Return stdout write errors through the mutation outcome boundary.
+	signal.Ignore(syscall.SIGPIPE)
+	inv := newInvocation()
+	restoreStderr := inv.bindStderr()
+	defer restoreStderr()
+	var err error
+	rec := newOutcomeRecorder(inv)
+	out, diagnostics := io.Writer(rec.stdout), io.Writer(rec.stderr)
+	defer func() { rec.finish(err, code); inv.close() }()
+
 	if len(os.Args) < 2 {
-		fmt.Fprint(os.Stderr, usage)
-		os.Exit(2)
+		_, _ = fmt.Fprint(diagnostics, usage)
+		return 2
+	}
+	if err = remoteCommandAllowed(os.Args[1]); err != nil {
+		_, _ = fmt.Fprintln(diagnostics, "memcue:", err)
+		return 1
 	}
 	if m := os.Getenv("MEMCUE_MODEL"); m != "" {
 		extract.Model = m
 	}
 	extract.API.URL, extract.API.Key = os.Getenv("MEMCUE_API_URL"), os.Getenv("MEMCUE_API_KEY")
 	extract.ClaudeTokenFile = os.Getenv("MEMCUE_CLAUDE_TOKEN_FILE")
-	var err error
 	switch os.Args[1] {
+	case "connect":
+		err = runConnect(os.Args[2:], out)
 	case "session-start":
 		fs := flag.NewFlagSet("session-start", flag.ContinueOnError)
 		instructionsOnly := fs.Bool("instructions-only", false, "omit automatic pitfalls when separate whole-fact hooks deliver them")
 		part := fs.Int("part", 0, "the share of the text this hook carries, 1 to 3; 0 is the whole text in one block")
 		if err = fs.Parse(os.Args[2:]); err == nil {
-			err = runSessionStartWith(os.Stdin, os.Stdout, *part, !*instructionsOnly)
+			err = inv.runSessionStartWith(os.Stdin, out, *part, !*instructionsOnly)
 		}
 	case "session-card":
 		fs := flag.NewFlagSet("session-card", flag.ContinueOnError)
@@ -154,11 +178,11 @@ func main() {
 		dreamTools := fs.Bool("dream-tools", false, "also say when a dream is due, naming the memcue_dream_* tools")
 		if err = fs.Parse(os.Args[2:]); err == nil {
 			if *pitfallsJSON {
-				err = runSessionPitfallsJSON(os.Stdin, os.Stdout)
+				err = inv.runSessionPitfallsJSON(os.Stdin, out)
 			} else if *pitfallsOnly {
-				err = runSessionPitfalls(os.Stdin, os.Stdout)
+				err = inv.runSessionPitfalls(os.Stdin, out)
 			} else {
-				err = runSessionCardMode(os.Stdin, os.Stdout, *dreamTools, !*hintsOnly)
+				err = inv.runSessionCardMode(os.Stdin, out, *dreamTools, !*hintsOnly)
 			}
 		}
 	case "hook-extract", "extract-session", "extract-messages":
@@ -166,53 +190,57 @@ func main() {
 		// the end of a session: take its input and exit 0, so it logs no failure for every turn.
 		_, _ = io.Copy(io.Discard, os.Stdin)
 	case "pre-command":
-		err = runPreCommand(os.Args[2:], os.Stdout)
+		err = inv.runPreCommand(os.Args[2:], out)
 	case "observe-problem":
-		err = runObserveProblem(os.Args[2:], os.Stdout)
+		err = inv.runObserveProblem(os.Args[2:], out)
 	case "search":
-		err = runSearch(os.Args[2:], os.Stdout)
+		err = inv.runSearch(os.Args[2:], out)
 	case "sessions":
-		err = runSessions(os.Args[2:], os.Stdout)
+		err = runSessions(os.Args[2:], out)
 	case "add":
-		err = runAdd(os.Args[2:], os.Stdout)
+		err = inv.runAdd(os.Args[2:], out)
 	case "correct":
-		err = runCorrect(os.Args[2:], os.Stdout)
+		err = inv.runCorrect(os.Args[2:], out)
 	case "candidates", "approve":
 		err = errNoApproval(os.Args[1])
 	case "retire":
-		err = runRetire(os.Args[2:], os.Stdout)
+		err = inv.runRetire(os.Args[2:], out)
 	case "reopen":
-		err = runReopen(os.Args[2:], os.Stdout)
+		err = inv.runReopen(os.Args[2:], out)
+	case "history":
+		err = inv.runHistory(os.Args[2:], out)
 	case "facts":
-		err = runFacts(os.Stdout)
+		err = inv.runFacts(out)
 	case "reindex":
-		err = runReindex(os.Args[2:], os.Stdout)
+		err = inv.runReindex(os.Args[2:], out)
 	case "dream":
-		err = runDream(os.Args[2:], os.Stdout)
+		err = inv.runDream(os.Args[2:], out)
 	case "notes":
-		err = runNotes(os.Args[2:], os.Stdout)
+		err = inv.runNotes(os.Args[2:], out)
 	case "migrate":
-		err = runMigrate(os.Args[2:], os.Stdout)
+		err = inv.runMigrate(os.Args[2:], out)
 	case "import":
-		err = runImport(os.Args[2:], os.Stdout)
+		err = inv.runImport(os.Args[2:], out)
 	case "merge":
-		err = runMerge(os.Args[2:], os.Stderr)
+		err = runMerge(os.Args[2:], diagnostics)
 	case "dump":
-		err = runDump(os.Args[2:], os.Stdout)
+		err = runDump(os.Args[2:], out)
 	case "install":
-		err = runInstall(os.Args[2:], os.Stdout)
+		err = runInstall(os.Args[2:], out)
 	case "version":
-		err = runVersion(os.Args[2:], os.Stdout)
+		err = runVersion(os.Args[2:], out)
 	case "-h", "--help", "help":
-		fmt.Print(usage)
+		_, _ = fmt.Fprint(out, usage)
 	default:
-		fmt.Fprint(os.Stderr, usage)
-		os.Exit(2)
+		_, _ = fmt.Fprint(diagnostics, usage)
+		return 2
 	}
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "memcue:", err)
-		os.Exit(1)
+		_, _ = fmt.Fprintln(diagnostics, "memcue:", err)
+		return 1
 	}
+
+	return 0
 }
 
 func claudeDir() string {

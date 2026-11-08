@@ -45,7 +45,8 @@ const dreamAllStalls = 3
 // runs out of groups, so it does not keep the loop going. It runs on the endpoint when MEMCUE_API_URL is set and on
 // claude -p otherwise, and stops on the first failed pass, after dreamAllStalls passes that change nothing, or after
 // dreamAllPasses.
-func runDreamOnce(out io.Writer, all, background bool, packets int) error {
+func (inv *invocation) runDreamOnce(out io.Writer, all, background bool, packets int) error {
+	out = inv.writer(out)
 	if !all && !background && extract.API.URL == "" {
 		return fmt.Errorf("dream -run: %w", extract.ErrNoEndpoint)
 	}
@@ -54,7 +55,7 @@ func runDreamOnce(out io.Writer, all, background bool, packets int) error {
 		return err
 	}
 	if !all {
-		fresh, _, err := dreamDue(dir, dreamEveryFromEnv(dreamEvery))
+		fresh, _, err := inv.dreamDue(dir, dreamEveryFromEnv(dreamEvery))
 		if err != nil {
 			return err
 		}
@@ -72,7 +73,7 @@ func runDreamOnce(out io.Writer, all, background bool, packets int) error {
 	}
 	defer unlock()
 	if !all {
-		_, _, err := dreamPass(dir, packets, out)
+		_, _, err := inv.dreamPass(dir, packets, out)
 		return err
 	}
 	stalls := 0
@@ -80,7 +81,7 @@ func runDreamOnce(out io.Writer, all, background bool, packets int) error {
 		if _, err := fmt.Fprintf(out, "dream -all: pass %d\n", pass); err != nil {
 			return err
 		}
-		rec, work, err := dreamPass(dir, packets, out)
+		rec, work, err := inv.dreamPass(dir, packets, out)
 		if err != nil {
 			return fmt.Errorf("dream -all: pass %d: %w", pass, err)
 		}
@@ -115,7 +116,8 @@ func runDreamOnce(out io.Writer, all, background bool, packets int) error {
 // groups and each packet's global facts to check the scope of. Most of a call's time is the model
 // writing its answer, so three calls of a third of it each take about a third of the time. Their answers are joined
 // and applied as one.
-func dreamPass(dir string, packets int, out io.Writer) (dreamRecord, int, error) {
+func (inv *invocation) dreamPass(dir string, packets int, out io.Writer) (dreamRecord, int, error) {
+	out = inv.writer(out)
 	var from time.Time
 	var seen map[string]int
 	if last, ok := lastDream(dir); ok {
@@ -127,7 +129,7 @@ func dreamPass(dir string, packets int, out io.Writer) (dreamRecord, int, error)
 	}
 	var packet bytes.Buffer
 	start := time.Now()
-	rec, w, err := prepare(dir, from, seen, false, packets, &packet)
+	rec, w, err := inv.prepare(dir, from, seen, false, packets, &packet)
 	timing := dreamTiming{Prepare: ms(time.Since(start))}
 	if err != nil || rec.Packet == "" {
 		rec.Timing = &timing
@@ -165,7 +167,7 @@ func dreamPass(dir string, packets int, out io.Writer) (dreamRecord, int, error)
 		return rec, work, err
 	}
 	start = time.Now()
-	rec, err = applyAnswer(dir, path, out)
+	rec, err = inv.applyAnswer(dir, path, out)
 	timing.Apply = ms(time.Since(start))
 	rec.Tokens, rec.CostUSD, rec.Timing, rec.Calls = &r.Tokens, r.CostUSD, &timing, byCall
 	if err != nil {

@@ -1140,8 +1140,12 @@ class ProviderTest(unittest.TestCase):
             with self.subTest(cwd=cwd, terminal=terminal):
                 calls = Path(self.home) / f"args-{abs(hash((cwd, terminal)))}"
                 script = Path(self.home) / f"bin-{abs(hash((cwd, terminal)))}"
-                script.write_text(f"#!/bin/sh\nprintf '%s\\n' \"$@\" >> {shlex.quote(str(calls))}\n"
-                                  "cat >/dev/null\nexit 0\n", encoding="utf-8")
+                script.write_text("#!"+sys.executable+"\nimport sys,os,json,hashlib\n"
+                                  +"with open("+repr(str(calls))+",'a') as f:f.write('\\n'.join(sys.argv[1:])+'\\n')\n"
+                                  +"sys.stdin.buffer.read()\nout=b'01J00000000000000000000000\\n';sys.stdout.buffer.write(out)\n"
+                                  +"if os.environ.get('MEMCUE_OUTCOME_NONCE'):\n"
+                                  +" sys.stderr.write('\\nMEMCUE_OUTCOME_V1 '+json.dumps({'version':1,'nonce':os.environ['MEMCUE_OUTCOME_NONCE'],'status':'success','bytes':len(out),'sha256':hashlib.sha256(out).hexdigest(),'error_bytes':0,'error_sha256':hashlib.sha256(b'').hexdigest()})+'\\n')\n",
+                                  encoding="utf-8")
                 script.chmod(0o755)
                 p = memcue_provider.MemcueMemoryProvider({"binary": str(script)})
                 kwargs = {"hermes_home": self.home, "agent_workspace": "hermes", "agent_context": "primary"}

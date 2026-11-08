@@ -29,6 +29,15 @@ jobs:
       - name: install model-free native Claude test client
         run: npm install --prefix "$RUNNER_TEMP/claude-client" --no-audit --no-fund --maxsockets=2 @anthropic-ai/claude-code@2.1.301
 
+      # make test discovers native provider/lifecycle tests as well as the optional
+      # provider-only stubs. Supply the real package in this job too.
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.13"
+
+      - name: install pinned Hermes for native tests
+        run: python3 -m pip install --disable-pip-version-check 'hermes-agent==0.17.0'
+
       # Builds bin/memcue, runs the Go tests with -race and the Hermes plugin tests against that binary.
       - name: test
         run: make test CLAUDE_BIN="$RUNNER_TEMP/claude-client/node_modules/.bin/claude"
@@ -64,7 +73,7 @@ jobs:
         run: go build -p 2 -o bin/memcue ./cmd/memcue
 
       - name: test plugins
-        run: MEMCUE_BIN="$PWD/bin/memcue" node --test --test-concurrency=2 plugins/deepseek-harness/test/*.test.mjs plugins/claude-code/test/*.test.mjs
+        run: MEMCUE_BIN="$PWD/bin/memcue" node --experimental-test-module-mocks --test --test-concurrency=2 plugins/deepseek-harness/test/*.test.mjs plugins/claude-code/test/*.test.mjs
 
   card-research:
     name: card research contracts
@@ -111,6 +120,9 @@ jobs:
         run: |
           MEMCUE_REQUIRE_HERMES=1 MEMCUE_BIN="$PWD/bin/memcue" \
             /tmp/hermes-venv/bin/python plugins/hermes/memcue/tests/test_provider.py
+
+      - name: test native local outcome and lifecycle contracts
+        run: MEMCUE_BIN="$PWD/bin/memcue" /tmp/hermes-venv/bin/python -I -m unittest discover -s plugins/hermes -p 'test_*.py' -v
 
       - name: test released normal-plugin request bridge
         run: |

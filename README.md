@@ -1379,3 +1379,7 @@ the built-in memory tool mirrored into the base, the tools the model writes and 
 ## License
 
 MIT
+
+Optional remote storage and explicit embedded tailnet login are described in
+[remote backends](docs/remote-backends.md), including checkpoint limits and the
+`connect serve/login/status/off` procedure.

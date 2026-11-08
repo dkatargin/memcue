@@ -42,9 +42,10 @@ import json
 import logging
 import os
 import re
+import secrets
 import shutil
 import platform
-import subprocess
+import subprocess as _subprocess
 import tarfile
 import tempfile
 import threading
@@ -55,6 +56,98 @@ from typing import Any, Optional
 
 from agent.memory_provider import MemoryProvider
 from tools.registry import tool_error
+
+
+class _ResponseTransportError(OSError):
+    attempted = True
+
+
+class _OwnedSubprocess:
+    """One POSIX session per invocation; keep its leader unreaped until cleanup.
+
+    Descendants that deliberately create another session (including the persistent
+    tsnet helper) are outside this invocation's group. No global reaper is used.
+    """
+    def __getattr__(self, name):
+        return getattr(_subprocess, name)
+
+    def run(self, args, *, input=None, capture_output=False, text=False,
+            encoding=None, errors=None, timeout=None, check=False, **kwargs):
+        if os.name != 'posix' or not hasattr(os, 'WNOWAIT'):
+            return _subprocess.run(args, input=input, capture_output=capture_output,
+                                   text=text, encoding=encoding, errors=errors,
+                                   timeout=timeout, check=check, **kwargs)
+        import signal
+        import time
+        from contextlib import ExitStack
+        attempted = False
+        try:
+            start = time.monotonic()
+            deadline = None if timeout is None else start + timeout
+            with ExitStack() as stack:
+                source = stack.enter_context(tempfile.TemporaryFile())
+                if input is not None:
+                    source.write(input.encode(encoding or 'utf-8', errors or 'strict') if isinstance(input, str) else input)
+                source.seek(0)
+                outputs = []
+                if capture_output:
+                    for key in ('stdout', 'stderr'):
+                        f = stack.enter_context(tempfile.TemporaryFile())
+                        kwargs[key] = f
+                        outputs.append(f)
+                if deadline is not None and time.monotonic() >= deadline:
+                    raise TimeoutError('memcue budget expired before executable start')
+                proc = _subprocess.Popen(args, stdin=source, start_new_session=True, **kwargs)
+                attempted = True
+                timed_out = False
+                try:
+                    while True:
+                        # WNOWAIT leaves the leader's PID reserved, even when it is
+                        # a zombie. Never signal a group after reaping its anchor.
+                        status = os.waitid(os.P_PID, proc.pid, os.WEXITED | os.WNOHANG | os.WNOWAIT)
+                        if status is not None:
+                            break
+                        if deadline is not None and time.monotonic() >= deadline - min(.02, timeout / 10):
+                            timed_out = True
+                            break
+                        time.sleep(.002)
+                finally:
+                    # Confirm that our child is still waitable before signalling.
+                    # If another component reaped it, do not signal a recycled PID.
+                    os.waitid(os.P_PID, proc.pid, os.WEXITED | os.WNOHANG | os.WNOWAIT)
+                    try:
+                        os.killpg(proc.pid, signal.SIGKILL)
+                    except ProcessLookupError:
+                        pass
+                    proc.wait(timeout=None if deadline is None else max(.001, deadline - time.monotonic()))
+                if timed_out:
+                    raise _subprocess.TimeoutExpired(args, timeout)
+                values = []
+                for f in outputs:
+                    f.seek(0)
+                    chunks = []
+                    while True:
+                        if deadline is not None and time.monotonic() >= deadline:
+                            raise _subprocess.TimeoutExpired(args, timeout)
+                        chunk = f.read(65536)
+                        if not chunk:
+                            break
+                        chunks.append(chunk)
+                    b = b''.join(chunks)
+                    values.append(b.decode(encoding or 'utf-8', errors or 'strict') if text or encoding else b)
+                    if deadline is not None and time.monotonic() >= deadline:
+                        raise _subprocess.TimeoutExpired(args, timeout)
+                result = _subprocess.CompletedProcess(args, proc.returncode, *(values or [None, None]))
+                if check:
+                    result.check_returncode()
+                return result
+        except OSError as exc:
+            if attempted:
+                raise _ResponseTransportError('memcue response transport unavailable') from exc
+            raise
+
+subprocess = _OwnedSubprocess()
+
 
 logger = logging.getLogger(__name__)
 
@@ -398,6 +491,9 @@ CORRECT_SCHEMA = _schema(
 RETIRE_SCHEMA = _schema(
     "memcue_retire", "Stop recalling a stored fact that no longer holds (the history keeps it).",
     {"id": "Fact ID from memcue_search."}, ["id"])
+for _mutation_schema in (CORRECT_SCHEMA, RETIRE_SCHEMA):
+    _mutation_schema["parameters"]["properties"]["expected_version"] = {"type": "integer", "minimum": 1, "description": "Version returned by the caller's earlier search; conflicts require a fresh read and decision, never automatic replay."}
+    _mutation_schema["parameters"]["required"].append("expected_version")
 DREAM_PREPARE_SCHEMA = _schema(
     "memcue_dream_prepare", "Start tidying long-term memory (the memcue dream): returns the instructions and the facts "
     "to split, to review in groups and global facts to check the scope of. "
@@ -411,6 +507,57 @@ DREAM_APPLY_SCHEMA = _schema(
 
 
 _REQUEST_OWNERS = weakref.WeakValueDictionary()
+
+
+def _unknown_mutation(args: list[str]) -> str:
+    dream = bool(args and args[0] == 'dream' and not any(v.lstrip('-').split('=', 1)[0] == 'list' for v in args[1:]))
+    if not args or args[0] not in ('add', 'correct', 'retire', 'reopen', 'observe-problem') and not dream:
+        return ''
+    batch = args[0] == 'add' and any(v.lstrip('-').split('=', 1)[0] == 'batch' for v in args[1:])
+    if batch:
+        return ('UNKNOWN OUTCOME for the entire batch; response incomplete. Inspect durable facts and history '
+                'for every batch row before deciding whether to retry; do not automatically replay the batch.')
+    if dream:
+        return ('UNKNOWN OUTCOME for the local plan; it may be partially applied. Inspect durable history '
+                'for every affected fact ID before deciding whether to retry; do not automatically replay the plan.')
+    fact_id = ""
+    if args[0] in ("correct", "retire", "reopen") and "--" in args:
+        rest = args[args.index("--") + 1:]
+        if rest and re.fullmatch(r"[0-9A-HJKMNP-TV-Z]{26}", rest[0]):
+            fact_id = " for fact " + rest[0]
+    return ("UNKNOWN OUTCOME" + fact_id + "; mutation response unavailable. Inspect durable ID/history "
+            "with memcue history before deciding whether to retry; do not automatically replay.")
+
+
+def classify_outcome(output, diagnostic, code, nonce):
+    marker = '\nMEMCUE_OUTCOME_V1 '
+    at = diagnostic.rfind(marker)
+    if at < 0 or not diagnostic.endswith('\n'):
+        return 'unknown', ''
+    try:
+        receipt = json.loads(diagnostic[at + len(marker):-1])
+    except (ValueError, TypeError):
+        return 'unknown', ''
+    if not isinstance(receipt, dict):
+        return 'unknown', ''
+    if (receipt.get('version') != 1 or receipt.get('nonce') != nonce or
+            receipt.get('bytes') != len(output.encode('utf-8')) or
+            receipt.get('sha256') != hashlib.sha256(output.encode('utf-8')).hexdigest()):
+        return 'unknown', ''
+    status = receipt.get('status')
+    if status == 'success' and code == 0:
+        return 'success', ''
+    if status == 'refused' and code > 0:
+        prelude = diagnostic[:at]
+        if (receipt.get('error_bytes') == len(prelude.encode('utf-8')) and
+                receipt.get('error_sha256') == hashlib.sha256(prelude.encode('utf-8')).hexdigest()):
+            return 'refused', prelude.strip()
+        return 'refused', 'memcue refused the operation before any fact change; check input, authentication and observed version'
+    return 'unknown', ''
+
+
+
+
 
 
 class MemcueMemoryProvider(MemoryProvider):
@@ -713,13 +860,25 @@ class MemcueMemoryProvider(MemoryProvider):
             env["MEMCUE_API_KEY"] = os.environ.get(self._api_key_env, "")
         if not self._dream:
             env["MEMCUE_DREAM_BACKGROUND"] = "0"
+        nonce = secrets.token_hex(16) if _unknown_mutation(args) and args[0] != "observe-problem" else ""
+        if nonce:
+            env["MEMCUE_OUTCOME_NONCE"] = nonce
         try:
             r = subprocess.run([binary] + args, input=stdin, capture_output=True, text=True, encoding="utf-8",
                                errors="replace", timeout=timeout, env=env, check=False)
         except subprocess.TimeoutExpired:
-            return False, f"memcue timed out after {timeout}s"
+            return False, _unknown_mutation(args) or f"memcue timed out after {timeout}s"
         except OSError as e:
+            if getattr(e, 'attempted', False):
+                return False, _unknown_mutation(args) or 'memcue response transport unavailable'
             return False, str(e)
+        if nonce:
+            status, refusal = classify_outcome(r.stdout, r.stderr, r.returncode, nonce)
+            if status == 'success':
+                return True, r.stdout.strip()
+            if status == 'refused':
+                return False, refusal
+            return False, _unknown_mutation(args)
         if r.returncode != 0:
             return False, (r.stderr or r.stdout).strip() or f"memcue exited {r.returncode}"
         return True, r.stdout.strip()
@@ -911,13 +1070,13 @@ class MemcueMemoryProvider(MemoryProvider):
     def _written_path(self) -> Path:
         return Path(self._state) / "written.json"
 
-    def _written(self) -> dict[str, str]:
+    def _written(self) -> dict[str, Any]:
         try:
             return json.loads(self._written_path().read_text(encoding="utf-8"))
         except (OSError, ValueError):
             return {}
 
-    def _save_written(self, written: dict[str, str]) -> None:
+    def _save_written(self, written: dict[str, Any]) -> None:
         tmp = self._written_path().with_suffix(".tmp")
         tmp.write_text(json.dumps(written, ensure_ascii=False, indent=1), encoding="utf-8")
         tmp.replace(self._written_path())
@@ -963,30 +1122,39 @@ class MemcueMemoryProvider(MemoryProvider):
             written = self._written()
             before = dict(written)
             previous_key = self._key(target, previous) if previous else ""
-            fact_id = written.get(previous_key) if previous_key else None
+            entry = written.get(previous_key) if previous_key else None
+            fact_id = entry.get("id") if isinstance(entry, dict) else entry
+            version = entry.get("version") if isinstance(entry, dict) else None
+            version_args = (["-expected-version", str(version)]
+                            if type(version) is int and version > 0 else [])
+            remote = bool(os.environ.get("MEMCUE_POSTGRES_DSN"))
+            def remembered(fact_id: str, version: int) -> Any:
+                # These are versions acknowledged by our own earlier writes,
+                # never a latest-version read just before changing a note.
+                return {"id": fact_id, "version": version} if remote else fact_id
             if action == "add" and content.strip():
                 ok, out = self._add_mirror(target, content)
                 if ok:
-                    written[self._key(target, content)] = out.split()[0]
+                    written[self._key(target, content)] = remembered(out.split()[0], 1)
             elif action == "replace" and content.strip():
                 if fact_id:
-                    ok, out = self._run(["correct", "--", fact_id, content.strip()])
+                    ok, out = self._run(["correct"] + version_args + ["--", fact_id, content.strip()])
                     if ok:  # a failed correct keeps the old entry: its fact id is the only link to the fact
                         written.pop(previous_key, None)
-                        written[self._key(target, content)] = fact_id
-                    elif "is retired" in out:
+                        written[self._key(target, content)] = remembered(fact_id, version + 1 if version else 1)
+                    elif not remote and "is retired" in out:
                         # A retired fact is final: the edited note becomes a new fact, and the entry is linked
                         # to it, so a later edit or remove reaches the live fact instead of the history.
                         ok, out = self._add_mirror(target, content)
                         if ok:
                             written.pop(previous_key, None)
-                            written[self._key(target, content)] = out.split()[0]
+                            written[self._key(target, content)] = remembered(out.split()[0], 1)
                 else:
                     ok, out = self._add_mirror(target, content)
                     if ok:
-                        written[self._key(target, content)] = out.split()[0]
+                        written[self._key(target, content)] = remembered(out.split()[0], 1)
             elif action == "remove" and fact_id:
-                ok, out = self._run(["retire", "--", fact_id])
+                ok, out = self._run(["retire"] + version_args + ["--", fact_id])
                 if ok:  # a failed retire keeps the mapping, so the next remove can try again
                     written.pop(previous_key, None)
             else:
@@ -1138,14 +1306,24 @@ class MemcueMemoryProvider(MemoryProvider):
         elif tool_name == "memcue_correct":
             if not arg("id") or not arg("content"):
                 return tool_error("id and content are required")
-            cmd = ["correct"]
+            version = args.get("expected_version")
+            if version is not None and (isinstance(version, bool) or not isinstance(version, int) or version < 1):
+                return tool_error("expected_version must be a positive integer from search")
+            if version is None and os.environ.get("MEMCUE_POSTGRES_DSN"):
+                return tool_error("expected_version is required; search/read before deciding")
+            cmd = ["correct"] + (["-expected-version", str(version)] if version is not None else [])
             if arg("expires"):
                 cmd += ["-expires", arg("expires")]
             ok, out = self._run(cmd + ["--", arg("id"), arg("content")])
         else:
             if not arg("id"):
                 return tool_error("id is required")
-            ok, out = self._run(["retire", "--", arg("id")])
+            version = args.get("expected_version")
+            if version is not None and (isinstance(version, bool) or not isinstance(version, int) or version < 1):
+                return tool_error("expected_version must be a positive integer from search")
+            if version is None and os.environ.get("MEMCUE_POSTGRES_DSN"):
+                return tool_error("expected_version is required; search/read before deciding")
+            ok, out = self._run(["retire"] + (["-expected-version", str(version)] if version is not None else []) + ["--", arg("id")])
         return json.dumps({"result": out}) if ok else tool_error(out)
 
     @classmethod

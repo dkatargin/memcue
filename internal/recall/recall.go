@@ -7,10 +7,8 @@
 package recall
 
 import (
-	"cmp"
 	"math"
 	"slices"
-	"sort"
 	"strings"
 
 	"github.com/juev/memcue/internal/store"
@@ -53,18 +51,20 @@ func Recall(s *store.Store, text string, p Params) ([]Hit, error) {
 	// prompts with more noise: on 409 blind-labelled Claude Code prompts where the two orders differ, 180 against 205
 	// with 41% noise against 30% (docs/research/search-chain-2026-10.md). Ties of equal BM25, such as the same text
 	// stored twice: a global one first, then the newer fact.
-	sort.SliceStable(hits, func(i, j int) bool {
+	if err := sortStableContext(s.RequestContext(), hits, func(i, j int) bool {
 		if hits[i].Provisional != hits[j].Provisional {
 			return !hits[i].Provisional
 		}
 		if hits[i].bm25 != hits[j].bm25 {
 			return hits[i].bm25 < hits[j].bm25
 		}
-		if pi, pj := place(hits[i].Fact, nil, ""), place(hits[j].Fact, nil, ""); pi != pj {
+		if pi, pj := mustPlace(s.RequestContext(), hits[i].Fact, nil, ""), mustPlace(s.RequestContext(), hits[j].Fact, nil, ""); pi != pj {
 			return pi < pj
 		}
-		return newer(hits[i].Fact, hits[j].Fact)
-	})
+		return newerContext(s.RequestContext(), hits[i].Fact, hits[j].Fact)
+	}); err != nil {
+		return nil, err
+	}
 	if maxFacts := capFacts(p.MaxFacts, len(hits)); len(hits) > maxFacts {
 		hits = hits[:maxFacts]
 	}
@@ -109,13 +109,27 @@ func capFacts(maxFacts, available int) int {
 // MaxFacts cap. Recall adds the tie order and the cap.
 func recallCandidates(s *store.Store, prompt string, p Params) (hits []Hit, err error) {
 	var short []Hit // below MinCoverage, for the containment check
-	terms := text.Terms(prompt)
+	terms, err := text.TermsContext(s.RequestContext(), prompt)
+	if err != nil {
+		return nil, err
+	}
 	var tickets, numbers []string
 	for _, t := range terms {
+		if e := s.RequestContext().Err(); e != nil {
+			return nil, e
+		}
+		ticket, e := text.IsTicketContext(s.RequestContext(), t)
+		if e != nil {
+			return nil, e
+		}
+		number, e := text.IsNumberTermContext(s.RequestContext(), t)
+		if e != nil {
+			return nil, e
+		}
 		switch {
-		case text.IsTicket(t):
+		case ticket:
 			tickets = append(tickets, t)
-		case text.IsNumberTerm(t):
+		case number:
 			numbers = append(numbers, t)
 		}
 	}
@@ -136,6 +150,9 @@ func recallCandidates(s *store.Store, prompt string, p Params) (hits []Hit, err 
 	weight := map[string]float64{}
 	var known []string
 	for _, t := range terms {
+		if e := s.RequestContext().Err(); e != nil {
+			return nil, e
+		}
 		if df[t] > 0 { // a word no fact holds says nothing about which fact matters
 			weight[t] = math.Log(1 + float64(total)/float64(df[t]))
 			known = append(known, t)
@@ -145,11 +162,16 @@ func recallCandidates(s *store.Store, prompt string, p Params) (hits []Hit, err 
 		return nil, nil
 	}
 	if p.MaxPromptTerms > 0 && len(known) > p.MaxPromptTerms {
-		sort.SliceStable(known, func(i, j int) bool { return weight[known[i]] > weight[known[j]] })
+		if e := sortStableContext(s.RequestContext(), known, func(i, j int) bool { return weight[known[i]] > weight[known[j]] }); e != nil {
+			return nil, e
+		}
 		known = known[:p.MaxPromptTerms]
 	}
 	var sum float64
 	for _, t := range known {
+		if e := s.RequestContext().Err(); e != nil {
+			return nil, e
+		}
 		sum += weight[t]
 	}
 	found, err := s.Search(known, p.Candidates)
@@ -176,18 +198,41 @@ func recallCandidates(s *store.Store, prompt string, p Params) (hits []Hit, err 
 		today = store.Today()
 	}
 	for _, f := range found {
+		if e := s.RequestContext().Err(); e != nil {
+			return nil, e
+		}
 		if p.Seen[f.ID] || store.Expired(f.Expires, today) {
 			continue
 		}
 		// A prompt that names a ticket must not recall another ticket through a shared project word: PROJ-1235
 		// and PROJ-1234 can share "proj" in a keyword, but only the exact key is the subject of the prompt.
-		if len(tickets) > 0 && !slices.ContainsFunc(f.Stems, func(st string) bool { return slices.Contains(tickets, st) }) {
-			continue
+		if len(tickets) > 0 {
+			hasTicket := false
+			for _, st := range f.Stems {
+				ok, e := containsContext(s.RequestContext(), tickets, st)
+				if e != nil {
+					return nil, e
+				}
+				if ok {
+					hasTicket = true
+					break
+				}
+			}
+			if !hasTicket {
+				continue
+			}
 		}
 		var got float64
 		matched := 0
 		for _, t := range known {
-			if slices.ContainsFunc(f.Stems, func(st string) bool { return text.Covers(t, st) }) {
+			if e := s.RequestContext().Err(); e != nil {
+				return nil, e
+			}
+			held, e := holdsContext(s.RequestContext(), []string{t}, f.Stems)
+			if e != nil {
+				return nil, e
+			}
+			if held > 0 {
 				got += weight[t]
 				matched++
 			}
@@ -214,22 +259,38 @@ func recallCandidates(s *store.Store, prompt string, p Params) (hits []Hit, err 
 		return nil, err
 	}
 	// Search order is BM25 order, and the facts kept by containment take their place in it.
-	return slices.SortedStableFunc(slices.Values(append(hits, contained...)), func(a, b Hit) int {
-		return cmp.Compare(a.bm25, b.bm25)
-	}), nil
+	hits = append(hits, contained...)
+	if e := sortStableContext(s.RequestContext(), hits, func(i, j int) bool { return hits[i].bm25 < hits[j].bm25 }); e != nil {
+		return nil, e
+	}
+	return hits, nil
 }
 
 // containedIn keeps the candidates whose own terms, those of their text and keywords, the prompt covers for at least
 // minShare of their IDF weight. weight holds the IDF of the prompt's terms and grows by the candidates' others.
 func containedIn(s *store.Store, prompt string, candidates []Hit, weight map[string]float64, total int,
 	minShare float64) ([]Hit, error) {
-	stems := text.Stems(prompt)
+	stems, err := text.StemsContext(s.RequestContext(), prompt)
+	if err != nil {
+		return nil, err
+	}
 	own := make([][]string, len(candidates))
 	var unknown []string
+	unknownSeen := map[string]bool{}
 	for i, h := range candidates {
-		own[i] = text.Terms(h.Content)
+		if e := s.RequestContext().Err(); e != nil {
+			return nil, e
+		}
+		own[i], err = text.TermsContext(s.RequestContext(), h.Content)
+		if err != nil {
+			return nil, err
+		}
 		for _, t := range own[i] {
-			if _, ok := weight[t]; !ok && !slices.Contains(unknown, t) {
+			if e := s.RequestContext().Err(); e != nil {
+				return nil, e
+			}
+			if _, ok := weight[t]; !ok && !unknownSeen[t] {
+				unknownSeen[t] = true
 				unknown = append(unknown, t)
 			}
 		}
@@ -240,6 +301,9 @@ func containedIn(s *store.Store, prompt string, candidates []Hit, weight map[str
 			return nil, err
 		}
 		for _, t := range unknown {
+			if e := s.RequestContext().Err(); e != nil {
+				return nil, e
+			}
 			if df[t] > 0 {
 				weight[t] = math.Log(1 + float64(total)/float64(df[t]))
 			}
@@ -247,10 +311,20 @@ func containedIn(s *store.Store, prompt string, candidates []Hit, weight map[str
 	}
 	var out []Hit
 	for i, h := range candidates {
+		if e := s.RequestContext().Err(); e != nil {
+			return nil, e
+		}
 		var got, sum float64
 		for _, t := range own[i] {
+			if e := s.RequestContext().Err(); e != nil {
+				return nil, e
+			}
 			sum += weight[t]
-			if slices.ContainsFunc(stems, func(st string) bool { return text.Covers(t, st) }) {
+			held, e := holdsContext(s.RequestContext(), []string{t}, stems)
+			if e != nil {
+				return nil, e
+			}
+			if held > 0 {
 				got += weight[t]
 			}
 		}

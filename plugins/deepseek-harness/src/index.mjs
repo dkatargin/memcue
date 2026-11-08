@@ -20,9 +20,10 @@
  * @module memcue-dsh
  */
 import { spawn } from 'node:child_process'
-import { createHash } from 'node:crypto'
+import { createHash, randomBytes } from 'node:crypto'
 import { homedir } from 'node:os'
 import { isAbsolute, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
 import { defineTool } from '@deepseek-ai/dsh-tools'
 import { install, pluginVersion } from './install.mjs'
@@ -159,38 +160,74 @@ function childEnv(settings) {
  * @param options - stdin text, extra environment, and a kill deadline.
  * @returns exit code and both streams; a spawn failure reports code -1.
  */
+function unknownMutation(args) {
+ if (!['add','correct','retire','reopen'].includes(args[0])) return ''
+ const separator=args.indexOf('--')
+ const target=separator>=0?args[separator+1]:''
+ const id=args[0]!=='add' && /^[0-9A-HJKMNP-TV-Z]{26}$/.test(target??'')?target:''
+ return `UNKNOWN OUTCOME${id ? ' for fact ' + id : ''}; mutation response unavailable. Inspect durable ID/history with memcue history before deciding whether to retry; do not automatically replay.`
+}
+
+function classifyOutcome(out, err, code, nonce) {
+ const marker='\nMEMCUE_OUTCOME_V1 '
+ const at=err.lastIndexOf(marker)
+ if(at<0 || !err.endsWith('\n')) return {status:'unknown'}
+ let r
+ try {r=JSON.parse(err.slice(at+marker.length,-1))} catch {return {status:'unknown'}}
+ const hash=s=>createHash('sha256').update(s).digest('hex')
+ if(!r || typeof r!=='object' || Array.isArray(r)) return {status:'unknown'}
+ if(r.version!==1 || r.nonce!==nonce || r.bytes!==Buffer.byteLength(out) || r.sha256!==hash(out)) return {status:'unknown'}
+ if(r.status==='success' && code===0) return {status:'success'}
+ if(r.status==='refused' && code>0){
+  const before=err.slice(0,at)
+  return {status:'refused',diagnostic:r.error_bytes===Buffer.byteLength(before)&&r.error_sha256===hash(before)?before.trim():'memcue refused the operation before any fact change; check input, authentication and observed version'}
+ }
+ return {status:'unknown'}
+}
+
 function runMemcue(settings, args, options = {}) {
-	const timeoutMs = options.timeoutMs ?? HOOK_TIMEOUT_MS
-	return new Promise((resolve) => {
-		let child
-		try {
-			child = spawn(settings.binary, args, { env: { ...childEnv(settings), ...options.env } })
-		} catch (error) {
-			resolve({ code: -1, out: '', err: String(error) })
-			return
-		}
-		let out = ''
-		let err = ''
-		let settled = false
-		const finish = (result) => {
-			if (settled) return
-			settled = true
-			clearTimeout(timer)
-			resolve(result)
-		}
-		const timer = setTimeout(() => {
-			child.kill('SIGKILL')
-			finish({ code: -1, out, err: `${err}\nmemcue: timed out after ${timeoutMs} ms` })
-		}, timeoutMs)
-		child.stdout?.setEncoding('utf8')
-		child.stdout?.on('data', (chunk) => { out += chunk })
-		child.stderr?.setEncoding('utf8')
-		child.stderr?.on('data', (chunk) => { err += chunk })
-		child.on('error', (error) => finish({ code: -1, out, err: `${err}\n${String(error)}` }))
-		child.on('close', (code) => finish({ code: code ?? -1, out, err }))
-		child.stdin?.on('error', () => {})
-		child.stdin?.end(options.input ?? '')
-	})
+ const timeoutMs=options.timeoutMs??HOOK_TIMEOUT_MS
+ const nonce=unknownMutation(args)?randomBytes(16).toString('hex'):''
+ return new Promise(resolve=>{
+  let child, out='',err='', settled=false, actualCode=null, spawnError=false, timedOut=false, attempted=false
+  const finish=result=>{
+   if(settled)return
+   settled=true;clearTimeout(timer);clearTimeout(limit)
+   for(const stream of [child?.stdin,child?.stdout,child?.stderr]){stream?.removeAllListeners();stream?.on('error',()=>{});stream?.destroy()}
+   child?.removeAllListeners('message')
+   resolve(result)
+  }
+  const uncertain=()=>({code:-1,out:'',err:unknownMutation(args)||'memcue: command transport unavailable',outcome:nonce?'unknown':undefined})
+  const stop=()=>{if(child?.connected)child.send({stop:true},()=>{})}
+  const timer=setTimeout(()=>{timedOut=true;stop()},Math.max(1,timeoutMs-40))
+  const limit=setTimeout(()=>finish(uncertain()),timeoutMs)
+  try{
+   child=spawn(process.execPath,[fileURLToPath(new URL('./process.mjs',import.meta.url))],{
+    detached:true,stdio:['pipe','pipe','pipe','ipc'],
+    env:{...childEnv(settings),...options.env,...(nonce?{MEMCUE_OUTCOME_NONCE:nonce}:{})}
+   })
+  }catch(error){finish({code:-1,out:'',err:String(error)});return}
+  child.stdout.setEncoding('utf8');child.stderr.setEncoding('utf8')
+  child.stdout.on('data',chunk=>{out+=chunk});child.stderr.on('data',chunk=>{err+=chunk})
+  child.stdin.on('error',()=>{})
+  child.on('message',message=>{
+   if(message.ready){attempted=true;child.send({binary:settings.binary,args},()=>{});child.stdin.end(options.input??'')}
+   if(message.spawnError){spawnError=true;stop()}
+   if(message.result){actualCode=message.code;stop()}
+  })
+  child.on('error',()=>finish(attempted?uncertain():{code:-1,out:'',err:'memcue: executable supervisor could not start'}))
+  child.on('close',()=>{
+   if(spawnError)return finish({code:-1,out:'',err:'memcue: configured executable could not start'})
+   if(timedOut || actualCode===null)return finish(uncertain())
+   if(nonce){
+    const outcome=classifyOutcome(out,err,actualCode,nonce)
+    if(outcome.status==='unknown')return finish(uncertain())
+    if(outcome.status==='refused')return finish({code:actualCode,out,err:outcome.diagnostic})
+    return finish({code:0,out,err:''})
+   }
+   finish({code:actualCode,out,err})
+  })
+ })
 }
 
 /**
@@ -273,6 +310,7 @@ function searchAnswerOf(stdout) {
 			.map((fact) => ({
 				id: fact.id,
 				content: fact.content,
+ ...(Number.isInteger(fact.version) && fact.version>0 ? {version:fact.version} : {}),
 				origin: typeof fact.origin === 'string' ? fact.origin : '',
 			}))
 		return { facts, hints }
@@ -470,6 +508,7 @@ export function apply(ctx, config) {
 							additionalProperties: false,
 							properties: {
 								id: { type: 'string', required: true, description: 'Fact id for memcue_correct or memcue_retire.' },
+ version: {type:'number', description:'Observed immutable version; pass as expected_version when mutating.'},
 								content: { type: 'string', required: true, description: 'The fact itself.' },
 								origin: { type: 'string', description: 'Where and when it was learnt.' },
 							},
@@ -518,7 +557,8 @@ export function apply(ctx, config) {
 			type: 'object',
 			additionalProperties: false,
 			properties: {
-				stored: { type: 'boolean', required: true, description: 'Whether the change was written.' },
+				stored: { oneOf: [{type:'boolean'},{type:'null'}], required: true, description: 'Whether the change was written; null when the durable outcome is unknown.' },
+                outcome: {type:'string',description:'unknown when receipt delivery cannot establish the durable outcome.'},
 				message: { type: 'string', required: true, description: 'What happened, in one line.' },
 			},
 		},
@@ -555,8 +595,11 @@ export function apply(ctx, config) {
 			if (args.scope) flags.push('-scope', String(args.scope))
 			if (args.shelf) flags.push('-shelf', String(args.shelf))
 			flags.push('--', text)
-			const { code, out, err } = await runMemcue(settings, flags, { timeoutMs: 15_000 })
-			if (code !== 0) return { stored: false, message: `memcue add exited ${code}: ${(err || out).trim().slice(0, 500)}` }
+			const { code, out, err, outcome } = await runMemcue(settings, flags, { timeoutMs: 15_000 })
+			if (code !== 0) {
+                if (outcome === 'unknown') return {stored:null,outcome:'unknown',message:err.trim().slice(0,500)}
+                return { stored: false, message: `memcue add exited ${code}: ${(err || out).trim().slice(0, 500)}` }
+            }
 			const id = out.trim().split(/\s+/)[0]
 			return { stored: true, message: id ? `memcue: stored the fact ${id}.` : 'memcue: stored the fact.' }
 		},
@@ -566,6 +609,7 @@ export function apply(ctx, config) {
 		name: 'memcue_correct',
 		description: 'Replace a stored fact with a corrected version (the history keeps the old one). Find the id with memcue_search first.',
 		parameters: {
+ expected_version: {type:'number',required:true,description:'Positive version observed in search; on conflict read and decide again, never auto-replay.'},
 			id: { type: 'string', required: true, description: 'Fact id from memcue_search.' },
 			text: { type: 'string', required: true, description: 'Write new and corrected facts in English regardless of the chat language. Preserve identifiers, commands, paths, versions, exact values and verbatim quotes. Keep the user\'s reply language unchanged.' },
 			expires: { type: 'string', description: 'Optional new last day the fact is worth recalling, YYYY-MM-DD.' },
@@ -576,14 +620,21 @@ export function apply(ctx, config) {
                 return { stored: false, message: 'memcue: auxiliary fields are no longer supported; store content only' }
             }
 
+            const version=args.expected_version
+            if (version !== undefined && (!Number.isInteger(version)||version<1)) return {stored:false,message:'expected_version must be a positive integer from search'}
+            if (version === undefined && process.env.MEMCUE_POSTGRES_DSN) return {stored:false,message:'expected_version is required; search/read before deciding'}
+
 			const id = String(args.id ?? '').trim()
 			const text = String(args.text ?? '').trim()
 			if (!id || !text) return { stored: false, message: 'memcue: id and text are required' }
-			const flags = ['correct']
+			const flags = ['correct', ...(version===undefined?[]:['-expected-version',String(version)])]
 			if (args.expires) flags.push('-expires', String(args.expires))
 			flags.push('--', id, text)
-			const { code, out, err } = await runMemcue(settings, flags, { timeoutMs: 15_000 })
-			if (code !== 0) return { stored: false, message: `memcue correct exited ${code}: ${(err || out).trim().slice(0, 500)}` }
+			const { code, out, err, outcome } = await runMemcue(settings, flags, { timeoutMs: 15_000 })
+			if (code !== 0) {
+                if (outcome === 'unknown') return {stored:null,outcome:'unknown',message:err.trim().slice(0,500)}
+                return { stored: false, message: `memcue correct exited ${code}: ${(err || out).trim().slice(0, 500)}` }
+            }
 			return { stored: true, message: `memcue: corrected ${id}.` }
 		},
 	}))
@@ -592,14 +643,22 @@ export function apply(ctx, config) {
 		name: 'memcue_retire',
 		description: 'Stop recalling a stored fact that no longer holds (the history keeps it). Find the id with memcue_search first.',
 		parameters: {
+ expected_version: {type:'number',required:true,description:'Positive version observed in search; on conflict read and decide again, never auto-replay.'},
 			id: { type: 'string', required: true, description: 'Fact id from memcue_search.' },
 		},
 		output: factResult,
 		async execute(args) {
+            const version=args.expected_version
+            if (version !== undefined && (!Number.isInteger(version)||version<1)) return {stored:false,message:'expected_version must be a positive integer from search'}
+            if (version === undefined && process.env.MEMCUE_POSTGRES_DSN) return {stored:false,message:'expected_version is required; search/read before deciding'}
+
 			const id = String(args.id ?? '').trim()
 			if (!id) return { stored: false, message: 'memcue: id is required' }
-			const { code, out, err } = await runMemcue(settings, ['retire', '--', id], { timeoutMs: 15_000 })
-			if (code !== 0) return { stored: false, message: `memcue retire exited ${code}: ${(err || out).trim().slice(0, 500)}` }
+			const { code, out, err, outcome } = await runMemcue(settings, ['retire', ...(version===undefined?[]:['-expected-version',String(version)]), '--', id], { timeoutMs: 15_000 })
+			if (code !== 0) {
+                if (outcome === 'unknown') return {stored:null,outcome:'unknown',message:err.trim().slice(0,500)}
+                return { stored: false, message: `memcue retire exited ${code}: ${(err || out).trim().slice(0, 500)}` }
+            }
 			return { stored: true, message: `memcue: retired ${id}.` }
 		},
 	}))

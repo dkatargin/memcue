@@ -12,6 +12,7 @@ import (
 	"regexp"
 	"strings"
 	"unicode"
+	"unicode/utf8"
 
 	"github.com/kljensen/snowball/english"
 	"github.com/kljensen/snowball/russian"
@@ -78,11 +79,22 @@ const prefixMin = 6
 
 // Prefix returns the part of term a stem must start with, and whether the match is by prefix at all.
 func Prefix(term string) (string, bool) {
-	r := []rune(term)
-	if len(r) < prefixMin || !isCyrillic(r[0]) {
+	first, _ := utf8.DecodeRuneInString(term)
+	if !isCyrillic(first) {
 		return term, false
 	}
-	return string(r[:len(r)-1]), true
+	count := 0
+	for range term {
+		count++
+		if count >= prefixMin {
+			break
+		}
+	}
+	if count < prefixMin {
+		return term, false
+	}
+	_, size := utf8.DecodeLastRuneInString(term)
+	return term[:len(term)-size], true
 }
 
 // Covers reports whether a stem of a note matches a term of a prompt.
@@ -127,6 +139,10 @@ func NumbersEnabled() bool {
 // original text: only an uppercase key is one, so a versioned name such as PostgreSQL-16 stays an ordinary word and
 // only its number is dropped.
 func words(s string) []string {
+	out, tickets, nums := wordParts(s)
+	return append(append(out, tickets...), nums...)
+}
+func wordParts(s string) ([]string, []string, []string) {
 	var tickets []string
 	s = reTicket.ReplaceAllStringFunc(s, func(m string) string {
 		tickets = append(tickets, ticketTerm(m))
@@ -143,7 +159,7 @@ func words(s string) []string {
 	}
 	s = reNumeric.ReplaceAllString(s, " ")
 	out := strings.FieldsFunc(s, func(r rune) bool { return !unicode.IsLetter(r) && !unicode.IsDigit(r) })
-	return append(append(out, tickets...), nums...)
+	return out, tickets, nums
 }
 
 // numberTerm normalizes a version, date, port or address into one FTS token: the "nm" prefix keeps it apart from

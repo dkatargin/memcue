@@ -73,8 +73,8 @@ looks at this repository, this host and the global facts and leaves out facts bo
 
 ```bash
 memcue search -in all "<words of the fact>"
-memcue correct ID "<corrected fact>"   # new version
-memcue retire ID                       # no longer recalled; the history keeps it
+memcue correct -expected-version VERSION ID "<corrected fact>"   # new version
+memcue retire -expected-version VERSION ID                       # no longer recalled; the history keeps it
 memcue reopen ID                       # undo a retire made by mistake
 ```
 
@@ -101,3 +101,5 @@ memcue add -shelf research -source tool -- "<finding>. Source: <document, versio
 - When a later task returns to the subject, search the shelf (`-in shelf:research`) as well as the ordinary places.
   Before relying on a shelf fact, compare its version or date with what the workspace uses. An answer built on it
   says no more than the fact and its source state, and marks an inference as one.
+
+Read `version` from the earlier `search -json` result and pass that caller-observed version to correct/retire. On conflict, read again and make a new decision; never fetch latest immediately before writing to conceal a stale decision, and never replay automatically. PostgreSQL requires the version; old local CLI calls remain compatible.

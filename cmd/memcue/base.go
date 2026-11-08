@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/juev/memcue/internal/store"
 )
@@ -46,6 +47,9 @@ func isDir(p string) bool {
 
 // exists says whether the base has been written: a check that must not create it looks here.
 func (b factBase) exists() bool {
+	if os.Getenv("MEMCUE_POSTGRES_DSN") != "" {
+		return true
+	}
 	_, err := os.Stat(b.path)
 	return err == nil
 }
@@ -61,6 +65,9 @@ func cachePath(b factBase) (string, error) {
 
 // openBase opens the base of this process for reading and writing.
 func openBase() (*store.Store, error) {
+	if dsn := os.Getenv("MEMCUE_POSTGRES_DSN"); dsn != "" {
+		return store.OpenPostgresRequest(dsn, 4*time.Second)
+	}
 	b := factsBase()
 	if !b.text {
 		return store.Open(b.path)
@@ -74,35 +81,16 @@ func openBase() (*store.Store, error) {
 
 // openBaseReadOnly opens the base without changing it, for a report that must see the base as it is. A text history
 // is read through its cache, which an ordinary open builds first when there is none yet.
-func openBaseReadOnly() (*store.Store, error) {
-	b := factsBase()
-	if !b.text {
-		return store.OpenReadOnly(b.path)
-	}
-	cache, err := cachePath(b)
-	if err != nil {
-		return nil, err
-	}
-	if _, err := os.Stat(cache); os.IsNotExist(err) {
-		s, err := store.OpenText(b.path, cache)
-		if err != nil {
-			return nil, err
-		}
-		if err := s.Close(); err != nil {
-			return nil, err
-		}
-	}
-	return store.OpenReadOnly(cache)
-}
 
 // runMigrateText moves a base of the old format to a text history (#530): the directory next to the file, named as
 // the file without .db, gets a file per fact, the base becomes the cache of that history in the state directory, and
 // the file is removed, so that git carries the removal to the other machines along with the text. A second run, on a
 // base already moved, takes in a file an interrupted run or a stale copy left beside the text, and removes it.
-func runMigrateText(out io.Writer) error {
+func (inv *invocation) runMigrateText(out io.Writer) error {
+	out = inv.writer(out)
 	b := factsBase()
 	if b.text {
-		return takeInLeftover(b, out)
+		return inv.takeInLeftover(b, out)
 	}
 	if !b.exists() {
 		return fmt.Errorf("migrate -text: no fact base at %s", b.path)
@@ -159,13 +147,14 @@ func runMigrateText(out io.Writer) error {
 
 // takeInLeftover is migrate -text on a base already moved: a file of the old format beside the text is merged into it
 // and removed.
-func takeInLeftover(b factBase, out io.Writer) error {
+func (inv *invocation) takeInLeftover(b factBase, out io.Writer) error {
+	out = inv.writer(out)
 	left := b.path + ".db"
 	if _, err := os.Stat(left); os.IsNotExist(err) {
 		_, err := fmt.Fprintf(out, "the base is already a text history at %s\n", b.path)
 		return err
 	}
-	s, err := openBase()
+	s, err := inv.openBase()
 	if err != nil {
 		return err
 	}
@@ -199,4 +188,47 @@ func countText(s *store.Store) (facts, versions int, err error) {
 		versions += len(h)
 	}
 	return facts, versions, nil
+}
+func runMigrateText(out io.Writer) error {
+	inv := newInvocation()
+	defer inv.close()
+	return inv.runMigrateText(out)
+}
+
+func (inv *invocation) openBase() (*store.Store, error) {
+	if dsn := os.Getenv("MEMCUE_POSTGRES_DSN"); dsn != "" {
+		return store.OpenPostgresContext(inv.ctx, dsn)
+	}
+	b := factsBase()
+	if !b.text {
+		return inv.local(store.Open(b.path))
+	}
+	cache, err := cachePath(b)
+	if err != nil {
+		return nil, err
+	}
+	return inv.local(store.OpenText(b.path, cache))
+}
+func (inv *invocation) openBaseReadOnly() (*store.Store, error) {
+	if dsn := os.Getenv("MEMCUE_POSTGRES_DSN"); dsn != "" {
+		return store.OpenPostgresContext(inv.ctx, dsn)
+	}
+	b := factsBase()
+	if !b.text {
+		return inv.local(store.OpenReadOnly(b.path))
+	}
+	cache, err := cachePath(b)
+	if err != nil {
+		return nil, err
+	}
+	if _, err := os.Stat(cache); os.IsNotExist(err) {
+		s, err := store.OpenText(b.path, cache)
+		if err != nil {
+			return nil, err
+		}
+		if err := s.Close(); err != nil {
+			return nil, err
+		}
+	}
+	return inv.local(store.OpenReadOnly(cache))
 }

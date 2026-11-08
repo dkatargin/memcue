@@ -12,6 +12,7 @@ build:
 test: build test-codex test-claude-mods
 	go test -race -p 2 -parallel 2 -count=1 -json ./...
 	MEMCUE_BIN=$(CURDIR)/bin/memcue python3 -I plugins/hermes/memcue/tests/test_provider.py
+	MEMCUE_BIN=$(CURDIR)/bin/memcue python3 -I -m unittest discover -s plugins/hermes -p 'test_*.py'
 	MEMCUE_BIN=$(CURDIR)/bin/memcue python3 -I plugins/test_pre_command.py
 	python3 -I plugins/test_cross_harness.py
 	MEMCUE_BIN=$(CURDIR)/bin/memcue python3 -I docs/research/scripts/test_search_stand.py
@@ -26,7 +27,7 @@ bench:
 # job) skips them with the command that would install them, instead of failing on an import the task does not need.
 test-plugins: build
 	@if [ -d node_modules/@deepseek-ai/dsh-llm ] && [ -d node_modules/@deepseek-ai/dsh-tools ]; then \
-		MEMCUE_BIN="$(CURDIR)/bin/memcue" node --test --test-concurrency=2 plugins/deepseek-harness/test/*.test.mjs plugins/claude-code/test/*.test.mjs; \
+		MEMCUE_BIN="$(CURDIR)/bin/memcue" node --experimental-test-module-mocks --test --test-concurrency=2 plugins/deepseek-harness/test/*.test.mjs plugins/claude-code/test/*.test.mjs; \
 	else \
 		echo "skipping plugin tests: node_modules lacks @deepseek-ai/dsh-llm and @deepseek-ai/dsh-tools"; \
 		echo "install them with: npm install --no-save --no-package-lock @deepseek-ai/dsh-llm@0.2.0-rc.2 @deepseek-ai/dsh-tools@0.2.0-rc.2"; \

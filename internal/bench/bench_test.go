@@ -433,8 +433,8 @@ func (w *world) names(ids []string) string {
 
 // jsonFields are the fields searchFact in cmd/memcue/facts.go prints; the always ones carry no omitempty.
 var (
-	jsonFields       = []string{"id", "content", "origin", "scope", "created", "expires"}
-	jsonFieldsAlways = []string{"id", "content", "created"}
+	jsonFields       = []string{"id", "version", "content", "origin", "scope", "created", "expires"}
+	jsonFieldsAlways = []string{"id", "version", "content", "created"}
 )
 
 // checkShape holds every fact of an answer to the -json contract a host parses: the fields it always has, no field

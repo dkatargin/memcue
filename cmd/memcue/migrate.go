@@ -24,7 +24,8 @@ import (
 // runMigrate turns memory notes into facts: memcue migrate [-dry-run] [-list] [-all] [-j N] [NOTE.md...]. -all finds the
 // notes of Claude Code's built-in memory itself and skips a note whose facts are already in the base, so the run can
 // be repeated; a note named on the command line is migrated again, for a note that changed. With -dry-run it prints the facts as JSON lines and stores nothing.
-func runMigrate(args []string, out io.Writer) error {
+func (inv *invocation) runMigrate(args []string, out io.Writer) error {
+	out = inv.writer(out)
 	fs := flag.NewFlagSet("migrate", flag.ContinueOnError)
 	dry := fs.Bool("dry-run", false, "print the facts instead of storing them")
 	all := fs.Bool("all", false, "migrate every note of the built-in memory")
@@ -42,10 +43,10 @@ func runMigrate(args []string, out io.Writer) error {
 		if *repos || *apply || len(roots) > 0 || *all || *dry || *list || fs.NArg() > 0 {
 			return errors.New("migrate: -text takes no other flag or argument")
 		}
-		return runMigrateText(out)
+		return inv.runMigrateText(out)
 	}
 	if *repos {
-		return runMigrateRepos(roots, fs.Args(), *apply, out)
+		return inv.runMigrateRepos(roots, fs.Args(), *apply, out)
 	}
 	if *apply || len(roots) > 0 {
 		return errors.New("migrate: -apply and -root go with -repos")
@@ -68,7 +69,7 @@ func runMigrate(args []string, out io.Writer) error {
 	var s *store.Store
 	if factsBase().exists() || (!*dry && !*list) {
 		var err error
-		if s, err = openBase(); err != nil {
+		if s, err = inv.openBase(); err != nil {
 			return err
 		}
 		defer func() { _ = s.Close() }()
@@ -116,7 +117,7 @@ func runMigrate(args []string, out io.Writer) error {
 		close(work)
 	}()
 
-	enc := json.NewEncoder(out)
+	enc := inv.encoder(out)
 	enc.SetEscapeHTML(false)
 	var failed int
 	for range notes {
@@ -343,11 +344,12 @@ func notMigrated(s *store.Store, notes []note, current int) ([]note, error) {
 var noteFn = extract.Note
 
 // runImport stores the facts of `memcue migrate -dry-run` output files: memcue import FILE.json...
-func runImport(args []string, out io.Writer) error {
+func (inv *invocation) runImport(args []string, out io.Writer) error {
+	out = inv.writer(out)
 	if len(args) == 0 {
 		return errors.New("usage: memcue import FILE.json [FILE.json ...]")
 	}
-	s, err := openBase()
+	s, err := inv.openBase()
 	if err != nil {
 		return err
 	}
@@ -410,4 +412,14 @@ func noteDate(path string) string {
 		return fi.ModTime().Format("2006-01-02")
 	}
 	return ""
+}
+func runImport(args []string, out io.Writer) error {
+	inv := newInvocation()
+	defer inv.close()
+	return inv.runImport(args, out)
+}
+func runMigrate(args []string, out io.Writer) error {
+	inv := newInvocation()
+	defer inv.close()
+	return inv.runMigrate(args, out)
 }

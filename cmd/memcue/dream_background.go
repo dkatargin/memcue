@@ -48,6 +48,9 @@ var spawnDream = func(dir string) error {
 // unless MEMCUE_DREAM_BACKGROUND is false, and only with a model to run it on, the endpoint of MEMCUE_API_URL or
 // `claude -p`. The session start then says nothing of the dream; without either the host's model keeps the hint.
 func dreamBackground() bool {
+	if os.Getenv("MEMCUE_POSTGRES_DSN") != "" {
+		return false
+	}
 	if on, err := strconv.ParseBool(strings.TrimSpace(os.Getenv("MEMCUE_DREAM_BACKGROUND"))); err == nil && !on {
 		return false
 	}
@@ -58,7 +61,7 @@ func dreamBackground() bool {
 // once. The start is stamped before the dream runs, so a dream that fails is tried again an interval later, not at
 // every session start. A failure to start says nothing: the session must start either way, and dream.out keeps
 // what the dream said.
-func startDream() {
+func (inv *invocation) startDream() {
 	if !dreamBackground() || !factsBase().exists() {
 		return
 	}
@@ -72,7 +75,7 @@ func startDream() {
 			return
 		}
 	}
-	fresh, _, err := dreamDue(dir, every)
+	fresh, _, err := inv.dreamDue(dir, every)
 	if err != nil || fresh == 0 {
 		return
 	}
@@ -82,3 +85,4 @@ func startDream() {
 	}
 	_ = spawnDream(dir)
 }
+func startDream() { inv := newInvocation(); defer inv.close(); inv.startDream() }

@@ -158,7 +158,7 @@ const unpromotedFile = "dream.unpromoted"
 // was learnt in another project, since a fact of two repositories is two facts (#607). dream.log of the machine is
 // the record of what was promoted, and gets a line of what was taken back. A fact no longer global, or one that had no
 // project scope before it became global, is left as it is.
-func unpromote(dir string, s *store.Store) error {
+func unpromote(dir string, s *store.Store, effect ...func()) error {
 	if _, err := os.Stat(filepath.Join(dir, unpromotedFile)); err == nil {
 		return nil
 	}
@@ -170,6 +170,9 @@ func unpromote(dir string, s *store.Store) error {
 	aliases := &projectAliases{}
 	rec := dreamRecord{Time: time.Now().UTC().Format(time.RFC3339)}
 	for _, pr := range pairs {
+		for _, notice := range effect {
+			notice()
+		}
 		back, err := demote(s, aliases, pr.by)
 		if err != nil {
 			return err
@@ -327,7 +330,7 @@ func renderScopeInput(facts []store.Fact, projects []string) (string, error) {
 // since the packet, changed in more than its labels, or no longer global is refused: the model judged another text or
 // another scope. It returns the smallest id of a fact refused as changed, which the next packet should give again.
 func applyRescopes(s *store.Store, rescopes []dreamPlanRescope, saw map[string]int, rec *dreamRecord,
-	out io.Writer) (changedFirst string, err error) {
+	out io.Writer, effect ...func()) (changedFirst string, err error) {
 	for _, r := range rescopes {
 		cur, err := s.Get(r.ID)
 		if errors.Is(err, store.ErrNotFound) {
@@ -356,6 +359,9 @@ func applyRescopes(s *store.Store, rescopes []dreamPlanRescope, saw map[string]i
 		case !strings.EqualFold(cur.Scope, "global"):
 			rec.Refused = append(rec.Refused, "scope "+r.ID+": no longer global, "+cur.Scope)
 			continue
+		}
+		for _, notice := range effect {
+			notice()
 		}
 		f, err := s.Relabel(cur.ID, cur.Version, cur.Kind, r.Scope, cur.Expires)
 		if err != nil {

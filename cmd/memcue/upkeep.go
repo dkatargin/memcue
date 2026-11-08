@@ -15,15 +15,15 @@ import (
 // machine's clones or its git setup (#396): facts under the old name of the session's repository, and a base in git
 // without the merge driver. Each check is a few stats or one query, so a session start pays nothing noticeable, and a
 // check that fails says nothing: the session must start either way.
-func upkeepHint(cwd string) string {
+func (inv *invocation) upkeepHint(cwd string) string {
 	if !factsBase().exists() {
 		return "" // no base yet: the hint must not create one
 	}
 	var lines []string
-	if l := oldNameHint(cwd); l != "" {
+	if l := inv.oldNameHint(cwd); l != "" {
 		lines = append(lines, l)
 	}
-	if l := driverHint(); l != "" {
+	if l := inv.driverHint(); l != "" {
 		lines = append(lines, l)
 	}
 	return strings.Join(lines, "\n")
@@ -32,16 +32,16 @@ func upkeepHint(cwd string) string {
 // oldNameHint is the line for facts written under the directory name of the session's repository before #343. Only
 // the session's repository is checked: its old name and its key give the exact pair, while a base-wide check would
 // repeat every name no clone here has on every card.
-func oldNameHint(cwd string) string {
+func (inv *invocation) oldNameHint(cwd string) string {
 	if cwd == "" {
 		return ""
 	}
-	keys := tier.Keys(cwd, claudeDir())
-	old := tier.Legacy(cwd, claudeDir())
+	keys := tier.Keys(cwd, claudeDir(), inv.ctx)
+	old := tier.Legacy(cwd, claudeDir(), inv.ctx)
 	if len(keys) == 0 || old == "" || old == keys[0] {
 		return ""
 	}
-	s, err := openBase()
+	s, err := inv.openBase()
 	if err != nil {
 		return ""
 	}
@@ -60,7 +60,7 @@ func oldNameHint(cwd string) string {
 // them a sync conflict on the base is a binary conflict. Only the files are read; git runs only when one is missing,
 // to tell an ignored base, which needs no driver, from a synced one. A base of the old format that is set up, and so
 // synced, gets the line about the move to text instead (#530).
-func driverHint() string {
+func (inv *invocation) driverHint() string {
 	b := factsBase()
 	base, err := filepath.Abs(b.path)
 	if err != nil {
@@ -69,6 +69,9 @@ func driverHint() string {
 	resolved := resolveDir(base)
 	top := resolved
 	for {
+		if inv.ctx.Err() != nil {
+			return ""
+		}
 		if _, err := os.Stat(filepath.Join(top, ".git")); err == nil {
 			break
 		}
@@ -87,8 +90,8 @@ func driverHint() string {
 		return ""
 	}
 	attrsPath, _ := attributesOf(b, top, rel)
-	config, _ := os.ReadFile(filepath.Join(gitDir, "config"))
-	attrs, _ := os.ReadFile(attrsPath)
+	config, _ := inv.readFile(filepath.Join(gitDir, "config"))
+	attrs, _ := inv.readFile(attrsPath)
 	_, script := os.Stat(filepath.Join(gitDir, "memcue-driver.sh"))
 	if bytes.Contains(config, []byte("memcue-driver.sh")) && script == nil && bytes.Contains(attrs, []byte("merge=memcue")) {
 		if b.text {
@@ -99,7 +102,7 @@ func driverHint() string {
 			"\"Moving to the text history\"). Ask the user first: every machine that syncs the base needs this " +
 			"memcue version before the move."
 	}
-	if exec.Command("git", "-C", top, "check-ignore", "-q", base).Run() == nil {
+	if exec.CommandContext(inv.ctx, "git", "-C", top, "check-ignore", "-q", base).Run() == nil {
 		return "" // the base is ignored, so git never merges it
 	}
 	return "memcue: the fact base is in the git repository " + top + " without memcue's merge driver, so a sync " +
