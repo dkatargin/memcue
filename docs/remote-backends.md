@@ -2,7 +2,7 @@
 
 SQLite and text history plus SQLite remain the default. PostgreSQL is selected only by a nonempty `MEMCUE_POSTGRES_DSN`. Whitespace is invalid. A remote error never opens, migrates, imports or writes the local fact base. Transport selection is independent: PostgreSQL works over ordinary networking with no embedded node.
 
-These remote-backend commands require a build from this source tree and its matching adapters; they are not part of the published v0.31.1 binaries. Build with `make build` and use `bin/memcue` (or explicitly install that build on your PATH). A release, live data migration and production enrollment are separate operations.
+These remote-backend commands are included in v0.32.0 and require matching binary and adapter versions. For a source checkout, build with `make build` and use `bin/memcue` (or explicitly install that build on your PATH). Publishing or installing a release does not perform live data migration or production enrollment.
 
 ## Ordinary PostgreSQL
 

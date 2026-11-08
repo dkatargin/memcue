@@ -54,11 +54,11 @@ not yet run for long in daily work.
 - Claude Code. Only `memcue migrate` and `memcue dream -run`, which a session start runs in the background when a
   dream is due, call a model, through the `claude` command on `PATH` or an OpenAI-compatible endpoint (see
   [Configuration](#configuration)).
-- Go 1.27 or later, to build from source.
+- Go 1.27.3 or later, to build from source.
 
 ## Compatibility
 
-This release candidate is `0.31.1`; the fact-base schema is **9**. Content-only storage is an incompatible
+This release candidate is `0.32.0`; the fact-base schema is **9**. Content-only storage is an incompatible
 upgrade: stop every consumer on every sharing machine and pause sync before opening a base. Make a full verified
 backup and test isolated copies first. Old JSONL consumers are not blocked by the SQLite schema number.
 See [Upgrade](#upgrade) for coordinated rollout and rollback data risks. All versioned plugin manifests carry
@@ -66,6 +66,7 @@ the same release version. Publication and live deployment are separate steps; ne
 
 | memcue | schema | Claude Code plugin | DSH plugin | Hermes plugin |
 |---|---|---|---|---|
+| 0.32.0 | 9 | 0.32.0 | 0.32.0 (`dsh >=0.2.0-rc.2 <0.3.0`) | 0.32.0 (`hermes-agent` >=0.17.0) |
 | 0.31.1 | 9 | 0.31.1 | 0.31.1 (`dsh >=0.2.0-rc.2 <0.3.0`) | 0.31.1 (`hermes-agent` >=0.17.0) |
 | 0.30.0 | 7 | 0.30.0 | 0.30.0 (`dsh >=0.2.0-rc.2 <0.3.0`) | 0.30.0 (`hermes-agent` 0.15.2) |
 | 0.29.0 | 7 | 0.29.0 | 0.29.0 (`dsh >=0.2.0-rc.2 <0.3.0`) | 0.29.0 (`hermes-agent` 0.15.2) |
@@ -273,6 +274,18 @@ fact's `scope`, so a fact from the shelf can be told from the rest, and prints o
 included (#453); the Hermes and DSH plugins read both it and the bare array of an older binary.
 
 ## Upgrade
+
+### 0.32.0: optional PostgreSQL, embedded Tailscale and security updates
+
+- SQLite/text remains the default. An explicit `MEMCUE_POSTGRES_DSN` selects the optional shared PostgreSQL
+  authority; it does not migrate or import a local base automatically. Remote corrections and retirement require
+  the version observed by the caller. See the [backend setup and supported operations](docs/remote-backends.md).
+- Optional embedded Tailscale has an explicit persistent helper and `memcue connect up` onboarding. Enrollment,
+  production database provisioning and data migration remain separate operator actions.
+- Updated pgx, compression and Go networking/crypto dependencies address the dependency security alerts. Building
+  from source now requires Go 1.27.3; use matching binary and integration versions.
+- Local schema remains **9**, unchanged from v0.31.1. Upgrading from v0.30.0 or earlier still requires the coordinated
+  [content-only upgrade](docs/content-only-upgrade.md) below; do not mix old writers with upgraded JSONL histories.
 
 ### 0.31.1: content-only storage and pull integrations
 
