@@ -56,7 +56,7 @@ not yet run for long in daily work.
 
 ## Compatibility
 
-This release candidate is `0.34.0`; the fact-base schema is **9**. Content-only storage is an incompatible
+This release candidate is `0.35.0`; the fact-base schema is **9**. Content-only storage is an incompatible
 upgrade: stop every consumer on every sharing machine and pause sync before opening a base. Make a full verified
 backup and test isolated copies first. Old JSONL consumers are not blocked by the SQLite schema number.
 See [Upgrade](#upgrade) for coordinated rollout and rollback data risks. All versioned plugin manifests carry
@@ -64,6 +64,7 @@ the same release version. Publication and live deployment are separate steps; ne
 
 | memcue | schema | Claude Code plugin | DSH plugin | Hermes plugin |
 |---|---|---|---|---|
+| 0.35.0 | 9 | 0.35.0 | 0.35.0 (`dsh >=0.2.0-rc.2 <0.3.0`) | 0.35.0 (`hermes-agent` >=0.17.0) |
 | 0.34.0 | 9 | 0.34.0 | 0.34.0 (`dsh >=0.2.0-rc.2 <0.3.0`) | 0.34.0 (`hermes-agent` >=0.17.0) |
 | 0.33.0 | 9 | 0.33.0 | 0.33.0 (`dsh >=0.2.0-rc.2 <0.3.0`) | 0.33.0 (`hermes-agent` >=0.17.0) |
 | 0.32.0 | 9 | 0.32.0 | 0.32.0 (`dsh >=0.2.0-rc.2 <0.3.0`) | 0.32.0 (`hermes-agent` >=0.17.0) |
@@ -275,6 +276,22 @@ fact's `scope`, so a fact from the shelf can be told from the rest, and prints o
 included (#453); the Hermes and DSH plugins read both it and the bare array of an older binary.
 
 ## Upgrade
+
+### 0.35.0: one search scope less, no pre-command, pitfalls sent once (#712)
+
+- **`memcue search -in project` is gone (incompatible).** It fails with a hint: search without `-in`, or name one
+  repository with `-in repo:KEY`. The default in a repository is unchanged: this repository, this host and global.
+- **An empty default search widens itself.** In a repository, a search without `-in` that finds nothing there runs
+  again over every repository; the text answer heads the facts with a line saying they come from other repositories,
+  and `-json` sets `"widened": true`. An explicit `-in` is kept as given. A caller that wants only this repository's
+  facts drops answers with `widened`.
+- **`pre-command` and `observe-problem` are removed (incompatible)**, with the session-start instruction line, the
+  Codex, DSH and Hermes `memcue_pre_command` tools and their policy text. Install the plugins of this release with the
+  binary: an older plugin still offers the removed tool. A leftover `pre-command.json` state file is left alone.
+- **The Claude Code plugin sends the repository pitfall snapshot only when it changed**, not with every prompt:
+  session start, `/clear` and compaction always deliver it, a prompt or a cwd change only when its content differs.
+- **`search.log` records the shape of a search:** `in`, `kind`, `widened` and `caller`, the last from the new
+  `MEMCUE_CALLER` variable a hook or plugin sets.
 
 ### 0.34.0: PostgreSQL searches on the server, faster session start on a text base
 
