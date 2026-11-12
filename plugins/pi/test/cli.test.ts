@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test, { type TestContext } from 'node:test';
@@ -104,7 +104,7 @@ test('passes literal argv, stdin and cwd, inherits ambient memcue settings and l
   assert.equal(result.exitCode, 0);
   assert.equal(result.stderr, '');
   assert.deepEqual(JSON.parse(result.stdout), {
-    args, stdin: '{"cwd":"example"}\n', cwd: dir,
+    args, stdin: '{"cwd":"example"}\n', cwd: await realpath(dir),
     env: { MEMCUE_SERVER: 'ambient', MEMCUE_API_URL: 'ambient',
       MEMCUE_FACTS: join(dir, 'facts.db'), MEMCUE_STATE_DIR: join(dir, 'state'), MEMCUE_HOST: 'laptop', MEMCUE_CALLER: 'pi', MEMCUE_DREAM_BACKGROUND: '0' },
   });

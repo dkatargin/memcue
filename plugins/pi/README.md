@@ -68,9 +68,11 @@ Each write checks memcue's outcome receipt. A write whose outcome is unknown is 
 | Command | Action |
 |---|---|
 | `/memcue status` | Show whether memory is on, the role and the binary, without running memcue |
-| `/memcue off` | Turn memory off for this session; facts already seen stay in the conversation |
-| `/memcue on` | Turn it back on, if the settings allow it |
-| `/memcue dream` | Ask the current model to maintain the base |
+| `/memcue off` | Turn memory off for this session and preserve that choice across `/reload`; facts already seen stay in the conversation |
+| `/memcue on` | Turn it back on, if the settings allow it; repeating it does not interrupt active work |
+| `/memcue dream` | Ask the current model to maintain the base, queued after active work if needed |
+
+Starting, resuming or forking a session uses current settings rather than reinstating an old session-local off marker.
 
 ## Subagents
 

@@ -72,7 +72,7 @@ if os.environ.get('MEMCUE_OUTCOME_NONCE'):
                 for forbidden in ('memcue sessions', 'built-in memory', 'memcue_dream_prepare', 'claude -p'):
                     self.assertNotIn(forbidden, text)
                 self.assertIn(str(self.config), text)
-                self.assertEqual(self.calls()[-1]['cwd'],str(self.cwd))
+                self.assertEqual(self.calls()[-1]['cwd'],str(self.cwd.resolve()))
 
     def test_delivered_english_first_policy_preserves_legacy_memory(self):
         # #669 removes translation work; the working model must not recreate it as corrections.

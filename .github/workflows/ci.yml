@@ -38,6 +38,9 @@ jobs:
       - name: install pinned Hermes for native tests
         run: python3 -m pip install --disable-pip-version-check 'hermes-agent==0.17.0'
 
+      - name: install pinned Pi test dependencies
+        run: npm --prefix plugins/pi ci --ignore-scripts --no-audit --no-fund
+
       # Builds bin/memcue, runs the Go tests with -race and the Hermes plugin tests against that binary.
       - name: test
         run: make test CLAUDE_BIN="$RUNNER_TEMP/claude-client/node_modules/.bin/claude"
@@ -75,17 +78,30 @@ jobs:
       - name: test plugins
         run: MEMCUE_BIN="$PWD/bin/memcue" node --experimental-test-module-mocks --test --test-concurrency=2 plugins/deepseek-harness/test/*.test.mjs plugins/claude-code/test/*.test.mjs
 
-      # The Pi plugin pins the tested Pi SDK in its own devDependencies.
-      - name: install Pi SDK
-        run: npm install --prefix plugins/pi --no-package-lock --no-audit --no-fund
-
-      - name: typecheck Pi plugin
-        working-directory: plugins/pi
-        run: npx tsc --noEmit
-
-      - name: test Pi plugin
-        working-directory: plugins/pi
-        run: MEMCUE_BIN="$GITHUB_WORKSPACE/bin/memcue" node --experimental-strip-types --test --test-concurrency=1 test/*.test.ts
+  pi:
+    name: pi / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: plugins/pi/package-lock.json
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: install pinned Pi test dependencies
+        run: npm --prefix plugins/pi ci --ignore-scripts --no-audit --no-fund
+      # The target builds this checkout with its release version, and forbids live-test skips.
+      # Inference is deterministic and offline; all bases and sessions are synthetic.
+      - name: typecheck and test Pi with the real CLI
+        run: make test-pi
 
   card-research:
     name: card research contracts

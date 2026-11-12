@@ -8,11 +8,11 @@ import { setTimeout as delay } from 'node:timers/promises';
 import {
   createAgentSession, DefaultResourceLoader, initTheme, ModelRuntime,
   SessionManager, SettingsManager,
-  type ExtensionError,
+  type ExtensionError, type SessionStartEvent,
 } from '@earendil-works/pi-coding-agent';
 import {
   createAssistantMessageEventStream, getCurrentSystemPrompt,
-  type AssistantMessage, type ToolCall,
+  type AssistantMessage, type Message, type ToolCall,
 } from '@earendil-works/pi-ai';
 
 export const PI_PACKAGE_ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
@@ -20,16 +20,22 @@ export const PITFALL = 'PI-SDK-FACT: rebuild the generated schema before compili
 
 export type CliCall = { args: string[]; input: string; facts?: string; stateDir?: string; host?: string };
 
-export async function piFixture(options: { versionDelayMs?: number; snapshotDelayMs?: number } = {}) {
+export async function piFixture(options: { versionDelayMs?: number; snapshotDelayMs?: number; mutationDelayMs?: number } = {}) {
   const versionDelayMs = options.versionDelayMs ?? 0;
   const snapshotDelayMs = options.snapshotDelayMs ?? 0;
+  const mutationDelayMs = options.mutationDelayMs ?? 0;
   assert.ok([versionDelayMs, snapshotDelayMs].every(value => Number.isFinite(value) && value >= 0 && value <= 200));
+  assert.ok(Number.isFinite(mutationDelayMs) && mutationDelayMs >= 0 && mutationDelayMs <= 10_000);
   const root = await mkdtemp(join(tmpdir(), 'memcue-pi-sdk-'));
   const cwd = join(root, 'project');
   const agentDir = join(root, 'agent');
   await Promise.all([mkdir(cwd), mkdir(agentDir)]);
   const callsFile = join(root, 'calls.jsonl');
+  const mutationFile = join(root, 'committed-mutations.jsonl');
   const snapshotFile = join(root, 'snapshot.json');
+  const behaviorFile = join(root, 'behavior.json');
+  const behavior: { version: unknown; snapshotExitCode: number } = { version: '0.36.1', snapshotExitCode: 0 };
+  await writeFile(behaviorFile, JSON.stringify(behavior));
   const binary = join(root, 'memcue-fixture.cjs');
   const facts = join(root, 'facts');
   const stateDir = join(root, 'state');
@@ -38,18 +44,24 @@ export async function piFixture(options: { versionDelayMs?: number; snapshotDela
 const fs = require('node:fs');
 const {createHash} = require('node:crypto');
 const args = process.argv.slice(2);
+const behavior = JSON.parse(fs.readFileSync(${JSON.stringify(behaviorFile)}, 'utf8'));
 const input = fs.readFileSync(0, 'utf8');
 fs.appendFileSync(${JSON.stringify(callsFile)}, JSON.stringify({args,input,facts:process.env.MEMCUE_FACTS,stateDir:process.env.MEMCUE_STATE_DIR,host:process.env.MEMCUE_HOST})+'\\n');
-const delayMs = args[0] === 'version' ? ${versionDelayMs} : args[0] === 'session-card' ? ${snapshotDelayMs} : 0;
+const delayMs = args[0] === 'version' ? ${versionDelayMs} : args[0] === 'session-card' ? ${snapshotDelayMs} : args[0] === 'add' ? ${mutationDelayMs} : 0;
 if (delayMs) Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, delayMs);
 let output = '', error = '', status = 0;
 switch (args[0]) {
-case 'version': output = JSON.stringify({version:'0.36.1'})+'\\n'; break;
+case 'version': output = JSON.stringify({version:behavior.version})+'\\n'; break;
 case 'session-card':
   if (args.length !== 2 || args[1] !== '-pitfalls-json') { status=2; error='unexpected session-card arguments'; }
+  else if (behavior.snapshotExitCode) { status=behavior.snapshotExitCode; error='synthetic snapshot read failed'; }
   else output = fs.readFileSync(${JSON.stringify(snapshotFile)}, 'utf8')+'\\n';
   break;
 case 'search': output = JSON.stringify({facts:[{id:'pi-fixture-fact',content:'Search result for '+args.at(-1),origin:'offline fixture',version:1}]})+'\\n'; break;
+case 'add':
+  fs.appendFileSync(${JSON.stringify(mutationFile)}, JSON.stringify(args)+'\\n');
+  output = '01M77C8CHDECN8VT3V85EQ9HGX\\n';
+  break;
 default: status=2; error='unexpected memcue command: '+args.join(' ');
 }
 process.stdout.write(output);
@@ -61,12 +73,21 @@ if (process.env.MEMCUE_OUTCOME_NONCE) {
 process.exit(status);
 `, { mode: 0o755 });
   return {
-    root, cwd, agentDir, binary, facts, stateDir,
+    root, cwd, agentDir, binary, facts, stateDir, mutationFile,
     async calls(): Promise<CliCall[]> {
       try { return (await readFile(callsFile, 'utf8')).trim().split('\n').filter(Boolean).map(line => JSON.parse(line)); }
       catch (error) { if ((error as NodeJS.ErrnoException).code === 'ENOENT') return []; throw error; }
     },
+    async configure(value: { version?: unknown; snapshot?: unknown; snapshotRaw?: string; snapshotExitCode?: number }) {
+      if (Object.hasOwn(value, 'version')) behavior.version = value.version;
+      if (value.snapshotExitCode !== undefined) behavior.snapshotExitCode = value.snapshotExitCode;
+      if (value.snapshotRaw !== undefined) await writeFile(snapshotFile, value.snapshotRaw);
+      else if (Object.hasOwn(value, 'snapshot')) await writeFile(snapshotFile, JSON.stringify(value.snapshot));
+      await writeFile(behaviorFile, JSON.stringify(behavior));
+    },
     async snapshot(fact: string) {
+      behavior.snapshotExitCode = 0;
+      await writeFile(behaviorFile, JSON.stringify(behavior));
       await writeFile(snapshotFile, JSON.stringify({ facts: [fact], context: 'Repository pitfalls for fixture:' }));
     },
     async empty() {
@@ -88,13 +109,28 @@ export async function waitForCliCall(fixture: PiFixture, command: string): Promi
   assert.fail(`Timed out waiting for the ${command} subprocess to start`);
 }
 
-export async function openPi(
-  fixture: PiFixture,
-  options: { entry?: string; entries?: string[]; agent?: string; child?: boolean; enabled?: boolean; tools?: ToolCall[];
-    /** Leave memcue.binary out of the settings, so the plugin finds or installs its binary itself. */
-    autoBinary?: boolean } = {},
-) {
-  const requests: unknown[] = [];
+export interface OpenPiOptions {
+  entry?: string;
+  entries?: string[];
+  agent?: string;
+  child?: boolean;
+  enabled?: boolean;
+  tools?: ToolCall[];
+  sessionManager?: SessionManager;
+  sessionStartEvent?: SessionStartEvent;
+  cwd?: string;
+  binary?: string;
+  memcueSettings?: Record<string, unknown>;
+  compactionKeepRecentTokens?: number;
+  /** Leave memcue.binary out of the settings, so the plugin finds or installs its binary itself. */
+  autoBinary?: boolean;
+}
+
+export type PiRequest = { messages: Message[] };
+
+export async function openPi(fixture: PiFixture, options: OpenPiOptions = {}) {
+  const cwd = options.cwd ?? options.sessionManager?.getCwd() ?? fixture.cwd;
+  const requests: PiRequest[] = [];
   const errors: ExtensionError[] = [];
   let pendingTools = options.tools;
   const runtime = await ModelRuntime.create({
@@ -111,7 +147,6 @@ export async function openPi(
     models: [{ id: 'deterministic', name: 'Offline test model', reasoning: false, input: ['text'],
       cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }, contextWindow: 100_000, maxTokens: 1024 }],
     streamSimple(model, context) {
-      // The whole request: the system prompt carries the memcue sections, the messages carry the rest.
       requests.push(structuredClone(context));
       const calls = pendingTools;
       pendingTools = undefined;
@@ -132,10 +167,12 @@ export async function openPi(
   const model = runtime.getModel('memcue-offline-test', 'deterministic');
   assert.ok(model, 'offline model must be registered');
   const settingsManager = SettingsManager.inMemory({
-    compaction: { enabled: false }, retry: { enabled: false },
-    memcue: { enabled: options.enabled ?? true, ...(options.autoBinary ? {} : { binary: fixture.binary }), facts: fixture.facts,
+    compaction: { enabled: false, keepRecentTokens: options.compactionKeepRecentTokens ?? 20_000 }, retry: { enabled: false },
+    memcue: { enabled: options.enabled ?? true,
+      ...(options.autoBinary ? {} : { binary: options.binary ?? fixture.binary }), facts: fixture.facts,
       stateDir: fixture.stateDir, host: 'pi-test-host',
-      subagents: { defaultEnabled: false, agents: { worker: true, 'maintainability-reviewer': false } } },
+      subagents: { defaultEnabled: false, agents: { worker: true, 'maintainability-reviewer': false } },
+      ...options.memcueSettings },
   } as Parameters<typeof SettingsManager.inMemory>[0]);
   let entry = options.entry ?? join(PI_PACKAGE_ROOT, 'index.ts');
   if (options.agent) {
@@ -145,22 +182,27 @@ export async function openPi(
   }
   initTheme('dark');
   const loader = new DefaultResourceLoader({
-    cwd: fixture.cwd, agentDir: fixture.agentDir, settingsManager,
+    cwd, agentDir: fixture.agentDir, settingsManager,
     noExtensions: true, noSkills: true, noPromptTemplates: true, noThemes: true, noContextFiles: true,
     systemPrompt: 'You are the isolated offline SDK test.',
     additionalExtensionPaths: options.entries ?? [entry],
   });
   await loader.reload();
   assert.deepEqual(loader.getExtensions().errors, [], 'native loader must load the Memcue entrypoint');
-  const sessionManager = SessionManager.inMemory(fixture.cwd,
+  const sessionManager = options.sessionManager ?? SessionManager.inMemory(cwd,
     options.child ? { parentSession: join(fixture.root, 'parent.jsonl') } : undefined);
   const { session } = await createAgentSession({
-    cwd: fixture.cwd, agentDir: fixture.agentDir, modelRuntime: runtime, model,
+    cwd, agentDir: fixture.agentDir, modelRuntime: runtime, model,
     resourceLoader: loader, settingsManager, sessionManager, noTools: 'builtin',
+    sessionStartEvent: options.sessionStartEvent,
   });
   await session.bindExtensions({ mode: 'print', onError: error => errors.push(error) });
   return {
     session, requests, errors,
+    enqueueTools(calls: ToolCall[]): void {
+      assert.equal(pendingTools, undefined, 'consume queued tool calls before enqueueing another turn');
+      pendingTools = calls;
+    },
     async prompt(text = 'Review the offline fixture.') {
       await session.prompt(text);
       assert.deepEqual(errors, [], 'extension lifecycle must not report failures');
@@ -178,7 +220,7 @@ export function requestText(request: unknown): string {
   return JSON.stringify(request);
 }
 
-/** The system prompt the model has at this request: the first one with every later section patch applied. */
+/** The system prompt at this request, with every later section patch applied. */
 export function currentPrompt(request: unknown): string {
-  return getCurrentSystemPrompt((request as { messages: Parameters<typeof getCurrentSystemPrompt>[0] }).messages);
+  return getCurrentSystemPrompt((request as PiRequest).messages);
 }
