@@ -171,5 +171,34 @@ class CodexDeliveryTest(unittest.TestCase):
                 self.assertNotIn(forbidden,text)
 
 
+class PiRolePolicyTest(unittest.TestCase):
+    def test_pi_memory_is_opt_in_for_children_without_harness_dependencies(self):
+        """Execute the delivered policy with Node built-ins only; no Pi SDK or model is needed."""
+        config = (PLUGINS / "pi/src/config.ts").as_uri()
+        script = f"""
+import {{readConfig, isEnabled}} from {json.dumps(config)};
+const defaults = readConfig({{}});
+const configured = readConfig({{memcue: {{subagents: {{defaultEnabled: true,
+  agents: {{worker: true, 'maintainability-reviewer': false}}}}}}}});
+console.log(JSON.stringify({{
+  main: isEnabled(defaults, {{isChild: false}}),
+  child: isEnabled(defaults, {{isChild: true}}),
+  worker: isEnabled(configured, {{isChild: true, agent: 'worker'}}),
+  reviewer: isEnabled(configured, {{isChild: true, agent: 'maintainability-reviewer'}}),
+  ambientMain: isEnabled(configured, {{isChild: true}}),
+  switchedOff: isEnabled(configured, {{isChild: true, agent: 'worker', sessionDisabled: true}}),
+  inheritedRole: isEnabled(defaults, {{isChild: true, agent: 'constructor'}}),
+  globalOff: isEnabled(readConfig({{memcue: {{enabled: false}}}}), {{isChild: false}})
+}}));
+"""
+        result = subprocess.run(["node", "--experimental-strip-types", "--input-type=module", "-e", script],
+                                text=True, capture_output=True, timeout=20)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout), {
+            "main": True, "child": False, "worker": True, "reviewer": False,
+            "ambientMain": False, "switchedOff": False, "inheritedRole": False, "globalOff": False,
+        })
+
+
 if __name__ == "__main__":
     unittest.main()

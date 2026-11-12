@@ -41,16 +41,6 @@ test-plugins: build
 	fi
 	$(MAKE) test-pi
 
-# The Pi plugin is TypeScript that Pi loads through jiti; its tests load it with the real Pi SDK from its own
-# node_modules, skipped the same way when they are not installed.
-test-pi: build
-	@if [ -d plugins/pi/node_modules/@earendil-works/pi-coding-agent ]; then \
-		cd plugins/pi && npx tsc --noEmit && MEMCUE_BIN="$(CURDIR)/bin/memcue" node --experimental-strip-types --test --test-concurrency=1 test/*.test.ts; \
-	else \
-		echo "skipping Pi plugin tests: plugins/pi/node_modules lacks @earendil-works/pi-coding-agent"; \
-		echo "install them with: npm install --prefix plugins/pi --no-package-lock"; \
-	fi
-
 lint:
 	@have=$$($(GOLANGCI_LINT) version 2>&1 | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | head -1); \
 	if [ "$$have" != "$(GOLANGCI_VERSION)" ]; then \
@@ -58,6 +48,11 @@ lint:
 	fi
 	go vet -p 2 ./...
 	$(GOLANGCI_LINT) run --concurrency 2 ./...
+
+# Install the pinned Pi test dependencies first: npm --prefix plugins/pi ci
+test-pi: build
+	npm --prefix plugins/pi run typecheck
+	MEMCUE_REQUIRE_LIVE=1 MEMCUE_TEST_BINARY="$(CURDIR)/bin/memcue" npm --prefix plugins/pi test
 
 # Synthetic CLI/configuration coverage; requires the built binary, never a live memory base.
 test-codex: build

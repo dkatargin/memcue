@@ -43,7 +43,9 @@
     "node": ">=24"
   },
   "scripts": {
-    "test": "node --experimental-strip-types --test --test-concurrency=1 test/*.test.ts",
-    "typecheck": "tsc --noEmit"
+    "test": "node --experimental-strip-types --test --test-concurrency=1 test/*.test.ts test/*.test.mjs",
+    "typecheck": "tsc --noEmit",
+    "test:live": "node --experimental-strip-types --test test/live.test.ts",
+    "test:package": "node --test test/package.test.mjs"
   }
 }

@@ -86,6 +86,30 @@ trivial prompts, compaction, retry, failures, session rotation/shutdown, provide
 same-session/repository identities in two distinct profiles. No core monkeypatch or host edit is used.
 [Official middleware contract](https://hermes-agent.nousresearch.com/docs/developer-guide/middleware).
 
+## Pi
+
+The standalone `memcue-pi` package targets Pi **1.5.2**, Node.js **24+** and memcue **0.36.1 or later**. It can install
+the matching released binary when no compatible binary is configured. See [installation and role policy](../plugins/pi/README.md).
+
+Before each agent prompt, a `before_agent_start` handler reads `session-card -pitfalls-json` using the current
+`ctx.cwd` and replaces the memory and repository-pitfall system-prompt sections. Pi patches only changed sections,
+so unchanged snapshots preserve the cached prompt; empty snapshots remove the pitfall section. Failed reads replace
+it with an explicit unavailability diagnostic. Compaction and replacement sessions read current state again.
+
+The CLI transport has a combined 4 MiB stdout/stderr limit and a 10-second snapshot deadline. Overflow, failed reads
+and invalid snapshots produce an explicit diagnostic, not partial facts. This is an adapter ceiling, not a verified
+model context-window limit. The extension does not start a second model or background maintenance.
+
+Child memory is disabled unless a trusted role entrypoint and settings explicitly permit it. Ordinary parent-header
+forks are also denied by the main entrypoint. A denied role does not probe the CLI or inject memory instructions.
+These are integration controls, not a filesystem sandbox or a way to erase memory already copied into messages,
+tool results or compaction summaries. Independent review requires a fresh context and an explicit no-memory policy.
+
+Model-free tests cover the real Pi loader, packed standalone copies without local dependencies, snapshot refresh,
+compaction, persisted resume/fork headers, replacement cwd, session controls, cancellation and failed/empty/malformed
+responses. The SDK-to-real-CLI path uses synthetic repositories/bases and a deterministic provider with network
+disabled. These checks do not prove real-model behavior or the full foreground/background pi-subagents runner.
+
 ## Other integrations and verification limits
 
 Codex retains supported start/task/Bash hook payloads and `additionalContextLimit: 0`. Relative target fields are an
