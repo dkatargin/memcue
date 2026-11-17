@@ -91,10 +91,15 @@ same-session/repository identities in two distinct profiles. No core monkeypatch
 The standalone `memcue-pi` package targets Pi **1.5.2**, Node.js **24+** and memcue **0.36.1 or later**. It can install
 the matching released binary when no compatible binary is configured. See [installation and role policy](../plugins/pi/README.md).
 
-Before each agent prompt, a `before_agent_start` handler reads `session-card -pitfalls-json` using the current
-`ctx.cwd` and replaces the memory and repository-pitfall system-prompt sections. Pi patches only changed sections,
-so unchanged snapshots preserve the cached prompt; empty snapshots remove the pitfall section. Failed reads replace
-it with an explicit unavailability diagnostic. Compaction and replacement sessions read current state again.
+A `before_agent_start` handler sets the memory section and serves the repository-pitfall snapshot from a per-session
+cache, so the block is byte-stable between real changes and never cuts the provider's cached prefix. The first read
+of a session, a `session_compact`, a `/memcue on` after an off, and every `add`/`correct`/`retire`/
+`dream -apply` whose outcome is committed or unknown (an unknown mutation may already be written) re-read
+`session-card -pitfalls-json` using the current `ctx.cwd`; a read-only `search` and an unchanged warm cache do not.
+Facts expiring between invalidations apply on the next read, not on a timer. A failed read keeps the last successful snapshot instead of flapping between a snapshot
+and an error text; only a failed first read shows an explicit unavailability diagnostic. Pi patches only changed
+sections, so unchanged snapshots preserve the cached prompt; empty snapshots remove the pitfall section. Replacement
+sessions read current state again.
 
 The CLI transport has a combined 4 MiB stdout/stderr limit and a 10-second snapshot deadline. Overflow, failed reads
 and invalid snapshots produce an explicit diagnostic, not partial facts. This is an adapter ceiling, not a verified

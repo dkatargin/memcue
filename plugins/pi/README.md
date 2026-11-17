@@ -57,9 +57,11 @@ optional:
 - Tools: `memcue_search`, `memcue_add`, `memcue_correct`, `memcue_retire`, and `memcue_dream_prepare` /
   `memcue_dream_apply` for maintenance with the session's own model.
 - A `memcue` system-prompt section with the instruction every memcue host carries.
-- A `memcue_pitfalls` section with the current repository's pitfalls, read once per prompt (`memcue session-card
-  -pitfalls-json`). Pi sends a section again only when it changes, so the cached prompt stays; a section without
-  pitfalls is left out. The scope follows Pi's working directory.
+- A `memcue_pitfalls` section with the current repository's pitfalls from `memcue session-card -pitfalls-json`.
+  It is read once per session and again after a compaction, a `/memcue on` after an off, or a committed or
+  possibly-committed memory write, so the block stays stable and the cached prompt is preserved; a failed read
+  keeps the last good snapshot. A section
+  without pitfalls is left out. The scope follows Pi's working directory.
 
 Each write checks memcue's outcome receipt. A write whose outcome is unknown is reported as such and never retried.
 
